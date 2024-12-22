@@ -10,7 +10,6 @@ import {
   SelectiveBloomEffect,
   BlendFunction,
 } from 'postprocessing'
-import { N8AOPostPass } from 'n8ao'
 
 import { System } from './System'
 

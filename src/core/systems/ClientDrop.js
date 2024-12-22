@@ -1,6 +1,5 @@
 import { System } from './System'
 
-import StatsGL from '../libs/stats-gl'
 import { hashFile } from '../utils-client'
 import { uuid } from '../utils'
 
@@ -81,6 +80,9 @@ export class ClientDrop extends System {
     }
     // register the app
     this.world.apps.add(config, true)
+    // get spawn point
+    const hit = this.world.stage.raycastPointer(this.world.controls.pointer.position)[0]
+    const position = hit ? hit.point.toArray() : [0, 0, 0]
     // spawn the app moving
     // - mover: follows this clients cursor until placed
     // - uploader: other clients see a loading indicator until its fully uploaded
@@ -88,8 +90,8 @@ export class ClientDrop extends System {
       id: uuid(),
       type: 'app',
       app: config.id,
-      position: [0, 0, 0],
-      quaternion: [0, 0, 0],
+      position,
+      quaternion: [0, 0, 0, 1],
       mover: this.world.network.id,
       uploader: this.world.network.id,
     }
@@ -97,6 +99,6 @@ export class ClientDrop extends System {
     // upload the glb
     await this.world.network.upload(file)
     // mark as uploaded so other clients can load it in
-    app.setUploader(null)
+    app.onUploaded()
   }
 }

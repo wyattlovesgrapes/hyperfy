@@ -116,6 +116,12 @@ export class ClientControls extends System {
             control.api.camera.claimed = false
           },
         },
+        release: () => {
+          const idx = this.controls.indexOf(control)
+          if (idx === -1) return
+          this.controls.splice(idx, 1)
+          control.options.onRelease?.()
+        },
       },
     }
     bindRotations(control.api.camera.quaternion, control.api.camera.rotation)

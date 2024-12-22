@@ -1,7 +1,6 @@
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-
-import { VRMLoaderPlugin as VRMLoader } from '../libs/three-vrm'
+import { VRMLoaderPlugin } from '@pixiv/three-vrm'
 
 import { System } from './System'
 
@@ -18,7 +17,7 @@ export class ClientLoader extends System {
     this.cache = new Map()
     this.rgbeLoader = new RGBELoader()
     this.gltfLoader = new GLTFLoader()
-    this.gltfLoader.register(parser => new VRMLoader(parser))
+    this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
   }
 
   start() {
