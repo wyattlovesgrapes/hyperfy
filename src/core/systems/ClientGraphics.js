@@ -1,0 +1,129 @@
+import * as THREE from '../extras/three'
+import {
+  EffectComposer,
+  EffectPass,
+  RenderPass,
+  SMAAPreset,
+  SMAAEffect,
+  ToneMappingEffect,
+  ToneMappingMode,
+  SelectiveBloomEffect,
+  BlendFunction,
+} from 'postprocessing'
+import { N8AOPostPass } from 'n8ao'
+
+import { System } from './System'
+
+/**
+ * Graphics System
+ *
+ * - Runs on the client
+ * - Supports renderer, shadows, postprocessing, etc
+ * - Renders to the viewport
+ *
+ */
+export class ClientGraphics extends System {
+  constructor(world) {
+    super(world)
+  }
+
+  async init({ viewport }) {
+    this.viewport = viewport
+    this.width = this.viewport.offsetWidth
+    this.height = this.viewport.offsetHeight
+    this.aspect = this.width / this.height
+    this.renderer = new THREE.WebGLRenderer({
+      powerPreference: 'high-performance',
+      antialias: true,
+    })
+    this.renderer.setSize(this.width, this.height)
+    this.renderer.setClearColor(0xffffff, 0)
+    this.renderer.setPixelRatio(this.world.client.settings.pixelRatio || window.devicePixelRatio)
+    this.renderer.shadowMap.enabled = true
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.toneMapping = THREE.NoToneMapping
+    this.renderer.toneMappingExposure = 1
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace
+    this.renderer.xr.enabled = true
+    this.renderer.xr.setReferenceSpaceType('local-floor')
+    this.renderer.xr.setFoveation(1)
+    this.maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy()
+    this.usePostprocessing = this.world.client.settings.postprocessing
+    const context = this.renderer.getContext()
+    const maxMultisampling = context.getParameter(context.MAX_SAMPLES)
+    this.composer = new EffectComposer(this.renderer, {
+      frameBufferType: THREE.HalfFloatType,
+      multisampling: Math.min(8, maxMultisampling),
+    })
+    this.renderPass = new RenderPass(this.world.stage.scene, this.world.camera)
+    this.composer.addPass(this.renderPass)
+    this.bloom = new SelectiveBloomEffect(this.world.stage.scene, this.world.camera, {
+      blendFunction: BlendFunction.ADD,
+      mipmapBlur: true,
+      luminanceThreshold: 1,
+      luminanceSmoothing: 0.3,
+      intensity: 0.5,
+      radius: 0.8,
+    })
+    this.bloom.inverted = true
+    this.bloom.selection.layer = 14 // NO_BLOOM layer
+    this.bloomPass = new EffectPass(this.world.camera, this.bloom)
+    this.bloomPass.enabled = this.world.client.settings.bloom
+    this.composer.addPass(this.bloomPass)
+    this.effectPass = new EffectPass(
+      this.world.camera,
+      new SMAAEffect({
+        preset: SMAAPreset.ULTRA,
+      }),
+      new ToneMappingEffect({
+        mode: ToneMappingMode.ACES_FILMIC,
+      })
+    )
+    this.composer.addPass(this.effectPass)
+    this.world.client.settings.on('change', this.onSettingsChange)
+    this.resizer = new ResizeObserver(() => {
+      this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight)
+    })
+    this.viewport.appendChild(this.renderer.domElement)
+    this.resizer.observe(this.viewport)
+  }
+
+  resize(width, height) {
+    this.width = width
+    this.height = height
+    this.aspect = this.width / this.height
+    this.world.camera.aspect = this.aspect
+    this.world.camera.updateProjectionMatrix()
+    this.renderer.setSize(this.width, this.height)
+    this.composer.setSize(this.width, this.height)
+    this.emit('resize')
+    this.render()
+  }
+
+  render() {
+    if (this.renderer.xr.isPresenting || !this.usePostprocessing) {
+      this.renderer.render(this.world.stage.scene, this.world.camera)
+    } else {
+      this.composer.render()
+    }
+  }
+
+  commit() {
+    this.render()
+  }
+
+  onSettingsChange = changes => {
+    // pixel ratio
+    if (changes.pixelRatio) {
+      this.renderer.setPixelRatio(changes.pixelRatio.value || window.devicePixelRatio)
+    }
+    // postprocessing
+    if (changes.postprocessing) {
+      this.usePostprocessing = changes.postprocessing.value
+    }
+    // bloom
+    if (changes.bloom) {
+      this.bloomPass.enabled = changes.bloom.value
+    }
+  }
+}
