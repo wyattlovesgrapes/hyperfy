@@ -23,6 +23,9 @@ const port = process.env.PORT
 await fs.ensureDir(worldDir)
 await fs.ensureDir(assetsDir)
 
+// copy core assets
+await fs.copy(path.join(rootDir, 'src/core/assets'), path.join(assetsDir))
+
 const world = createServerWorld()
 world.init({ loadPhysX })
 

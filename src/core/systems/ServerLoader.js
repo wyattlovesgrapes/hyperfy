@@ -55,8 +55,17 @@ export class ServerLoader extends System {
       promise = new Promise(async resolve => {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-        this.gltfLoader.parse(arrayBuffer, '', gltf => {
-          resolve(gltf)
+        this.gltfLoader.parse(arrayBuffer, '', glb => {
+          resolve(glb)
+        })
+      })
+    }
+    if (type === 'vrm') {
+      promise = new Promise(async resolve => {
+        const buffer = await fs.readFile(url)
+        const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+        this.gltfLoader.parse(arrayBuffer, '', glb => {
+          resolve(glb)
         })
       })
     }

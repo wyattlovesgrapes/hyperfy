@@ -26,7 +26,7 @@ export class App extends Entity {
     // activate, but if moving dont run physics
     this.base.activate({ world: this.world, entity: this.entity, physics: !this.data.mover })
     // if moving we need updates
-    if (this.data.mover) this.world.entities.setHot(this, true)
+    if (this.data.mover) this.world.setHot(this, true)
     // if we're the mover lets bind controls
     if (this.data.mover === this.world.network.id) {
       this.lastMoveSendTime = 0
@@ -54,7 +54,7 @@ export class App extends Entity {
     // otherwise we can load our glb
     else {
       const glb = await this.world.loader.load('glb', this.config.model)
-      this.base.add(glbToNodes(glb, this.world))
+      this.base.add(glb.toNodes())
     }
   }
 
@@ -67,7 +67,7 @@ export class App extends Entity {
       this.control?.release()
       this.control = null
     }
-    this.world.entities.setHot(this, false)
+    this.world.setHot(this, false)
   }
 
   update(delta) {

@@ -3,6 +3,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin } from '@pixiv/three-vrm'
 
 import { System } from './System'
+import { createNode } from '../extras/createNode'
+import { createVRMFactory } from '../extras/createVRMFactory'
+import { glbToNodes } from '../extras/glbToNodes'
+import { createEmoteFactory } from '../extras/createEmoteFactory'
 
 /**
  * Client Loader System
@@ -43,6 +47,32 @@ export class ClientLoader extends System {
     }
     if (type === 'glb') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
+        let node
+        glb.toNodes = () => {
+          if (!node) {
+            node = glbToNodes(glb, this.world)
+          }
+          return node.clone(true)
+        }
+        return glb
+      })
+    }
+    if (type === 'vrm') {
+      promise = this.gltfLoader.loadAsync(url).then(glb => {
+        const factory = createVRMFactory(glb, this.world)
+        glb.toNodes = () => {
+          return createNode({
+            name: 'vrm',
+            factory,
+          })
+        }
+        return glb
+      })
+    }
+    if (type === 'emote') {
+      promise = this.gltfLoader.loadAsync(url).then(glb => {
+        const factory = createEmoteFactory(glb, url)
+        glb.toClip = factory.toClip
         return glb
       })
     }
@@ -55,12 +85,15 @@ export class ClientLoader extends System {
     const localUrl = URL.createObjectURL(file)
     let promise
     if (type === 'glb') {
-      promise = this.gltfLoader.loadAsync(localUrl).then(raw => {
-        console.log('raw', raw)
-        console.log('TODO: gltf to nodes')
-        return raw
-        // const node = glbToNodes(raw, this.world)
-        // return { raw, node }
+      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+        let node
+        glb.toNodes = () => {
+          if (!node) {
+            node = glbToNodes(glb, this.world)
+          }
+          return node.clone(true)
+        }
+        return glb
       })
     }
     this.cache.set(key, promise)

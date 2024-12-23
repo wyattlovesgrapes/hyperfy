@@ -3,7 +3,6 @@ import * as THREE from '../extras/three'
 import { System } from './System'
 
 import { CSM } from '../libs/csm/CSM'
-import { glbToNodes } from '../extras/glbToNodes'
 
 const csmLevels = {
   none: {
@@ -65,7 +64,7 @@ export class ClientEnvironment extends System {
 
     // TEMP: base environment
     const glb = await this.world.loader.load('glb', '/base-environment.glb')
-    const root = glbToNodes(glb, this.world)
+    const root = glb.toNodes()
     root.activate({ world: this.world, physics: true })
 
     // {

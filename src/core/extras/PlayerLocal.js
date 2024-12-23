@@ -31,6 +31,13 @@ const m1 = new THREE.Matrix4()
 const m2 = new THREE.Matrix4()
 const m3 = new THREE.Matrix4()
 
+const emotes = {
+  idle: 'asset://emote-idle.glb',
+  walk: 'asset://emote-walk.glb',
+  run: 'asset://emote-run.glb',
+  float: 'asset://emote-float.glb',
+}
+
 export class PlayerLocal {
   constructor(entity) {
     this.entity = entity
@@ -76,31 +83,37 @@ export class PlayerLocal {
     this.base.quaternion.fromArray(this.data.quaternion)
 
     // temp
-    this.vrm = createNode({ name: 'mesh' })
-    this.vrm.type = 'box'
-    this.vrm.width = 0.3
-    this.vrm.height = 1.6
-    this.vrm.depth = 0.3
-    this.vrm.position.y = 1.6 / 2
-    this.vrm.material = this.world.stage.createMaterial({
-      internal: new THREE.MeshStandardMaterial({ color: 'white' }),
+    this.world.loader.load('vrm', 'asset://avatar.vrm').then(glb => {
+      this.vrm = glb.toNodes()
+      this.base.add(this.vrm)
     })
-    this.base.add(this.vrm)
+    // this.vrm = createNode({ name: 'mesh' })
+    // this.vrm.type = 'box'
+    // this.vrm.width = 0.3
+    // this.vrm.height = 1.6
+    // this.vrm.depth = 0.3
+    // this.vrm.position.y = 1.6 / 2
+    // this.vrm.material = this.world.stage.createMaterial({
+    //   internal: new THREE.MeshStandardMaterial({ color: 'white' }),
+    // })
+    // this.base.add(this.vrm)
 
     this.base.activate({ world: this.world, physics: true, entity: this })
 
     this.cam = {}
     this.cam.position = new THREE.Vector3().copy(this.base.position)
     this.cam.position.y += 1.6
-    this.cam.quaternion = new THREE.Quaternion().copy(this.base.quaternion)
-    this.cam.rotation = new THREE.Euler(0, 0, 0, 'YXZ').setFromQuaternion(this.cam.quaternion)
-    this.cam.zoom = 6
+    this.cam.quaternion = new THREE.Quaternion()
+    this.cam.rotation = new THREE.Euler(0, 0, 0, 'YXZ')
     bindRotations(this.cam.quaternion, this.cam.rotation)
+    this.cam.quaternion.copy(this.base.quaternion)
+    this.cam.rotation.x += -15 * DEG2RAD
+    this.cam.zoom = 4
 
     this.initCapsule()
     this.initControl()
 
-    this.world.entities.setHot(this, true)
+    this.world.setHot(this, true)
   }
 
   initCapsule() {
@@ -179,12 +192,12 @@ export class PlayerLocal {
     this.control = this.world.controls.bind({
       priority: 0,
       onPress: code => {
-        if (code === 'MouseLeft') {
+        if (code === 'MouseRight') {
           this.control.pointer.lock()
         }
       },
       onRelease: code => {
-        if (code === 'MouseLeft') {
+        if (code === 'MouseRight') {
           this.control.pointer.unlock()
         }
       },
@@ -401,7 +414,7 @@ export class PlayerLocal {
 
     // apply move force, projected onto ground normal
     if (this.moving) {
-      let moveSpeed = 8 * this.mass // run
+      let moveSpeed = (this.running ? 8 : 4) * this.mass // run
       const slopeRotation = q1.setFromUnitVectors(UP, this.groundNormal)
       const moveForce = v1.copy(this.moveDir).multiplyScalar(moveSpeed * 10).applyQuaternion(slopeRotation) // prettier-ignore
       this.capsule.addForce(moveForce.toPxVec3(), PHYSX.PxForceModeEnum.eFORCE, true)
@@ -449,6 +462,7 @@ export class PlayerLocal {
 
     // we're moving if any keys are down
     this.moving = this.moveDir.length() > 0
+    this.running = this.moving && this.control.buttons.ShiftLeft
 
     // normalize direction for non-joystick (prevents surfing)
     this.moveDir.normalize()
@@ -470,17 +484,17 @@ export class PlayerLocal {
     this.cam.position.y += 1.6
 
     // emote
-    // let emote
-    // if (this.jumping) {
-    //   emote = emotes.float // todo: better jump anim
-    // } else if (this.falling) {
-    //   emote = emotes.float
-    // } else if (this.moving) {
-    //   emote = emotes.run
-    // } else {
-    //   emote = emotes.idle
-    // }
-    // this.vrm.setEmote(emote)
+    let emote
+    if (this.jumping) {
+      emote = emotes.float
+    } else if (this.falling) {
+      emote = emotes.float
+    } else if (this.moving) {
+      emote = this.running ? emotes.run : emotes.walk
+    } else {
+      emote = emotes.idle
+    }
+    this.vrm?.vrm.setEmote(emote)
 
     // network variables
     // this.position.value.copy(this.ghost.position)

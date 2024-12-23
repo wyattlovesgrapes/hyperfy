@@ -16,6 +16,7 @@ export class World extends EventEmitter {
     this.time = 0
     this.accumulator = 0
     this.systems = []
+    this.hot = new Set()
 
     this.rig = new THREE.Object3D()
     this.camera = new THREE.PerspectiveCamera(70, 0, 0.01, 2000)
@@ -101,6 +102,9 @@ export class World extends EventEmitter {
   }
 
   fixedUpdate(delta) {
+    for (const item of this.hot) {
+      item.fixedUpdate?.(delta)
+    }
     for (const system of this.systems) {
       system.fixedUpdate(delta)
     }
@@ -119,6 +123,9 @@ export class World extends EventEmitter {
   }
 
   update(delta) {
+    for (const item of this.hot) {
+      item.update?.(delta)
+    }
     for (const system of this.systems) {
       system.update(delta)
     }
@@ -131,6 +138,9 @@ export class World extends EventEmitter {
   }
 
   lateUpdate(delta) {
+    for (const item of this.hot) {
+      item.lateUpdate?.(delta)
+    }
     for (const system of this.systems) {
       system.lateUpdate(delta)
     }
@@ -156,5 +166,13 @@ export class World extends EventEmitter {
 
   setupMaterial(material) {
     this.environment?.csm.setupMaterial(material)
+  }
+
+  setHot(item, hot) {
+    if (hot) {
+      this.hot.add(item)
+    } else {
+      this.hot.delete(item)
+    }
   }
 }
