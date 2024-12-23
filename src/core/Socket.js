@@ -20,7 +20,7 @@ export class Socket {
   }
 
   send(name, data) {
-    console.log('->', name, data)
+    // console.log('->', name, data)
     const packet = writePacket(name, data)
     this.ws.send(packet)
   }
@@ -45,7 +45,7 @@ export class Socket {
 
   onMessage = packet => {
     const [method, data] = readPacket(packet)
-    console.log('<-', method, data)
+    // console.log('<-', method, data)
     this.network[method]?.(this, data)
   }
 

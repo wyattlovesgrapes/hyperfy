@@ -6,8 +6,6 @@ import { createNode } from '../extras/createNode'
 import { NetworkedVector3 } from '../extras/NetworkedVector3'
 import { NetworkedQuaternion } from '../extras/NetworkedQuaternion'
 
-const MOVE_SEND_RATE = 1 / 8
-
 export class App extends Entity {
   constructor(world, data, local) {
     super(world, data, local)
@@ -39,8 +37,8 @@ export class App extends Entity {
     }
     // if remote is moving, set up to receive network updates
     if (this.data.mover && this.data.mover !== this.world.network.id) {
-      this.networkPosition = new NetworkedVector3(this.base.position, MOVE_SEND_RATE)
-      this.networkQuaternion = new NetworkedQuaternion(this.base.quaternion, MOVE_SEND_RATE)
+      this.networkPosition = new NetworkedVector3(this.base.position, this.world.networkRate)
+      this.networkQuaternion = new NetworkedQuaternion(this.base.quaternion, this.world.networkRate)
     }
     // if remote is uploading, display a loading indicator
     if (this.data.uploader && this.data.uploader !== this.world.network.id) {
@@ -89,8 +87,8 @@ export class App extends Entity {
       this.base.rotation.y += this.control.scroll.delta * 0.1 * delta
       // periodically send updates
       this.lastMoveSendTime += delta
-      if (this.lastMoveSendTime > MOVE_SEND_RATE) {
-        this.world.network.send('entityUpdated', {
+      if (this.lastMoveSendTime > this.world.networkRate) {
+        this.world.network.send('entityChanged', {
           id: this.data.id,
           position: this.base.position.toArray(),
           quaternion: this.base.quaternion.toArray(),
@@ -102,7 +100,7 @@ export class App extends Entity {
         this.data.mover = null
         this.data.position = this.base.position.toArray()
         this.data.quaternion = this.base.quaternion.toArray()
-        this.world.network.send('entityUpdated', {
+        this.world.network.send('entityChanged', {
           id: this.data.id,
           mover: null,
           position: this.data.position,
@@ -120,10 +118,10 @@ export class App extends Entity {
 
   onUploaded() {
     this.data.uploader = null
-    this.world.network.send('entityUpdated', { id: this.data.id, uploader: null })
+    this.world.network.send('entityChanged', { id: this.data.id, uploader: null })
   }
 
-  onUpdate(data) {
+  onChange(data) {
     // TODO: server can reject for reasons
     let rebuild
     if (data.hasOwnProperty('uploader')) {

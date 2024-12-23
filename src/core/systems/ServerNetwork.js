@@ -1,5 +1,6 @@
 import { writePacket } from '../packets'
 import { Socket } from '../Socket'
+import { uuid } from '../utils'
 import { System } from './System'
 
 /**
@@ -13,12 +14,17 @@ export class ServerNetwork extends System {
   constructor(world) {
     super(world)
     this.id = 0
+    this.ids = -1
     this.sockets = new Map()
     this.checkInterval = setInterval(() => this.checkSockets(), 1000)
   }
 
+  makeId() {
+    return `${this.id}_${++this.ids}`
+  }
+
   send(name, data, ignoreSocket) {
-    console.log('->>>', name, data)
+    // console.log('->>>', name, data)
     const packet = writePacket(name, data)
     this.sockets.forEach(socket => {
       if (socket === ignoreSocket) return
@@ -50,6 +56,7 @@ export class ServerNetwork extends System {
       // spawn player
       socket.player = this.world.entities.add(
         {
+          id: this.makeId(),
           type: 'player',
           owner: socket.id,
           position: [0, 0, 0],
@@ -82,10 +89,10 @@ export class ServerNetwork extends System {
     this.send('entityAdded', data, socket)
   }
 
-  onEntityUpdated = (socket, data) => {
+  onEntityChanged = (socket, data) => {
     const entity = this.world.entities.get(data.id)
-    entity.onUpdate(data)
-    this.send('entityUpdated', data, socket)
+    entity.onChange(data)
+    this.send('entityChanged', data, socket)
   }
 
   onEntityRemoved = (socket, id) => {

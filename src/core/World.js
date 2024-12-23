@@ -16,6 +16,7 @@ export class World extends EventEmitter {
     this.time = 0
     this.accumulator = 0
     this.systems = []
+    this.networkRate = 1 / 8 // 8Hz
     this.hot = new Set()
 
     this.rig = new THREE.Object3D()

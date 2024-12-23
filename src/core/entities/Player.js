@@ -14,4 +14,8 @@ export class Player extends Entity {
       this.player = new PlayerRemote(this)
     }
   }
+
+  onChange(data) {
+    this.player.onChange(data)
+  }
 }

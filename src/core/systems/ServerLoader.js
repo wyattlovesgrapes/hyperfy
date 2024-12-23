@@ -5,6 +5,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { VRMLoaderPlugin } from '@pixiv/three-vrm'
 
 import { System } from './System'
+import { createVRMFactory } from '../extras/createVRMFactory'
+import { glbToNodes } from '../extras/glbToNodes'
+import { createNode } from '../extras/createNode'
+import { createEmoteFactory } from '../extras/createEmoteFactory'
 
 /**
  * Server Loader System
@@ -56,6 +60,13 @@ export class ServerLoader extends System {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         this.gltfLoader.parse(arrayBuffer, '', glb => {
+          let node
+          glb.toNodes = () => {
+            if (!node) {
+              node = glbToNodes(glb, this.world)
+            }
+            return node.clone(true)
+          }
           resolve(glb)
         })
       })
@@ -65,6 +76,24 @@ export class ServerLoader extends System {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         this.gltfLoader.parse(arrayBuffer, '', glb => {
+          const factory = createVRMFactory(glb, this.world)
+          glb.toNodes = () => {
+            return createNode({
+              name: 'vrm',
+              factory,
+            })
+          }
+          resolve(glb)
+        })
+      })
+    }
+    if (type === 'emote') {
+      promise = new Promise(async resolve => {
+        const buffer = await fs.readFile(url)
+        const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+        this.gltfLoader.parse(arrayBuffer, '', glb => {
+          const factory = createEmoteFactory(glb, url)
+          glb.toClip = factory.toClip
           resolve(glb)
         })
       })

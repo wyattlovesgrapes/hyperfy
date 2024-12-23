@@ -203,8 +203,6 @@ export function createVRMFactory(glb, world) {
           })
           const action = mixer.clipAction(clip)
           emote.action = action
-
-          console.log('play?', currentEmote, emote)
           // if its still this emote, play it!
           if (currentEmote === emote) {
             action.play()

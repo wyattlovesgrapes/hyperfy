@@ -12,8 +12,13 @@ export class ClientNetwork extends System {
   constructor(world) {
     super(world)
     this.id = null
+    this.ids = -1
     this.ws = null
     this.apiUrl = null
+  }
+
+  makeId() {
+    return `${this.id}_${++this.ids}`
   }
 
   init({ wsUrl, apiUrl }) {
@@ -25,7 +30,7 @@ export class ClientNetwork extends System {
   }
 
   send(name, data) {
-    console.log('->', name, data)
+    // console.log('->', name, data)
     const packet = writePacket(name, data)
     this.ws.send(packet)
   }
@@ -42,7 +47,7 @@ export class ClientNetwork extends System {
 
   onPacket = e => {
     const [method, data] = readPacket(e.data)
-    console.log('<-', method, data)
+    // console.log('<-', method, data)
     this[method]?.(data)
   }
 
@@ -60,9 +65,9 @@ export class ClientNetwork extends System {
     this.world.entities.add(data)
   }
 
-  onEntityUpdated = data => {
+  onEntityChanged = data => {
     const entity = this.world.entities.get(data.id)
-    entity.onUpdate(data)
+    entity.onChange(data)
   }
 
   onEntityRemoved = id => {

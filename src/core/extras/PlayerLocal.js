@@ -78,6 +78,8 @@ export class PlayerLocal {
       prevTransform: new THREE.Matrix4(),
     }
 
+    this.lastSendAt = 0
+
     this.base = createNode({ name: 'group' })
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
@@ -484,26 +486,36 @@ export class PlayerLocal {
     this.cam.position.y += 1.6
 
     // emote
-    let emote
     if (this.jumping) {
-      emote = emotes.float
+      this.emote = emotes.float
     } else if (this.falling) {
-      emote = emotes.float
+      this.emote = emotes.float
     } else if (this.moving) {
-      emote = this.running ? emotes.run : emotes.walk
+      this.emote = this.running ? emotes.run : emotes.walk
     } else {
-      emote = emotes.idle
+      this.emote = emotes.idle
     }
-    this.vrm?.vrm.setEmote(emote)
+    this.vrm?.vrm.setEmote(this.emote)
 
-    // network variables
-    // this.position.value.copy(this.ghost.position)
-    // this.quaternion.value.copy(this.ghost.quaternion)
-    // this.emote.value = emote
+    // send network updates
+    this.lastSendAt += delta
+    if (this.lastSendAt >= this.world.networkRate) {
+      this.world.network.send('entityChanged', {
+        id: this.data.id,
+        p: this.base.position.toArray(),
+        q: this.base.quaternion.toArray(),
+        e: this.emote,
+      })
+      this.lastSendAt = 0
+    }
   }
 
   lateUpdate(delta) {
     // interpolate camera towards target
     simpleCamLerp(this.world, this.control.camera, this.cam, delta)
+  }
+
+  onChange(data) {
+    console.log('local player onChange wtf', data)
   }
 }

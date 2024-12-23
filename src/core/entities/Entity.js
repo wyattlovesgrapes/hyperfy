@@ -9,20 +9,8 @@ export class Entity {
     }
   }
 
-  fixedUpdate(delta) {
-    // ...
-  }
-
-  update(delta) {
-    // ...
-  }
-
-  lateUpdate(delta) {
-    // ...
-  }
-
-  onUpdate(data) {
-    // called when remote receives entity update
+  onChange(data) {
+    // called when remote receives entity changes
   }
 
   serialize() {

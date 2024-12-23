@@ -87,7 +87,7 @@ export class ClientDrop extends System {
     // - mover: follows this clients cursor until placed
     // - uploader: other clients see a loading indicator until its fully uploaded
     const data = {
-      id: uuid(),
+      id: this.world.network.makeId(),
       type: 'app',
       app: config.id,
       position,
