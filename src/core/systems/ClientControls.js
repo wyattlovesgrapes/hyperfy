@@ -138,6 +138,17 @@ export class ClientControls extends System {
     return control.api
   }
 
+  releaseAllButtons() {
+    // release all down buttons because they can get stuck
+    for (const control of this.controls) {
+      Object.keys(control.api.buttons).forEach(code => {
+        control.api.buttons[code] = false
+        control.api.released[code] = true
+        control.options.onRelease?.(code)
+      })
+    }
+  }
+
   onKeyDown = e => {
     if (e.repeat) return
     if (this.isInputFocused()) return
@@ -154,6 +165,11 @@ export class ClientControls extends System {
     if (e.repeat) return
     if (this.isInputFocused()) return
     const code = e.code
+    if (code === 'MetaLeft' || code === 'MetaRight') {
+      // releasing a meta key while another key is down causes browsers not to ever
+      // trigger onKeyUp, so we just have to force all keys up
+      return this.releaseAllButtons()
+    }
     for (const control of this.controls) {
       control.api.buttons[code] = false
       control.api.released[code] = true
@@ -278,10 +294,7 @@ export class ClientControls extends System {
   }
 
   onBlur = () => {
-    console.warn('TODO: control onBlur')
-    // for (const control of this.controls) {
-    //   control.handler.blur?.() // not cancellable
-    // }
+    this.releaseAllButtons()
   }
 
   isInputFocused() {

@@ -1,5 +1,3 @@
-import * as THREE from '../extras/three'
-
 import { PlayerLocal } from '../extras/PlayerLocal'
 import { PlayerRemote } from '../extras/PlayerRemote'
 
@@ -17,5 +15,10 @@ export class Player extends Entity {
 
   onChange(data) {
     this.player.onChange(data)
+  }
+
+  destroy(local) {
+    this.player.destroy()
+    super.destroy(local)
   }
 }

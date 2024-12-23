@@ -103,7 +103,7 @@ export class ServerNetwork extends System {
 
   onDisconnect = (socket, code) => {
     console.log('disconect')
-    socket.player.destroy()
+    socket.player.destroy(true)
     this.sockets.delete(socket.id)
   }
 }

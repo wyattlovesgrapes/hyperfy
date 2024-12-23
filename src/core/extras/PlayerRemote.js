@@ -1,6 +1,7 @@
 import { createNode } from './createNode'
 import { NetworkedQuaternion } from './NetworkedQuaternion'
 import { NetworkedVector3 } from './NetworkedVector3'
+import { emotes } from './playerEmotes'
 
 export class PlayerRemote {
   constructor(entity) {
@@ -30,7 +31,7 @@ export class PlayerRemote {
   update(delta) {
     this.position.update(delta)
     this.quaternion.update(delta)
-    this.vrm?.vrm.setEmote(this.emote)
+    this.vrm?.vrm.setEmote(emotes[this.emote])
   }
 
   onChange(data) {
@@ -43,5 +44,11 @@ export class PlayerRemote {
     if (data.hasOwnProperty('e')) {
       this.emote = data.e
     }
+  }
+
+  destroy() {
+    this.base.deactivate()
+    this.vrm = null
+    this.world.setHot(this, false)
   }
 }

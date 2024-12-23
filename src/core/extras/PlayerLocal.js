@@ -5,6 +5,7 @@ import { createNode } from './createNode'
 import { clamp } from '../utils'
 import { bindRotations } from './bindRotations'
 import { simpleCamLerp } from './simpleCamLerp'
+import { Emotes, emotes } from './playerEmotes'
 
 const UP = new THREE.Vector3(0, 1, 0)
 const DOWN = new THREE.Vector3(0, -1, 0)
@@ -30,13 +31,6 @@ const q4 = new THREE.Quaternion()
 const m1 = new THREE.Matrix4()
 const m2 = new THREE.Matrix4()
 const m3 = new THREE.Matrix4()
-
-const emotes = {
-  idle: 'asset://emote-idle.glb',
-  walk: 'asset://emote-walk.glb',
-  run: 'asset://emote-run.glb',
-  float: 'asset://emote-float.glb',
-}
 
 export class PlayerLocal {
   constructor(entity) {
@@ -487,15 +481,15 @@ export class PlayerLocal {
 
     // emote
     if (this.jumping) {
-      this.emote = emotes.float
+      this.emote = Emotes.FLOAT
     } else if (this.falling) {
-      this.emote = emotes.float
+      this.emote = Emotes.FLOAT
     } else if (this.moving) {
-      this.emote = this.running ? emotes.run : emotes.walk
+      this.emote = this.running ? Emotes.RUN : Emotes.WALK
     } else {
-      this.emote = emotes.idle
+      this.emote = Emotes.IDLE
     }
-    this.vrm?.vrm.setEmote(this.emote)
+    this.vrm?.vrm.setEmote(emotes[this.emote])
 
     // send network updates
     this.lastSendAt += delta
