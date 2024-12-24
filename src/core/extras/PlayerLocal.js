@@ -458,7 +458,7 @@ export class PlayerLocal {
 
     // we're moving if any keys are down
     this.moving = this.moveDir.length() > 0
-    this.running = this.moving && this.control.buttons.ShiftLeft
+    this.running = this.moving && (this.control.buttons.ShiftLeft || this.control.buttons.ShiftRight)
 
     // normalize direction for non-joystick (prevents surfing)
     this.moveDir.normalize()
