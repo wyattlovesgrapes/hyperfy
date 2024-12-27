@@ -69,6 +69,7 @@ const clientHtmlDest = path.join(rootDir, 'build/public/index.html')
             // inject into html and copy over
             let htmlContent = await fs.readFile(clientHtmlSrc, 'utf-8')
             htmlContent = htmlContent.replace('{jsFile}', jsFile)
+            htmlContent = htmlContent.replace('{timestamp}', Date.now())
             await fs.writeFile(clientHtmlDest, htmlContent)
           })
         },
