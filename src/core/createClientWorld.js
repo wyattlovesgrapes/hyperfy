@@ -7,7 +7,7 @@ import { ClientLoader } from './systems/ClientLoader'
 import { ClientGraphics } from './systems/ClientGraphics'
 import { ClientEnvironment } from './systems/ClientEnvironment'
 import { ClientStats } from './systems/ClientStats'
-import { ClientDrop } from './systems/ClientDrop'
+import { ClientEditor } from './systems/ClientEditor'
 
 export function createClientWorld() {
   const world = new World()
@@ -18,6 +18,6 @@ export function createClientWorld() {
   world.register('graphics', ClientGraphics)
   world.register('environment', ClientEnvironment)
   world.register('stats', ClientStats)
-  world.register('drop', ClientDrop)
+  world.register('editor', ClientEditor)
   return world
 }

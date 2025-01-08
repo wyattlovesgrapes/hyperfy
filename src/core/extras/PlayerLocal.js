@@ -6,6 +6,7 @@ import { clamp } from '../utils'
 import { bindRotations } from './bindRotations'
 import { simpleCamLerp } from './simpleCamLerp'
 import { Emotes, emotes } from './playerEmotes'
+import { ControlPriorities } from './ControlPriorities'
 
 const UP = new THREE.Vector3(0, 1, 0)
 const DOWN = new THREE.Vector3(0, -1, 0)
@@ -94,7 +95,7 @@ export class PlayerLocal {
     // })
     // this.base.add(this.vrm)
 
-    this.base.activate({ world: this.world, physics: true, entity: this })
+    this.base.activate({ world: this.world, physics: true, entity: this.entity })
 
     this.cam = {}
     this.cam.position = new THREE.Vector3().copy(this.base.position)
@@ -186,7 +187,7 @@ export class PlayerLocal {
 
   initControl() {
     this.control = this.world.controls.bind({
-      priority: 0,
+      priority: ControlPriorities.PLAYER,
       onPress: code => {
         if (code === 'MouseRight') {
           this.control.pointer.lock()

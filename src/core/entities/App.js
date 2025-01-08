@@ -5,10 +5,12 @@ import { glbToNodes } from '../extras/glbToNodes'
 import { createNode } from '../extras/createNode'
 import { NetworkedVector3 } from '../extras/NetworkedVector3'
 import { NetworkedQuaternion } from '../extras/NetworkedQuaternion'
+import { ControlPriorities } from '../extras/ControlPriorities'
 
 export class App extends Entity {
   constructor(world, data, local) {
     super(world, data, local)
+    this.isApp = true
     this.build()
   }
 
@@ -22,14 +24,14 @@ export class App extends Entity {
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
     // activate, but if moving dont run physics
-    this.base.activate({ world: this.world, entity: this.entity, physics: !this.data.mover })
+    this.base.activate({ world: this.world, entity: this, physics: !this.data.mover })
     // if moving we need updates
     if (this.data.mover) this.world.setHot(this, true)
     // if we're the mover lets bind controls
     if (this.data.mover === this.world.network.id) {
       this.lastMoveSendTime = 0
       this.control = this.world.controls.bind({
-        priority: 100,
+        priority: ControlPriorities.APP,
         onScroll: () => {
           return true
         },
@@ -77,8 +79,10 @@ export class App extends Entity {
       let hit
       for (const _hit of hits) {
         const entity = _hit.getEntity?.()
-        if (entity?.data.mover === this.world.network.id) continue
+        // ignore self and players
+        if (entity === this || entity?.isPlayer) continue
         hit = _hit
+        break
       }
       if (hit) {
         this.base.position.copy(hit.point)

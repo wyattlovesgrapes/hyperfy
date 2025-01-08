@@ -24,6 +24,7 @@
     "find-cache-dir": "^5.0.0",
     "fs-extra": "^11.2.0",
     "lodash-es": "^4.17.21",
+    "lucide-react": "^0.469.0",
     "msgpackr": "^1.11.0",
     "nanoid": "^5.0.6",
     "postprocessing": "^6.36.4",
@@ -37,5 +38,5 @@
   "engines": {
     "node": "22.11.0"
   },
-  "license": "MIT"
+  "license": "GPL-3.0-only"
 }

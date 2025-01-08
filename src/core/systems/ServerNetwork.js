@@ -65,9 +65,15 @@ export class ServerNetwork extends System {
         true
       )
 
+      // permissions
+      const permissions = {
+        build: true,
+      }
+
       // send snapshot
       socket.send('snapshot', {
         id: socket.id,
+        permissions,
         apps: this.world.apps.serialize(),
         entities: this.world.entities.serialize(),
       })

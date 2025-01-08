@@ -1,20 +1,22 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { css } from '@firebolt-dev/css'
 
 import { loadPhysX } from './loadPhysX'
 import { createClientWorld } from '../core/createClientWorld'
+import { ContextMenu } from './components/ContextMenu'
 
 function App() {
   const viewportRef = useRef()
   const uiRef = useRef()
   const world = useMemo(() => createClientWorld(), [])
+  const [context, setContext] = useState(null)
   useEffect(() => {
     const viewport = viewportRef.current
     const ui = uiRef.current
     const wsUrl = process.env.PUBLIC_WS_URL
     const apiUrl = process.env.PUBLIC_API_URL
-    world.init({ viewport, ui, wsUrl, apiUrl, loadPhysX })
+    world.init({ viewport, ui, wsUrl, apiUrl, loadPhysX, onContext: setContext })
   }, [])
   return (
     <div
@@ -34,11 +36,14 @@ function App() {
           position: absolute;
           inset: 0;
           pointer-events: none;
+          user-select: none;
         }
       `}
     >
       <div className='App__viewport' ref={viewportRef} />
-      <div className='App__ui' ref={uiRef} />
+      <div className='App__ui' ref={uiRef}>
+        {context && <ContextMenu key={context.id} {...context} />}
+      </div>
     </div>
   )
 }

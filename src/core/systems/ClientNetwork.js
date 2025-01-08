@@ -11,10 +11,11 @@ import { System } from './System'
 export class ClientNetwork extends System {
   constructor(world) {
     super(world)
-    this.id = null
     this.ids = -1
     this.ws = null
     this.apiUrl = null
+    this.id = null
+    this.permissions = null
   }
 
   makeId() {
@@ -53,6 +54,7 @@ export class ClientNetwork extends System {
 
   onSnapshot(data) {
     this.id = data.id
+    this.permissions = data.permissions
     this.world.apps.deserialize(data.apps)
     this.world.entities.deserialize(data.entities)
   }

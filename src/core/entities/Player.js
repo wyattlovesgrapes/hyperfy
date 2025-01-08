@@ -6,6 +6,7 @@ import { Entity } from './Entity'
 export class Player extends Entity {
   constructor(world, data, local) {
     super(world, data, local)
+    this.isPlayer = true
     if (data.owner === this.world.network.id) {
       this.player = new PlayerLocal(this)
     } else {
