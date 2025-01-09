@@ -53,7 +53,9 @@ export class App extends Entity {
     }
     // otherwise we can load our glb
     else {
-      const glb = await this.world.loader.load('glb', this.config.model)
+      let glb = this.world.loader.get('glb', this.config.model)
+      console.log('glb', glb)
+      if (!glb) glb = await this.world.loader.load('glb', this.config.model)
       this.base.add(glb.toNodes())
     }
   }

@@ -21,7 +21,8 @@ export class ServerLoader extends System {
   constructor(world) {
     super(world)
     this.assetsDir = path.join(__dirname, '../', process.env.ASSETS_DIR)
-    this.cache = new Map()
+    this.promises = new Map()
+    this.results = new Map()
     this.rgbeLoader = new RGBELoader()
     this.gltfLoader = new GLTFLoader()
     this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
@@ -40,13 +41,18 @@ export class ServerLoader extends System {
 
   has(type, url) {
     const key = `${type}/${url}`
-    return this.cache.has(key)
+    return this.promises.has(key)
+  }
+
+  get(type, url) {
+    const key = `${type}/${url}`
+    return this.results.get(key)
   }
 
   load(type, url) {
     const key = `${type}/${url}`
-    if (this.cache.has(key)) {
-      return this.cache.get(key)
+    if (this.promises.has(key)) {
+      return this.promises.get(key)
     }
     url = this.resolveURL(url)
     let promise
@@ -67,6 +73,7 @@ export class ServerLoader extends System {
             }
             return node.clone(true)
           }
+          this.results.set(key, glb)
           resolve(glb)
         })
       })
@@ -83,6 +90,7 @@ export class ServerLoader extends System {
               factory,
             })
           }
+          this.results.set(key, glb)
           resolve(glb)
         })
       })
@@ -94,11 +102,12 @@ export class ServerLoader extends System {
         this.gltfLoader.parse(arrayBuffer, '', glb => {
           const factory = createEmoteFactory(glb, url)
           glb.toClip = factory.toClip
+          this.results.set(key, glb)
           resolve(glb)
         })
       })
     }
-    this.cache.set(key, promise)
+    this.promises.set(key, promise)
     return promise
   }
 

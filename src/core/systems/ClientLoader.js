@@ -18,7 +18,8 @@ import { createEmoteFactory } from '../extras/createEmoteFactory'
 export class ClientLoader extends System {
   constructor(world) {
     super(world)
-    this.cache = new Map()
+    this.promises = new Map()
+    this.results = new Map()
     this.rgbeLoader = new RGBELoader()
     this.gltfLoader = new GLTFLoader()
     this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
@@ -30,18 +31,24 @@ export class ClientLoader extends System {
 
   has(type, url) {
     const key = `${type}/${url}`
-    return this.cache.has(key)
+    return this.promises.has(key)
+  }
+
+  get(type, url) {
+    const key = `${type}/${url}`
+    return this.results.get(key)
   }
 
   load(type, url) {
     const key = `${type}/${url}`
-    if (this.cache.has(key)) {
-      return this.cache.get(key)
+    if (this.promises.has(key)) {
+      return this.promises.get(key)
     }
     url = this.resolveURL(url)
     let promise
     if (type === 'hdr') {
       promise = this.rgbeLoader.loadAsync(url).then(texture => {
+        this.results.set(key, texture)
         return texture
       })
     }
@@ -54,6 +61,7 @@ export class ClientLoader extends System {
           }
           return node.clone(true)
         }
+        this.results.set(key, glb)
         return glb
       })
     }
@@ -66,6 +74,7 @@ export class ClientLoader extends System {
             factory,
           })
         }
+        this.results.set(key, glb)
         return glb
       })
     }
@@ -73,10 +82,11 @@ export class ClientLoader extends System {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
         const factory = createEmoteFactory(glb, url)
         glb.toClip = factory.toClip
+        this.results.set(key, glb)
         return glb
       })
     }
-    this.cache.set(key, promise)
+    this.promises.set(key, promise)
     return promise
   }
 
@@ -93,10 +103,11 @@ export class ClientLoader extends System {
           }
           return node.clone(true)
         }
+        this.results.set(key, glb)
         return glb
       })
     }
-    this.cache.set(key, promise)
+    this.promises.set(key, promise)
   }
 
   resolveURL(url) {
