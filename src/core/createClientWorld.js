@@ -17,7 +17,7 @@ export function createClientWorld() {
   world.register('loader', ClientLoader)
   world.register('graphics', ClientGraphics)
   world.register('environment', ClientEnvironment)
-  world.register('stats', ClientStats)
+  // world.register('stats', ClientStats)
   world.register('editor', ClientEditor)
   return world
 }
