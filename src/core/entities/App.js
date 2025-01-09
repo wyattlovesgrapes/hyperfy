@@ -75,22 +75,28 @@ export class App extends Entity {
   update(delta) {
     // if we're moving the app, handle that
     if (this.data.mover === this.world.network.id) {
-      // move with the cursor
-      const position = this.world.controls.pointer.position
-      const hits = this.world.stage.raycastPointer(position)
-      let hit
-      for (const _hit of hits) {
-        const entity = _hit.getEntity?.()
-        // ignore self and players
-        if (entity === this || entity?.isPlayer) continue
-        hit = _hit
-        break
+      if (this.control.buttons.ShiftLeft) {
+        // if shift is down we're raising and lowering the app
+        this.base.position.y -= this.world.controls.scroll.delta * delta * 0.5
+      } else {
+        // otherwise move with the cursor
+        const position = this.world.controls.pointer.position
+        const hits = this.world.stage.raycastPointer(position)
+        let hit
+        for (const _hit of hits) {
+          const entity = _hit.getEntity?.()
+          // ignore self and players
+          if (entity === this || entity?.isPlayer) continue
+          hit = _hit
+          break
+        }
+        if (hit) {
+          this.base.position.copy(hit.point)
+        }
+        // and rotate with the mouse wheel
+        this.base.rotation.y += this.control.scroll.delta * 0.1 * delta
       }
-      if (hit) {
-        this.base.position.copy(hit.point)
-      }
-      // rotate with the mouse wheel
-      this.base.rotation.y += this.control.scroll.delta * 0.1 * delta
+
       // periodically send updates
       this.lastMoveSendTime += delta
       if (this.lastMoveSendTime > this.world.networkRate) {
