@@ -54,7 +54,6 @@ export class App extends Entity {
     // otherwise we can load our glb
     else {
       let glb = this.world.loader.get('glb', this.config.model)
-      console.log('glb', glb)
       if (!glb) glb = await this.world.loader.load('glb', this.config.model)
       this.base.add(glb.toNodes())
     }
@@ -77,7 +76,7 @@ export class App extends Entity {
     if (this.data.mover === this.world.network.id) {
       if (this.control.buttons.ShiftLeft) {
         // if shift is down we're raising and lowering the app
-        this.base.position.y -= this.world.controls.scroll.delta * delta * 0.5
+        this.base.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
       } else {
         // otherwise move with the cursor
         const position = this.world.controls.pointer.position
