@@ -34,7 +34,7 @@ export class PlayerRemote {
     this.vrm?.vrm.setEmote(emotes[this.emote])
   }
 
-  onChange(data) {
+  modify(data) {
     if (data.hasOwnProperty('p')) {
       this.position.pushArray(data.p)
     }

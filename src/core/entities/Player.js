@@ -14,8 +14,8 @@ export class Player extends Entity {
     }
   }
 
-  onChange(data) {
-    this.player.onChange(data)
+  modify(data) {
+    this.player.modify(data)
   }
 
   destroy(local) {

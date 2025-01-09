@@ -108,6 +108,7 @@ export class ClientEditor extends System {
         disabled: false,
         onClick: () => {
           this.setContext(null)
+          entity.move()
         },
       })
       context.actions.push({

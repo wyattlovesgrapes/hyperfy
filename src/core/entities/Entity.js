@@ -9,8 +9,9 @@ export class Entity {
     }
   }
 
-  onChange(data) {
+  modify(data) {
     // called when remote receives entity changes
+    // or applying local changes
   }
 
   serialize() {

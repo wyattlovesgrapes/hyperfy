@@ -38,10 +38,10 @@ export class App extends Entity {
       })
     }
     // if remote is moving, set up to receive network updates
-    if (this.data.mover && this.data.mover !== this.world.network.id) {
-      this.networkPosition = new NetworkedVector3(this.base.position, this.world.networkRate)
-      this.networkQuaternion = new NetworkedQuaternion(this.base.quaternion, this.world.networkRate)
-    }
+    this.networkPosition = new NetworkedVector3(this.base.position, this.world.networkRate)
+    this.networkQuaternion = new NetworkedQuaternion(this.base.quaternion, this.world.networkRate)
+    // if (this.data.mover && this.data.mover !== this.world.network.id) {
+    // }
     // if remote is uploading, display a loading indicator
     if (this.data.uploader && this.data.uploader !== this.world.network.id) {
       const box = createNode({ name: 'mesh' })
@@ -99,7 +99,7 @@ export class App extends Entity {
       // periodically send updates
       this.lastMoveSendTime += delta
       if (this.lastMoveSendTime > this.world.networkRate) {
-        this.world.network.send('entityChanged', {
+        this.world.network.send('entityModified', {
           id: this.data.id,
           position: this.base.position.toArray(),
           quaternion: this.base.quaternion.toArray(),
@@ -111,7 +111,7 @@ export class App extends Entity {
         this.data.mover = null
         this.data.position = this.base.position.toArray()
         this.data.quaternion = this.base.quaternion.toArray()
-        this.world.network.send('entityChanged', {
+        this.world.network.send('entityModified', {
           id: this.data.id,
           mover: null,
           position: this.data.position,
@@ -129,11 +129,10 @@ export class App extends Entity {
 
   onUploaded() {
     this.data.uploader = null
-    this.world.network.send('entityChanged', { id: this.data.id, uploader: null })
+    this.world.network.send('entityModified', { id: this.data.id, uploader: null })
   }
 
-  onChange(data) {
-    // TODO: server can reject for reasons
+  modify(data) {
     let rebuild
     if (data.hasOwnProperty('uploader')) {
       this.data.uploader = data.uploader
@@ -154,6 +153,12 @@ export class App extends Entity {
     if (rebuild) {
       this.build()
     }
+  }
+
+  move() {
+    this.data.mover = this.world.network.id
+    this.build()
+    this.world.network.send('entityModified', { id: this.data.id, mover: this.data.mover })
   }
 
   destroy(local) {

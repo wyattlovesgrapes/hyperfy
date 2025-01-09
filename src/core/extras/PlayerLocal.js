@@ -495,7 +495,7 @@ export class PlayerLocal {
     // send network updates
     this.lastSendAt += delta
     if (this.lastSendAt >= this.world.networkRate) {
-      this.world.network.send('entityChanged', {
+      this.world.network.send('entityModified', {
         id: this.data.id,
         p: this.base.position.toArray(),
         q: this.base.quaternion.toArray(),
@@ -510,7 +510,7 @@ export class PlayerLocal {
     simpleCamLerp(this.world, this.control.camera, this.cam, delta)
   }
 
-  onChange(data) {
-    console.log('local player onChange wtf', data)
+  modify(data) {
+    console.warn('local player modify :/', data)
   }
 }

@@ -7,7 +7,7 @@ const names = [
   'snapshot',
   'appAdded',
   'entityAdded',
-  'entityChanged',
+  'entityModified',
   'entityRemoved',
 ]
 

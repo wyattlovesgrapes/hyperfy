@@ -67,9 +67,9 @@ export class ClientNetwork extends System {
     this.world.entities.add(data)
   }
 
-  onEntityChanged = data => {
+  onEntityModified = data => {
     const entity = this.world.entities.get(data.id)
-    entity.onChange(data)
+    entity.modify(data)
   }
 
   onEntityRemoved = id => {

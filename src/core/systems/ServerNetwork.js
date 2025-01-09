@@ -95,10 +95,10 @@ export class ServerNetwork extends System {
     this.send('entityAdded', data, socket)
   }
 
-  onEntityChanged = (socket, data) => {
+  onEntityModified = (socket, data) => {
     const entity = this.world.entities.get(data.id)
-    entity.onChange(data)
-    this.send('entityChanged', data, socket)
+    entity.modify(data)
+    this.send('entityModified', data, socket)
   }
 
   onEntityRemoved = (socket, id) => {
