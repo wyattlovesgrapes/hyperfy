@@ -118,6 +118,16 @@ export class ClientEditor extends System {
         disabled: false,
         onClick: () => {
           this.setContext(null)
+          const data = {
+            id: this.world.network.makeId(),
+            type: 'app',
+            app: entity.data.app,
+            position: entity.data.position,
+            quaternion: entity.data.quaternion,
+            mover: this.world.network.id,
+            uploader: null,
+          }
+          this.world.entities.add(data, true)
         },
       })
       context.actions.push({
