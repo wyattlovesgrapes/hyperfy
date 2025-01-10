@@ -134,6 +134,10 @@ export class App extends Entity {
 
   modify(data) {
     let rebuild
+    if (data.hasOwnProperty('app')) {
+      this.data.app = data.app
+      rebuild = true
+    }
     if (data.hasOwnProperty('uploader')) {
       this.data.uploader = data.uploader
       rebuild = true

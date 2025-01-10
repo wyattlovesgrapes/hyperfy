@@ -6,6 +6,7 @@ import { hashFile } from '../utils-client'
 import { muid, uuid } from '../utils'
 import { ControlPriorities } from '../extras/ControlPriorities'
 import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
+import { cloneDeep } from 'lodash-es'
 
 contextBreakers = ['MouseLeft', 'Escape']
 
@@ -137,6 +138,16 @@ export class ClientEditor extends System {
         disabled: false,
         onClick: () => {
           this.setContext(null)
+          // duplicate the app config
+          const config = {
+            id: uuid(),
+            model: entity.config.model,
+            script: entity.config.script,
+            values: cloneDeep(entity.config.values),
+          }
+          this.world.apps.add(config, true)
+          // assign new app config
+          entity.modify({ app: config.id })
         },
       })
       context.actions.push({
