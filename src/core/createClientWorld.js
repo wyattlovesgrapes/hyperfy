@@ -8,6 +8,7 @@ import { ClientGraphics } from './systems/ClientGraphics'
 import { ClientEnvironment } from './systems/ClientEnvironment'
 import { ClientStats } from './systems/ClientStats'
 import { ClientEditor } from './systems/ClientEditor'
+import { Chat } from './systems/Chat'
 
 export function createClientWorld() {
   const world = new World()

@@ -511,6 +511,8 @@ export class PlayerLocal {
   }
 
   modify(data) {
-    console.warn('local player modify :/', data)
+    if (data.hasOwnProperty('user')) {
+      this.data.user = data.user
+    }
   }
 }

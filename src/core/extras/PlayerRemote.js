@@ -36,13 +36,19 @@ export class PlayerRemote {
 
   modify(data) {
     if (data.hasOwnProperty('p')) {
+      this.data.position = data.p
       this.position.pushArray(data.p)
     }
     if (data.hasOwnProperty('q')) {
+      this.data.quaternion = data.q
       this.quaternion.pushArray(data.q)
     }
     if (data.hasOwnProperty('e')) {
+      this.data.emote = data.e
       this.emote = data.e
+    }
+    if (data.hasOwnProperty('user')) {
+      this.data.user = data.user
     }
   }
 

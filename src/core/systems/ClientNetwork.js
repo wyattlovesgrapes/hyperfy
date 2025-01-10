@@ -15,7 +15,6 @@ export class ClientNetwork extends System {
     this.ws = null
     this.apiUrl = null
     this.id = null
-    this.permissions = null
   }
 
   makeId() {
@@ -23,8 +22,9 @@ export class ClientNetwork extends System {
   }
 
   init({ wsUrl, apiUrl }) {
+    const authToken = this.world.client.storage.get('authToken')
     this.apiUrl = apiUrl
-    this.ws = new WebSocket(wsUrl)
+    this.ws = new WebSocket(`${wsUrl}?authToken=${authToken}`)
     this.ws.binaryType = 'arraybuffer'
     this.ws.addEventListener('message', this.onPacket)
     this.ws.addEventListener('close', this.onClose)
@@ -54,9 +54,14 @@ export class ClientNetwork extends System {
 
   onSnapshot(data) {
     this.id = data.id
-    this.permissions = data.permissions
+    this.world.chat.deserialize(data.chat)
     this.world.apps.deserialize(data.apps)
     this.world.entities.deserialize(data.entities)
+    this.world.client.storage.set('authToken', data.authToken)
+  }
+
+  onChatAdded = msg => {
+    this.world.chat.add(msg, false)
   }
 
   onAppAdded = config => {

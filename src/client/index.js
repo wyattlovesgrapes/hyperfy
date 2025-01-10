@@ -5,6 +5,7 @@ import { css } from '@firebolt-dev/css'
 import { loadPhysX } from './loadPhysX'
 import { createClientWorld } from '../core/createClientWorld'
 import { ContextMenu } from './components/ContextMenu'
+import { ChatBox } from './components/ChatBox'
 
 function App() {
   const viewportRef = useRef()
@@ -43,6 +44,7 @@ function App() {
       <div className='App__viewport' ref={viewportRef} />
       <div className='App__ui' ref={uiRef}>
         {context && <ContextMenu key={context.id} {...context} />}
+        <ChatBox world={world} />
       </div>
     </div>
   )

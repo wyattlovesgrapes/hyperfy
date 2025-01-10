@@ -30,6 +30,9 @@ export class Entities extends System {
     const Entity = Types[data.type]
     const entity = new Entity(this.world, data, local)
     this.entities.set(entity.data.id, entity)
+    if (data.owner === this.world.network.id) {
+      this.player = entity
+    }
     return entity
   }
 

@@ -3,7 +3,7 @@ import * as THREE from '../extras/three'
 import { System } from './System'
 
 import { hashFile } from '../utils-client'
-import { muid, uuid } from '../utils'
+import { hasRole, muid, uuid } from '../utils'
 import { ControlPriorities } from '../extras/ControlPriorities'
 import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
 import { cloneDeep } from 'lodash-es'
@@ -93,6 +93,9 @@ export class ClientEditor extends System {
       })
     }
     if (entity.isApp) {
+      const roles = this.world.entities.player.data.user.roles
+      const isAdmin = hasRole(roles, 'admin')
+      const isBuilder = hasRole(roles, 'builder')
       context.actions.push({
         label: 'Inspect',
         icon: EyeIcon,
@@ -105,7 +108,7 @@ export class ClientEditor extends System {
       context.actions.push({
         label: 'Move',
         icon: HandIcon,
-        visible: this.world.network.permissions.build,
+        visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
           this.setContext(null)
@@ -115,7 +118,7 @@ export class ClientEditor extends System {
       context.actions.push({
         label: 'Duplicate',
         icon: CopyIcon,
-        visible: this.world.network.permissions.build,
+        visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
           this.setContext(null)
@@ -134,7 +137,7 @@ export class ClientEditor extends System {
       context.actions.push({
         label: 'Unlink',
         icon: UnlinkIcon,
-        visible: this.world.network.permissions.build,
+        visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
           this.setContext(null)
@@ -153,7 +156,7 @@ export class ClientEditor extends System {
       context.actions.push({
         label: 'Destroy',
         icon: Trash2Icon,
-        visible: this.world.network.permissions.build,
+        visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
           this.setContext(null)
@@ -188,6 +191,11 @@ export class ClientEditor extends System {
   onDrop = e => {
     e.preventDefault()
     this.dropping = false
+    // ensure we have admin/builder role
+    const roles = this.world.entities.player.data.user.roles
+    const canDrop = hasRole(roles, 'admin', 'builder')
+    if (!canDrop) return
+    // handle drop
     let file
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
       const item = e.dataTransfer.items[0]

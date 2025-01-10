@@ -14,6 +14,7 @@ import { loadPhysX } from './physx/loadPhysX'
 
 import { createServerWorld } from '../core/createServerWorld'
 import { hashFile } from '../core/utils-server'
+import { getDB } from './db'
 
 const rootDir = path.join(__dirname, '../')
 const worldDir = path.join(rootDir, 'world')
@@ -26,8 +27,10 @@ await fs.ensureDir(assetsDir)
 // copy core assets
 await fs.copy(path.join(rootDir, 'src/core/assets'), path.join(assetsDir))
 
+const db = await getDB(path.join(worldDir, '/db.sqlite'))
+
 const world = createServerWorld()
-world.init({ loadPhysX })
+world.init({ db, loadPhysX })
 
 const fastify = Fastify({ logger: { level: 'error' } })
 
@@ -95,8 +98,8 @@ try {
 }
 
 async function worldNetwork(fastify) {
-  fastify.get('/ws', { websocket: true }, ws => {
-    world.network.onConnection(ws)
+  fastify.get('/ws', { websocket: true }, (ws, req) => {
+    world.network.onConnection(ws, req.query.authToken)
   })
 }
 

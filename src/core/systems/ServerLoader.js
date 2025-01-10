@@ -20,7 +20,7 @@ import { createEmoteFactory } from '../extras/createEmoteFactory'
 export class ServerLoader extends System {
   constructor(world) {
     super(world)
-    this.assetsDir = path.join(__dirname, '../', process.env.ASSETS_DIR)
+    this.assetsDir = path.join(__dirname, '../world/assets')
     this.promises = new Map()
     this.results = new Map()
     this.rgbeLoader = new RGBELoader()

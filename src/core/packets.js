@@ -5,6 +5,7 @@ const packr = new Packr({ structuredClone: true })
 // prettier-ignore
 const names = [
   'snapshot',
+  'chatAdded',
   'appAdded',
   'entityAdded',
   'entityModified',

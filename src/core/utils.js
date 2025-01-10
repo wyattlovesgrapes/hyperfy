@@ -1,3 +1,4 @@
+import { some } from 'lodash-es'
 import { customAlphabet } from 'nanoid'
 
 /**
@@ -23,4 +24,22 @@ export const muid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGH
 
 export function clamp(n, low, high) {
   return Math.max(Math.min(n, high), low)
+}
+
+export function hasRole(arr, ...roles) {
+  // also includes temporary roles (prefixed with `~`)
+  return some(roles, role => arr.includes(role) || arr.includes(`~${role}`))
+}
+
+export function addRole(arr, role) {
+  if (!hasRole(arr, role)) {
+    arr.push(role)
+  }
+}
+
+export function serializeRoles(roles) {
+  // remove temporary (~) roles
+  roles = roles.filter(role => !role.startsWith('~'))
+  // convert to string
+  return roles.join(',')
 }
