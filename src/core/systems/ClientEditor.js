@@ -119,7 +119,7 @@ export class ClientEditor extends System {
         label: 'Duplicate',
         icon: CopyIcon,
         visible: isAdmin || isBuilder,
-        disabled: false,
+        disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
           this.setContext(null)
           const data = {
@@ -138,7 +138,7 @@ export class ClientEditor extends System {
         label: 'Unlink',
         icon: UnlinkIcon,
         visible: isAdmin || isBuilder,
-        disabled: false,
+        disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
           this.setContext(null)
           // duplicate the app config
