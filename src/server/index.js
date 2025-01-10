@@ -87,7 +87,7 @@ fastify.setErrorHandler((err, req, reply) => {
 })
 
 try {
-  await fastify.listen({ port })
+  await fastify.listen({ port, host: "0.0.0.0" })
 } catch (err) {
   console.error(err)
   console.error(`failed to launch on port ${port}`)
