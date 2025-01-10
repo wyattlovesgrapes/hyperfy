@@ -147,6 +147,25 @@ export class ServerNetwork extends System {
           .where('id', user.id)
           .update({ roles: serializeRoles(user.roles) })
       }
+      if (cmd === 'name') {
+        const name = arg1
+        const player = socket.player
+        const id = player.data.id
+        const user = player.data.user
+        player.data.user.name = name
+        player.modify({ user })
+        this.send('entityModified', { id, user })
+        socket.send('chatAdded', {
+          id: uuid(),
+          from: null,
+          fromId: null,
+          body: `Name set to ${name}!`,
+          createdAt: moment().toISOString(),
+        })
+        await this.db('users')
+          .where('id', user.id)
+          .update({ name })
+      }
       return
     }
     // handle chat messages
