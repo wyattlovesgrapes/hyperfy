@@ -40,7 +40,7 @@ npm install
 npm run dev
 ```
 
-### 🌱 Alpha
+## 🌱 Alpha
 
 This project is still in alpha as we transition all of our [reference platform](https://github.com/hyperfy-xyz/hyperfy-ref) code into fully self hostable worlds.
 Most features are already here in this repo but still need to be connected up to work with self hosting in mind.
