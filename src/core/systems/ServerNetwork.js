@@ -5,6 +5,9 @@ import { addRole, hasRole, serializeRoles, uuid } from '../utils'
 import { System } from './System'
 import { createJWT, readJWT } from '../utils-server'
 
+const SAVE_RATE = 60 // seconds
+const PING_RATE = 1 // seconds
+
 /**
  * Server Network System
  *
@@ -18,15 +21,31 @@ export class ServerNetwork extends System {
     this.id = 0
     this.ids = -1
     this.sockets = new Map()
-    this.checkInterval = setInterval(() => this.checkSockets(), 1000)
+    this.socketIntervalId = setInterval(() => this.checkSockets(), PING_RATE * 1000)
+    this.saveTimerId = null
+    this.dirtyBlueprints = new Set()
+    this.dirtyApps = new Set()
   }
 
   init({ db }) {
     this.db = db
   }
 
-  makeId() {
-    return `${this.id}_${++this.ids}`
+  async start() {
+    // hydrate blueprints
+    const blueprints = await this.db('blueprints')
+    for (const blueprint of blueprints) {
+      const data = JSON.parse(blueprint.data)
+      this.world.blueprints.add(data, true)
+    }
+    // hydrate entities
+    const entities = await this.db('entities')
+    for (const entity of entities) {
+      const data = JSON.parse(entity.data)
+      this.world.entities.add(data, true)
+    }
+    // queue first save
+    this.saveTimerId = setTimeout(this.save, SAVE_RATE * 1000)
   }
 
   send(name, data, ignoreSocket) {
@@ -49,6 +68,70 @@ export class ServerNetwork extends System {
       }
     })
     dead.forEach(socket => socket.disconnect())
+  }
+
+  save = async () => {
+    const counts = {
+      upsertedBlueprints: 0,
+      upsertedApps: 0,
+      deletedApps: 0,
+    }
+    const now = moment().toISOString()
+    // blueprints
+    for (const id of this.dirtyBlueprints) {
+      const blueprint = this.world.blueprints.get(id)
+      try {
+        const record = {
+          id: blueprint.id,
+          data: JSON.stringify(blueprint),
+        }
+        await this.db('blueprints')
+          .insert({ ...record, createdAt: now, updatedAt: now })
+          .onConflict('id')
+          .merge({ ...record, updatedAt: now })
+        counts.upsertedBlueprints++
+        this.dirtyBlueprints.delete(id)
+      } catch (err) {
+        console.log(`error saving blueprint: ${blueprint.id}`)
+        console.error(err)
+      }
+    }
+    // app entities
+    for (const id of this.dirtyApps) {
+      const entity = this.world.entities.get(id)
+      if (entity) {
+        // it needs creating/updating
+        if (entity.data.uploader || entity.data.mover) {
+          continue // ignore while uploading or moving
+        }
+        try {
+          const record = {
+            id: entity.data.id,
+            data: JSON.stringify(entity.data),
+          }
+          await this.db('entities')
+            .insert({ ...record, createdAt: now, updatedAt: now })
+            .onConflict('id')
+            .merge({ ...record, updatedAt: now })
+          counts.upsertedApps++
+          this.dirtyApps.delete(id)
+        } catch (err) {
+          console.log(`error saving entity: ${entity.data.id}`)
+          console.error(err)
+        }
+      } else {
+        // it was removed
+        await this.db('entities').where('id', id).delete()
+        counts.deletedApps++
+        this.dirtyApps.delete(id)
+      }
+    }
+    // log
+    console.log(
+      `save complete [blueprints:${counts.upsertedBlueprints} apps:${counts.upsertedApps} apps-removed:${counts.deletedApps}]`
+    )
+    // queue again
+    this.saveTimerId = setTimeout(this.save, SAVE_RATE * 1000)
   }
 
   async onConnection(ws, authToken) {
@@ -87,7 +170,7 @@ export class ServerNetwork extends System {
       // spawn player
       socket.player = this.world.entities.add(
         {
-          id: this.makeId(),
+          id: uuid(),
           type: 'player',
           position: [0, 0, 0],
           quaternion: [0, 0, 0, 1],
@@ -101,7 +184,7 @@ export class ServerNetwork extends System {
       socket.send('snapshot', {
         id: socket.id,
         chat: this.world.chat.serialize(),
-        apps: this.world.apps.serialize(),
+        blueprints: this.world.blueprints.serialize(),
         entities: this.world.entities.serialize(),
         authToken,
       })
@@ -162,9 +245,7 @@ export class ServerNetwork extends System {
           body: `Name set to ${name}!`,
           createdAt: moment().toISOString(),
         })
-        await this.db('users')
-          .where('id', user.id)
-          .update({ name })
+        await this.db('users').where('id', user.id).update({ name })
       }
       return
     }
@@ -173,31 +254,36 @@ export class ServerNetwork extends System {
     this.send('chatAdded', msg, socket)
   }
 
-  onAppAdded = (socket, config) => {
-    this.world.apps.add(config)
-    this.send('appAdded', config, socket)
+  onBlueprintAdded = (socket, blueprint) => {
+    this.world.blueprints.add(blueprint)
+    this.send('blueprintAdded', blueprint, socket)
+    this.dirtyBlueprints.add(blueprint.id)
   }
 
   onEntityAdded = (socket, data) => {
     // TODO: check client permission
-    this.world.entities.add(data)
+    const entity = this.world.entities.add(data)
     this.send('entityAdded', data, socket)
+    if (entity.isApp) this.dirtyApps.add(entity.data.id)
   }
 
   onEntityModified = (socket, data) => {
+    // TODO: check client permission
     const entity = this.world.entities.get(data.id)
     entity.modify(data)
     this.send('entityModified', data, socket)
+    if (entity.isApp) this.dirtyApps.add(entity.data.id)
   }
 
   onEntityRemoved = (socket, id) => {
     // TODO: check client permission
+    const entity = this.world.entities.get(id)
     this.world.entities.remove(id)
     this.send('entityRemoved', id, socket)
+    if (entity.isApp) this.dirtyApps.add(id)
   }
 
   onDisconnect = (socket, code) => {
-    console.log('disconect')
     socket.player.destroy(true)
     this.sockets.delete(socket.id)
   }

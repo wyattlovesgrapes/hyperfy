@@ -52,4 +52,18 @@ const migrations = [
       table.timestamp('createdAt').notNullable()
     })
   },
+  async db => {
+    await db.schema.createTable('blueprints', table => {
+      table.string('id').primary()
+      table.text('data').notNullable()
+      table.timestamp('createdAt').notNullable()
+      table.timestamp('updatedAt').notNullable()
+    })
+    await db.schema.createTable('entities', table => {
+      table.string('id').primary()
+      table.text('data').notNullable()
+      table.timestamp('createdAt').notNullable()
+      table.timestamp('updatedAt').notNullable()
+    })
+  },
 ]

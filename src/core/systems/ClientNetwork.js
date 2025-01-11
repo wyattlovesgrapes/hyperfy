@@ -17,10 +17,6 @@ export class ClientNetwork extends System {
     this.id = null
   }
 
-  makeId() {
-    return `${this.id}_${++this.ids}`
-  }
-
   init({ wsUrl, apiUrl }) {
     const authToken = this.world.client.storage.get('authToken')
     this.apiUrl = apiUrl
@@ -55,7 +51,7 @@ export class ClientNetwork extends System {
   onSnapshot(data) {
     this.id = data.id
     this.world.chat.deserialize(data.chat)
-    this.world.apps.deserialize(data.apps)
+    this.world.blueprints.deserialize(data.blueprints)
     this.world.entities.deserialize(data.entities)
     this.world.client.storage.set('authToken', data.authToken)
   }
@@ -64,8 +60,8 @@ export class ClientNetwork extends System {
     this.world.chat.add(msg, false)
   }
 
-  onAppAdded = config => {
-    this.world.apps.add(config)
+  onBlueprintAdded = blueprint => {
+    this.world.blueprints.add(blueprint)
   }
 
   onEntityAdded = data => {

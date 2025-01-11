@@ -2,7 +2,7 @@ import * as THREE from './extras/three'
 import EventEmitter from 'eventemitter3'
 
 import { Chat } from './systems/Chat'
-import { Apps } from './systems/Apps'
+import { Blueprints } from './systems/Blueprints'
 import { Entities } from './systems/Entities'
 import { Physics } from './systems/Physics'
 import { Stage } from './systems/Stage'
@@ -25,7 +25,7 @@ export class World extends EventEmitter {
     this.rig.add(this.camera)
 
     this.register('chat', Chat)
-    this.register('apps', Apps)
+    this.register('blueprints', Blueprints)
     this.register('entities', Entities)
     this.register('physics', Physics)
     this.register('stage', Stage)

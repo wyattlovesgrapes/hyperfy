@@ -6,7 +6,7 @@ const packr = new Packr({ structuredClone: true })
 const names = [
   'snapshot',
   'chatAdded',
-  'appAdded',
+  'blueprintAdded',
   'entityAdded',
   'entityModified',
   'entityRemoved',

@@ -17,8 +17,8 @@ export class App extends Entity {
   async build() {
     // cleanup any previous build
     this.unbuild()
-    // fetch app config
-    this.config = this.world.apps.get(this.data.app)
+    // fetch blueprint
+    this.blueprint = this.world.blueprints.get(this.data.blueprint)
     // set up our base
     this.base = createNode({ name: 'group' })
     this.base.position.fromArray(this.data.position)
@@ -55,11 +55,11 @@ export class App extends Entity {
     else {
       let glb
       try {
-        glb = this.world.loader.get('glb', this.config.model)
-        if (!glb) glb = await this.world.loader.load('glb', this.config.model)
+        glb = this.world.loader.get('glb', this.blueprint.model)
+        if (!glb) glb = await this.world.loader.load('glb', this.blueprint.model)
       } catch (err) {
         console.error(err)
-        glb = this.world.loader.get('glb', this.config.model)
+        glb = this.world.loader.get('glb', this.blueprint.model)
         if (!glb) glb = await this.world.loader.load('glb', 'asset://crash-block.glb')
       }
       this.base.add(glb.toNodes())
@@ -141,8 +141,8 @@ export class App extends Entity {
 
   modify(data) {
     let rebuild
-    if (data.hasOwnProperty('app')) {
-      this.data.app = data.app
+    if (data.hasOwnProperty('blueprint')) {
+      this.data.blueprint = data.blueprint
       rebuild = true
     }
     if (data.hasOwnProperty('uploader')) {

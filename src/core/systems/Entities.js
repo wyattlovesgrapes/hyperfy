@@ -18,18 +18,19 @@ const Types = {
 export class Entities extends System {
   constructor(world) {
     super(world)
-    this.entities = new Map()
+    this.items = new Map()
     this.hot = new Set()
+    this.removed = []
   }
 
   get(id) {
-    return this.entities.get(id)
+    return this.items.get(id)
   }
 
   add(data, local) {
     const Entity = Types[data.type]
     const entity = new Entity(this.world, data, local)
-    this.entities.set(entity.data.id, entity)
+    this.items.set(entity.data.id, entity)
     if (data.owner === this.world.network.id) {
       this.player = entity
     }
@@ -37,10 +38,11 @@ export class Entities extends System {
   }
 
   remove(id) {
-    const entity = this.entities.get(id)
+    const entity = this.items.get(id)
     if (!entity) console.warn(`tried to remove entity that did not exist: ${id}`)
     entity.destroy()
-    this.entities.delete(id)
+    this.items.delete(id)
+    this.removed.push(id)
   }
 
   setHot(entity, hot) {
@@ -71,7 +73,7 @@ export class Entities extends System {
 
   serialize() {
     const data = []
-    this.entities.forEach(entity => {
+    this.items.forEach(entity => {
       data.push(entity.serialize())
     })
     return data

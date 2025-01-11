@@ -3,7 +3,7 @@ import * as THREE from '../extras/three'
 import { System } from './System'
 
 import { hashFile } from '../utils-client'
-import { hasRole, muid, uuid } from '../utils'
+import { hasRole, uuid } from '../utils'
 import { ControlPriorities } from '../extras/ControlPriorities'
 import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
 import { cloneDeep } from 'lodash-es'
@@ -76,7 +76,7 @@ export class ClientEditor extends System {
     }
     if (!entity) return
     const context = {
-      id: muid(),
+      id: uuid(),
       x: this.world.controls.pointer.position.x,
       y: this.world.controls.pointer.position.y,
       actions: [],
@@ -123,9 +123,9 @@ export class ClientEditor extends System {
         onClick: () => {
           this.setContext(null)
           const data = {
-            id: this.world.network.makeId(),
+            id: uuid(),
             type: 'app',
-            app: entity.data.app,
+            blueprint: entity.data.blueprint,
             position: entity.data.position,
             quaternion: entity.data.quaternion,
             mover: this.world.network.id,
@@ -141,16 +141,17 @@ export class ClientEditor extends System {
         disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
           this.setContext(null)
-          // duplicate the app config
-          const config = {
+          // duplicate the blueprint
+          const blueprint = {
             id: uuid(),
-            model: entity.config.model,
-            script: entity.config.script,
-            values: cloneDeep(entity.config.values),
+            model: entity.blueprint.model,
+            script: entity.blueprint.script,
+            values: cloneDeep(entity.blueprint.values),
           }
-          this.world.apps.add(config, true)
-          // assign new app config
-          entity.modify({ app: config.id })
+          this.world.blueprints.add(blueprint, true)
+          // assign new blueprint
+          entity.modify({ blueprint: blueprint.id })
+          this.world.network.send('entityModified', { id: entity.data.id, blueprint: blueprint.id })
         },
       })
       context.actions.push({
@@ -224,15 +225,15 @@ export class ClientEditor extends System {
     const url = `asset://${filename}`
     // cache file locally so this client can insta-load it
     this.world.loader.insert('glb', url, file)
-    // make app config
-    const config = {
+    // make blueprint
+    const blueprint = {
       id: uuid(),
       model: url,
       script: null,
       values: {},
     }
-    // register the app
-    this.world.apps.add(config, true)
+    // register blueprint
+    this.world.blueprints.add(blueprint, true)
     // get spawn point
     const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
     const position = hit ? hit.point.toArray() : [0, 0, 0]
@@ -240,9 +241,9 @@ export class ClientEditor extends System {
     // - mover: follows this clients cursor until placed
     // - uploader: other clients see a loading indicator until its fully uploaded
     const data = {
-      id: this.world.network.makeId(),
+      id: uuid(),
       type: 'app',
-      app: config.id,
+      blueprint: blueprint.id,
       position,
       quaternion: [0, 0, 0, 1],
       mover: this.world.network.id,
