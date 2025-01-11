@@ -53,8 +53,15 @@ export class App extends Entity {
     }
     // otherwise we can load our glb
     else {
-      let glb = this.world.loader.get('glb', this.config.model)
-      if (!glb) glb = await this.world.loader.load('glb', this.config.model)
+      let glb
+      try {
+        glb = this.world.loader.get('glb', this.config.model)
+        if (!glb) glb = await this.world.loader.load('glb', this.config.model)
+      } catch (err) {
+        console.error(err)
+        glb = this.world.loader.get('glb', this.config.model)
+        if (!glb) glb = await this.world.loader.load('glb', 'asset://crash-block.glb')
+      }
       this.base.add(glb.toNodes())
     }
   }

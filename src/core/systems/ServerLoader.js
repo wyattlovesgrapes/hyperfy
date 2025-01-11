@@ -62,49 +62,61 @@ export class ServerLoader extends System {
       // })
     }
     if (type === 'glb') {
-      promise = new Promise(async resolve => {
+      promise = new Promise(async (resolve, reject) => {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-        this.gltfLoader.parse(arrayBuffer, '', glb => {
-          let node
-          glb.toNodes = () => {
-            if (!node) {
-              node = glbToNodes(glb, this.world)
+        try {
+          this.gltfLoader.parse(arrayBuffer, '', glb => {
+            let node
+            glb.toNodes = () => {
+              if (!node) {
+                node = glbToNodes(glb, this.world)
+              }
+              return node.clone(true)
             }
-            return node.clone(true)
-          }
-          this.results.set(key, glb)
-          resolve(glb)
-        })
+            this.results.set(key, glb)
+            resolve(glb)
+          })
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     if (type === 'vrm') {
-      promise = new Promise(async resolve => {
+      promise = new Promise(async (resolve, reject) => {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-        this.gltfLoader.parse(arrayBuffer, '', glb => {
-          const factory = createVRMFactory(glb, this.world)
-          glb.toNodes = () => {
-            return createNode({
-              name: 'vrm',
-              factory,
-            })
-          }
-          this.results.set(key, glb)
-          resolve(glb)
-        })
+        try {
+          this.gltfLoader.parse(arrayBuffer, '', glb => {
+            const factory = createVRMFactory(glb, this.world)
+            glb.toNodes = () => {
+              return createNode({
+                name: 'vrm',
+                factory,
+              })
+            }
+            this.results.set(key, glb)
+            resolve(glb)
+          })
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     if (type === 'emote') {
-      promise = new Promise(async resolve => {
+      promise = new Promise(async (resolve, reject) => {
         const buffer = await fs.readFile(url)
         const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-        this.gltfLoader.parse(arrayBuffer, '', glb => {
-          const factory = createEmoteFactory(glb, url)
-          glb.toClip = factory.toClip
-          this.results.set(key, glb)
-          resolve(glb)
-        })
+        try {
+          this.gltfLoader.parse(arrayBuffer, '', glb => {
+            const factory = createEmoteFactory(glb, url)
+            glb.toClip = factory.toClip
+            this.results.set(key, glb)
+            resolve(glb)
+          })
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     this.promises.set(key, promise)
