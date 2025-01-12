@@ -31,7 +31,7 @@ export class PlayerRemote {
   update(delta) {
     this.position.update(delta)
     this.quaternion.update(delta)
-    this.vrm?.vrm.setEmote(emotes[this.emote])
+    this.vrm?.vrm?.setEmote(emotes[this.emote])
   }
 
   modify(data) {
