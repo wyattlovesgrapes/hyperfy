@@ -119,6 +119,14 @@ export class ServerLoader extends System {
         }
       })
     }
+    if (type === 'script') {
+      promise = new Promise(async (resolve, reject) => {
+        const code = await fs.readFile(url, { encoding: 'utf8' })
+        const script = this.world.scripts.evaluate(code)
+        this.results.set(key, script)
+        resolve(script)
+      })
+    }
     this.promises.set(key, promise)
     return promise
   }

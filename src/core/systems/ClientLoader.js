@@ -86,6 +86,15 @@ export class ClientLoader extends System {
         return glb
       })
     }
+    if (type === 'script') {
+      promise = new Promise(async (resolve, reject) => {
+        const resp = await fetch(url)
+        const code = await resp.text()
+        const script = this.world.scripts.evaluate(code)
+        this.results.set(key, script)
+        resolve(script)
+      })
+    }
     this.promises.set(key, promise)
     return promise
   }
@@ -105,6 +114,14 @@ export class ClientLoader extends System {
         }
         this.results.set(key, glb)
         return glb
+      })
+    }
+    if (type === 'script') {
+      promise = new Promise(async (resolve, reject) => {
+        const code = await file.text()
+        const script = this.world.scripts.evaluate(code)
+        this.results.set(key, script)
+        resolve(script)
       })
     }
     this.promises.set(key, promise)

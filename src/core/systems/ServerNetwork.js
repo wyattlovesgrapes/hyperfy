@@ -260,6 +260,20 @@ export class ServerNetwork extends System {
     this.dirtyBlueprints.add(blueprint.id)
   }
 
+  onBlueprintModified = (socket, data) => {
+    const blueprint = this.world.blueprints.get(data.id)
+    // if new version is greater than current version, allow it
+    if (data.version > blueprint.version) {
+      this.world.blueprints.modify(data)
+      this.send('blueprintModified', data, socket)
+      this.dirtyBlueprints.add(data.id)
+    }
+    // otherwise, send a revert back to client, because someone else modified before them
+    else {
+      socket.send('blueprintModified', blueprint)
+    }
+  }
+
   onEntityAdded = (socket, data) => {
     // TODO: check client permission
     const entity = this.world.entities.add(data)
