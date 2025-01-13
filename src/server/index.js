@@ -1,3 +1,5 @@
+import 'ses'
+import '../core/lockdown'
 import './bootstrap'
 
 import fs from 'fs-extra'
@@ -65,6 +67,9 @@ fastify.register(ws)
 fastify.register(worldNetwork)
 
 fastify.post('/api/upload', async (req, reply) => {
+  // console.log('DEBUG: slow uploads')
+  // await new Promise(resolve => setTimeout(resolve, 2000))
+
   const file = await req.file()
   const ext = file.filename.split('.').pop().toLowerCase()
   // create temp buffer to store contents
@@ -90,7 +95,7 @@ fastify.setErrorHandler((err, req, reply) => {
 })
 
 try {
-  await fastify.listen({ port, host: "0.0.0.0" })
+  await fastify.listen({ port, host: '0.0.0.0' })
 } catch (err) {
   console.error(err)
   console.error(`failed to launch on port ${port}`)

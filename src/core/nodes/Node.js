@@ -213,6 +213,17 @@ export class Node {
     return this
   }
 
+  get(id) {
+    if (this.id === id) return this
+    for (let i = 0, l = this.children.length; i < l; i++) {
+      const found = this.children[i].get(id)
+      if (found) {
+        return found
+      }
+    }
+    return null
+  }
+
   // onPhysicsMovement = (position, quaternion) => {
   //   if (this.parent) {
   //     _m1.compose(position, quaternion, defaultScale)

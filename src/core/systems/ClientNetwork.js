@@ -64,6 +64,10 @@ export class ClientNetwork extends System {
     this.world.blueprints.add(blueprint)
   }
 
+  onBlueprintModified = change => {
+    this.world.blueprints.modify(change)
+  }
+
   onEntityAdded = data => {
     this.world.entities.add(data)
   }

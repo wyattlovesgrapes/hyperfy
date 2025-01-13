@@ -7,6 +7,7 @@ const names = [
   'snapshot',
   'chatAdded',
   'blueprintAdded',
+  'blueprintModified',
   'entityAdded',
   'entityModified',
   'entityRemoved',

@@ -6,6 +6,7 @@ import { Blueprints } from './systems/Blueprints'
 import { Entities } from './systems/Entities'
 import { Physics } from './systems/Physics'
 import { Stage } from './systems/Stage'
+import { Scripts } from './systems/Scripts'
 
 export class World extends EventEmitter {
   constructor() {
@@ -24,6 +25,7 @@ export class World extends EventEmitter {
     this.camera = new THREE.PerspectiveCamera(70, 0, 0.01, 2000)
     this.rig.add(this.camera)
 
+    this.register('scripts', Scripts)
     this.register('chat', Chat)
     this.register('blueprints', Blueprints)
     this.register('entities', Entities)

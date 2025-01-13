@@ -1,4 +1,5 @@
 import Knex from 'knex'
+import moment from 'moment'
 
 let db
 
@@ -44,6 +45,7 @@ async function migrate(db) {
  * NOTE: always append new migrations and never modify pre-existing ones!
  */
 const migrations = [
+  // add users table
   async db => {
     await db.schema.createTable('users', table => {
       table.string('id').primary()
@@ -52,6 +54,7 @@ const migrations = [
       table.timestamp('createdAt').notNullable()
     })
   },
+  // add blueprints & entities tables
   async db => {
     await db.schema.createTable('blueprints', table => {
       table.string('id').primary()
@@ -65,5 +68,22 @@ const migrations = [
       table.timestamp('createdAt').notNullable()
       table.timestamp('updatedAt').notNullable()
     })
+  },
+  // add blueprint.version field
+  async db => {
+    const now = moment().toISOString()
+    const blueprints = await db('blueprints')
+    for (const blueprint of blueprints) {
+      const data = JSON.parse(blueprint.data)
+      if (data.version === undefined) {
+        data.version = 0
+        await db('blueprints')
+          .where('id', blueprint.id)
+          .update({
+            data: JSON.stringify(data),
+            updatedAt: now,
+          })
+      }
+    }
   },
 ]

@@ -29,12 +29,13 @@ export class ClientEditor extends System {
     }
   }
 
-  async init({ viewport, onContext }) {
+  async init({ viewport, onContext, onApp }) {
     viewport.addEventListener('dragover', this.onDragOver)
     viewport.addEventListener('dragenter', this.onDragEnter)
     viewport.addEventListener('dragleave', this.onDragLeave)
     viewport.addEventListener('drop', this.onDrop)
     this.onContext = onContext
+    this.onApp = onApp
   }
 
   start() {
@@ -99,10 +100,11 @@ export class ClientEditor extends System {
       context.actions.push({
         label: 'Inspect',
         icon: EyeIcon,
-        visible: true,
+        visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
           this.setContext(null)
+          this.onApp(entity)
         },
       })
       context.actions.push({
@@ -144,6 +146,7 @@ export class ClientEditor extends System {
           // duplicate the blueprint
           const blueprint = {
             id: uuid(),
+            version: 0,
             model: entity.blueprint.model,
             script: entity.blueprint.script,
             values: cloneDeep(entity.blueprint.values),
@@ -165,7 +168,9 @@ export class ClientEditor extends System {
         },
       })
     }
-    this.setContext(context)
+    if (context.actions.length) {
+      this.setContext(context)
+    }
   }
 
   setContext(value) {
@@ -228,6 +233,7 @@ export class ClientEditor extends System {
     // make blueprint
     const blueprint = {
       id: uuid(),
+      version: 0,
       model: url,
       script: null,
       values: {},

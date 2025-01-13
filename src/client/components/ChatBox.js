@@ -93,13 +93,18 @@ function ChatBoxOpen({ world, onClose }) {
         width: 400px;
         height: 250px;
         border-radius: 25px;
-        background: rgba(0, 0, 0, 0.2);
-        transition: background 0.15s ease-out;
+        background: rgba(22, 22, 28, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0);
+        box-shadow: rgba(0, 0, 0, 0) 0px 10px 30px;
+        border-radius: 10px;
+        transition: all 0.15s ease-out;
         display: flex;
         flex-direction: column;
         align-items: stretch;
         &:hover {
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(22, 22, 28, 1);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px;
         }
         .chat-content {
           flex: 1;

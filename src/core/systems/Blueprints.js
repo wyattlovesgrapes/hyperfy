@@ -1,3 +1,4 @@
+import { isEqual, merge } from 'lodash-es'
 import { System } from './System'
 
 /**
@@ -21,6 +22,22 @@ export class Blueprints extends System {
     this.items.set(data.id, data)
     if (local) {
       this.world.network.send('blueprintAdded', data)
+    }
+  }
+
+  modify(data) {
+    const blueprint = this.items.get(data.id)
+    const modified = {
+      ...blueprint,
+      ...data,
+    }
+    const changed = !isEqual(blueprint, modified)
+    if (!changed) return
+    this.items.set(blueprint.id, modified)
+    for (const [_, entity] of this.world.entities.items) {
+      if (entity.blueprint === blueprint) {
+        entity.build()
+      }
     }
   }
 

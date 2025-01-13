@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 
-export class NetworkedVector3 {
+export class LerpQuaternion {
   constructor(value, rate) {
     this.value = value
     this.rate = rate // receive rate eg 1/5 for 5hz
-    this.previous = new THREE.Vector3().copy(this.value)
-    this.current = new THREE.Vector3().copy(this.value)
+    this.previous = new THREE.Quaternion().copy(this.value)
+    this.current = new THREE.Quaternion().copy(this.value)
     this.time = 0
     this.snapToken = null
   }
@@ -40,7 +40,7 @@ export class NetworkedVector3 {
     this.time += delta
     let alpha = this.time / this.rate
     if (alpha > 1) alpha = 1
-    this.value.lerpVectors(this.previous, this.current, alpha)
+    this.value.slerpQuaternions(this.previous, this.current, alpha)
     return this
   }
 }

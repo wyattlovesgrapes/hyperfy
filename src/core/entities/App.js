@@ -3,30 +3,95 @@ import * as THREE from '../extras/three'
 import { Entity } from './Entity'
 import { glbToNodes } from '../extras/glbToNodes'
 import { createNode } from '../extras/createNode'
-import { NetworkedVector3 } from '../extras/NetworkedVector3'
-import { NetworkedQuaternion } from '../extras/NetworkedQuaternion'
+import { LerpVector3 } from '../extras/LerpVector3'
+import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { ControlPriorities } from '../extras/ControlPriorities'
+
+const hotEventNames = ['fixedUpdate', 'update', 'lateUpdate']
+
+const Modes = {
+  ACTIVE: 'active',
+  MOVING: 'moving',
+  LOADING: 'loading',
+  CRASHED: 'crashed',
+}
 
 export class App extends Entity {
   constructor(world, data, local) {
     super(world, data, local)
     this.isApp = true
+    this.n = 0
+    this.worldNodes = new Set()
+    this.hotEvents = 0
     this.build()
   }
 
-  async build() {
-    // cleanup any previous build
-    this.unbuild()
+  async build(crashed) {
+    const n = ++this.n
+    // create base
+    const base = createNode({ name: 'group' })
     // fetch blueprint
-    this.blueprint = this.world.blueprints.get(this.data.blueprint)
-    // set up our base
-    this.base = createNode({ name: 'group' })
+    const blueprint = this.world.blueprints.get(this.data.blueprint)
+    // fetch script (if any)
+    let script
+    if (blueprint.script) {
+      script = this.world.loader.get('script', blueprint.script)
+      if (!script) script = await this.world.loader.load('script', blueprint.script)
+    }
+    let model
+    // if someone else is uploading glb, show a loading indicator
+    if (this.data.uploader && this.data.uploader !== this.world.network.id) {
+      model = createNode({ name: 'mesh' })
+      model.type = 'box'
+      model.width = 1
+      model.height = 1
+      model.depth = 1
+    }
+    // otherwise we can load the actual glb
+    else {
+      try {
+        let glb = this.world.loader.get('glb', blueprint.model)
+        if (!glb) glb = await this.world.loader.load('glb', blueprint.model)
+        model = glb.toNodes()
+      } catch (err) {
+        console.error(err)
+        // no model, will use crash block below
+      }
+    }
+    // if script crashed (or failed to load model), show crash-block
+    if (crashed || !model) {
+      let glb = this.world.loader.get('glb', 'asset://crash-block.glb')
+      if (!glb) glb = await this.world.loader.load('glb', 'asset://crash-block.glb')
+      model = glb.toNodes()
+    }
+    // if a new build happened while we were fetching, stop here
+    if (this.n !== n) return
+    // unbuild any previous version
+    this.unbuild()
+    // mode
+    this.mode = Modes.ACTIVE
+    if (this.data.mover) this.mode = Modes.MOVING
+    if (this.data.uploader && this.data.uploader !== this.world.network.id) this.mode = Modes.LOADING
+    // activate
+    this.blueprint = blueprint
+    this.base = base
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
-    // activate, but if moving dont run physics
+    this.base.add(model)
     this.base.activate({ world: this.world, entity: this, physics: !this.data.mover })
+    // execute script
+    if (this.mode === Modes.ACTIVE && script && !crashed) {
+      this.script = script
+      try {
+        this.script.exec(this.getWorldProxy(), this.getAppProxy())
+      } catch (err) {
+        console.error('script crashed', this)
+        console.error(err)
+        return this.crash()
+      }
+    }
     // if moving we need updates
-    if (this.data.mover) this.world.setHot(this, true)
+    if (this.mode === Modes.MOVING) this.world.setHot(this, true)
     // if we're the mover lets bind controls
     if (this.data.mover === this.world.network.id) {
       this.lastMoveSendTime = 0
@@ -38,44 +103,42 @@ export class App extends Entity {
       })
     }
     // if remote is moving, set up to receive network updates
-    this.networkPosition = new NetworkedVector3(this.base.position, this.world.networkRate)
-    this.networkQuaternion = new NetworkedQuaternion(this.base.quaternion, this.world.networkRate)
-    // if (this.data.mover && this.data.mover !== this.world.network.id) {
-    // }
-    // if remote is uploading, display a loading indicator
-    if (this.data.uploader && this.data.uploader !== this.world.network.id) {
-      const box = createNode({ name: 'mesh' })
-      box.type = 'box'
-      box.width = 1
-      box.height = 1
-      box.depth = 1
-      this.base.add(box)
-    }
-    // otherwise we can load our glb
-    else {
-      let glb
-      try {
-        glb = this.world.loader.get('glb', this.blueprint.model)
-        if (!glb) glb = await this.world.loader.load('glb', this.blueprint.model)
-      } catch (err) {
-        console.error(err)
-        glb = this.world.loader.get('glb', this.blueprint.model)
-        if (!glb) glb = await this.world.loader.load('glb', 'asset://crash-block.glb')
-      }
-      this.base.add(glb.toNodes())
-    }
+    this.networkPos = new LerpVector3(base.position, this.world.networkRate)
+    this.networkQuat = new LerpQuaternion(base.quaternion, this.world.networkRate)
   }
 
   unbuild() {
-    if (this.base) {
-      this.base.deactivate()
-      this.base = null
+    // deactivate local node
+    this.base?.deactivate()
+    // deactivate world nodes
+    for (const node of this.worldNodes) {
+      node.deactivate()
     }
+    this.worldNodes.clear()
+    // clear script event listeners
+    this.events = {}
+    this.hotEvents = 0
+    // release control
     if (this.control) {
       this.control?.release()
       this.control = null
     }
+    // cancel update tracking
     this.world.setHot(this, false)
+  }
+
+  fixedUpdate(delta) {
+    // script fixedUpdate()
+    if (this.mode === Modes.ACTIVE && this.script) {
+      try {
+        this.emit('fixedUpdate', delta)
+      } catch (err) {
+        console.error('script fixedUpdate crashed', this)
+        console.error(err)
+        this.crash()
+        return
+      }
+    }
   }
 
   update(delta) {
@@ -129,8 +192,32 @@ export class App extends Entity {
     }
     // if someone else is moving the app, interpolate updates
     if (this.data.mover && this.data.mover !== this.world.network.id) {
-      this.networkPosition.update(delta)
-      this.networkQuaternion.update(delta)
+      this.networkPos.update(delta)
+      this.networkQuat.update(delta)
+    }
+    // script update()
+    if (this.mode === Modes.ACTIVE && this.script) {
+      try {
+        this.emit('update', delta)
+      } catch (err) {
+        console.error('script update() crashed', this)
+        console.error(err)
+        this.crash()
+        return
+      }
+    }
+  }
+
+  lateUpdate(delta) {
+    if (this.mode === Modes.ACTIVE && this.script) {
+      try {
+        this.emit('lateUpdate', delta)
+      } catch (err) {
+        console.error('script lateUpdate() crashed', this)
+        console.error(err)
+        this.crash()
+        return
+      }
     }
   }
 
@@ -155,11 +242,11 @@ export class App extends Entity {
     }
     if (data.hasOwnProperty('position')) {
       this.data.position = data.position
-      this.networkPosition.pushArray(data.position)
+      this.networkPos.pushArray(data.position)
     }
     if (data.hasOwnProperty('quaternion')) {
       this.data.quaternion = data.quaternion
-      this.networkQuaternion.pushArray(data.quaternion)
+      this.networkQuat.pushArray(data.quaternion)
     }
     if (rebuild) {
       this.build()
@@ -172,8 +259,115 @@ export class App extends Entity {
     this.world.network.send('entityModified', { id: this.data.id, mover: this.data.mover })
   }
 
+  crash() {
+    this.build(true)
+  }
+
   destroy(local) {
     this.unbuild()
     super.destroy(local)
+  }
+
+  on(name, callback) {
+    if (!this.events[name]) {
+      this.events[name] = new Set()
+    }
+    this.events[name].add(callback)
+    if (hotEventNames.includes(name)) {
+      this.hotEvents++
+      this.world.setHot(this, this.hotEvents > 0)
+    }
+  }
+
+  off(name, callback) {
+    if (!this.events[name]) return
+    this.events[name].delete(callback)
+    if (hotEventNames.includes(name)) {
+      this.hotEvents--
+      this.world.setHot(this, this.hotEvents > 0)
+    }
+  }
+
+  emit(name, a1, a2) {
+    if (!this.events[name]) return
+    for (const callback of this.events[name]) {
+      callback(a1, a2)
+    }
+  }
+
+  getWorldProxy() {
+    const entity = this
+    const world = this.world
+    return {
+      add(pNode) {
+        const node = entity.nodes.get(pNode.id)
+        if (!node) return
+        if (node.parent) {
+          node.parent.remove(node)
+        }
+        entity.worldNodes.add(node)
+        node.activate({ world, entity, physics: true })
+      },
+      remove(pNode) {
+        const node = entity.nodes.get(pNode.id)
+        if (!node) return
+        if (node.parent) return // its not in world
+        if (!entity.worldNodes.has(node)) return
+        entity.worldNodes.delete(node)
+        node.deactivate()
+      },
+    }
+  }
+
+  getAppProxy() {
+    const entity = this
+    const world = this.world
+    return {
+      get instanceId() {
+        return entity.data.id
+      },
+      on(name, callback) {
+        entity.on(name, callback)
+      },
+      off(name, callback) {
+        entity.off(name, callback)
+      },
+      get(id) {
+        const node = entity.base.get(id)
+        if (!node) return null
+        return node.getProxy()
+      },
+      create(name) {
+        if (isString(name)) {
+          const node = entity.createNode({ name })
+          return node.getProxy()
+        } else {
+          console.warn('TODO: migrate script to create(String)')
+          const node = entity.createNode(name)
+          return node.getProxy()
+        }
+      },
+      // getState() {
+      //   return entity.state
+      // },
+      // getStateChanges() {
+      //   return entity._stateChanges
+      // },
+      // createNetworkProp(value, onChange) {
+      //   const key = `__${entity.scriptVarIds++}`
+      //   return entity.createNetworkProp(key, value, onChange)
+      // },
+      // control(options) {
+      //   // TODO: only allow on user interaction
+      //   // TODO: show UI with a button to release()
+      //   entity.control = world.input.bind({
+      //     ...options,
+      //     priority: 50,
+      //     object: entity,
+      //   })
+      //   return entity.control
+      // },
+      ...this.base.getProxy(),
+    }
   }
 }
