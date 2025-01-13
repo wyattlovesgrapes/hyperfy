@@ -2,6 +2,9 @@ import { System } from './System'
 
 import * as THREE from '../extras/three'
 import { DEG2RAD, RAD2DEG } from '../extras/general'
+import { clamp, num } from '../utils'
+import { LerpVector3 } from '../extras/LerpVector3'
+import { LerpQuaternion } from '../extras/LerpQuaternion'
 
 /**
  * Script System
@@ -24,21 +27,21 @@ export class Scripts extends System {
       eval: undefined,
       harden: undefined,
       lockdown: undefined,
-      // num: num,
-      // clamp: clamp,
+      num,
+      clamp,
       // Layers,
       Object3D: THREE.Object3D,
       Quaternion: THREE.Quaternion,
       Vector3: THREE.Vector3,
       Euler: THREE.Euler,
       Matrix4: THREE.Matrix4,
-      // Vector3Lerp: Vector3Lerp,
-      // QuaternionLerp: QuaternionLerp,
+      LerpVector3,
+      LerpQuaternion,
       // Material: Material,
       // Curve: Curve,
       // Gradient: Gradient,
-      DEG2RAD: DEG2RAD,
-      RAD2DEG: RAD2DEG,
+      DEG2RAD,
+      RAD2DEG,
       // pause: () => this.world.pause(),
     })
   }

@@ -1,6 +1,6 @@
 import { createNode } from './createNode'
-import { NetworkedQuaternion } from './NetworkedQuaternion'
-import { NetworkedVector3 } from './NetworkedVector3'
+import { LerpQuaternion } from './LerpQuaternion'
+import { LerpVector3 } from './LerpVector3'
 import { emotes } from './playerEmotes'
 
 export class PlayerRemote {
@@ -17,8 +17,8 @@ export class PlayerRemote {
     this.base.quaternion.fromArray(this.data.quaternion)
     this.base.activate({ world: this.world, entity: this.entity, physics: true })
 
-    this.position = new NetworkedVector3(this.base.position, this.world.networkRate)
-    this.quaternion = new NetworkedQuaternion(this.base.quaternion, this.world.networkRate)
+    this.position = new LerpVector3(this.base.position, this.world.networkRate)
+    this.quaternion = new LerpQuaternion(this.base.quaternion, this.world.networkRate)
     this.emote = 'asset://emote-idle.glb'
 
     const glb = await this.world.loader.load('vrm', 'asset://avatar.vrm')
