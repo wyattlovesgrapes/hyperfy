@@ -13,7 +13,7 @@ Click the `Fork` button at the top-right corner of this page to create a copy of
 Clone the repository to your local machine using the following command in the terminal:
 
 ```bash
-git clone https://github.com/numengames/numinia-hyperfy2.git
+git clone https://github.com/hyperfy-xyz/hyperfy.git
 ```
 
 ### 3. Create a Branch
@@ -112,7 +112,7 @@ export default function InteractiveComponent(props) {
 
 ## Reporting Bugs
 
-If you find a bug, please open an [issue](https://github.com/numengames/numinia-hyperfy2/issues) and provide as much information as possible:
+If you find a bug, please open an [issue](https://github.com/hyperfy-xyz/hyperfy/issues) and provide as much information as possible:
 
 - Problem Description: What you expected to happen vs. what actually happened.
 - Steps to Reproduce: Detail the specific steps you took to find the bug.
@@ -120,7 +120,7 @@ If you find a bug, please open an [issue](https://github.com/numengames/numinia-
 
 ## Suggesting New Features
 
-If you have ideas for new features, open an [issue](https://github.com/numengames/numinia-hyperfy2/issues) describing your proposal. We’d love to hear your ideas and discuss how we could implement them.
+If you have ideas for new features, open an [issue](https://github.com/hyperfy-xyz/hyperfy/issues) describing your proposal. We’d love to hear your ideas and discuss how we could implement them.
 
 ## Acknowledgements
 

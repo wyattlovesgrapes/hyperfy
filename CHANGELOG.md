@@ -45,5 +45,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic project structure
 - Core functionality from original project
 
-[Unreleased]: https://github.com/numengames/numinia-hyperfy2/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/numengames/numinia-hyperfy2/releases/tag/v0.1.0 
+[Unreleased]: https://github.com/hyperfy-xyz/hyperfy/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/hyperfy-xyz/hyperfy/releases/tag/v0.1.0 
