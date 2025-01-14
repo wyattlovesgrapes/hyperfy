@@ -17,7 +17,7 @@ let nodeIds = -1
 
 export class Node {
   constructor(data = {}) {
-    this.id = data.id || ++nodeIds
+    this.id = data.id || `${++nodeIds}`
     this.name = 'node'
 
     this.parent = null
