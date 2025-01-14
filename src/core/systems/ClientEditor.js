@@ -7,8 +7,11 @@ import { hasRole, uuid } from '../utils'
 import { ControlPriorities } from '../extras/ControlPriorities'
 import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
 import { cloneDeep } from 'lodash-es'
+import moment from 'moment'
 
 contextBreakers = ['MouseLeft', 'Escape']
+
+const MAX_UPLOAD_SIZE = parseInt(process.env.PUBLIC_MAX_UPLOAD_SIZE || '100')
 
 /**
  * Editor System
@@ -213,6 +216,18 @@ export class ClientEditor extends System {
       file = e.dataTransfer.files[0]
     }
     if (!file) return
+    const maxSize = MAX_UPLOAD_SIZE * 1024 * 1024
+    if (file.size > maxSize) {
+      this.world.chat.add({
+        id: uuid(),
+        from: null,
+        fromId: null,
+        body: `File size too large (>${MAX_UPLOAD_SIZE}mb)`,
+        createdAt: moment().toISOString(),
+      })
+      console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
+      return
+    }
     const ext = file.name.split('.').pop().toLowerCase()
     if (ext === 'glb') {
       this.addGLB(file)
