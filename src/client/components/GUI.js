@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { ContextWheel } from './ContextWheel'
 import { InspectPane } from './InspectPane'
@@ -24,14 +24,12 @@ export function GUI({ world }) {
 }
 
 function Content({ world, width, height }) {
-  const mobile = width < 600
+  const small = width < 600
+  const touch = useMemo(() => navigator.userAgent.match(/OculusBrowser|iPhone|iPad|iPod|Android/i), [])
   const [context, setContext] = useState(null)
   const [inspect, setInspect] = useState(null)
   const [code, setCode] = useState(false)
-  const [chat, setChat] = useState(() => !mobile)
-  useEffect(() => {
-    setChat(!mobile)
-  }, [mobile])
+  const [chat, setChat] = useState(() => !touch)
   useEffect(() => {
     world.on('context', setContext)
     world.on('inspect', setInspect)
@@ -44,18 +42,7 @@ function Content({ world, width, height }) {
   }, [])
   return (
     <>
-      {mobile && !chat && (
-        <ChatBtn
-          css={css`
-            position: absolute;
-            top: 20px;
-            left: 20px;
-          `}
-          world={world}
-          onClick={() => setChat(true)}
-        />
-      )}
-      {!mobile && !chat && (
+      {!chat && (
         <ChatBtn
           css={css`
             position: absolute;
@@ -66,20 +53,7 @@ function Content({ world, width, height }) {
           onClick={() => setChat(true)}
         />
       )}
-      {mobile && chat && (
-        <ChatBox
-          css={css`
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-          `}
-          world={world}
-          active={true}
-          onClose={() => setChat(false)}
-        />
-      )}
-      {!mobile && chat && (
+      {chat && (
         <ChatBox
           css={css`
             position: absolute;
@@ -87,6 +61,10 @@ function Content({ world, width, height }) {
             left: 20px;
             width: 100%;
             max-width: 400px;
+            @media all and (max-width: 440px) {
+              right: 20px;
+              width: inherit;
+            }
           `}
           world={world}
           onClose={() => setChat(false)}
