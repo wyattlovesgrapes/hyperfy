@@ -306,6 +306,11 @@ export class Node {
           self.remove(node)
           return this
         },
+        traverse(callback) {
+          self.traverse(node => {
+            callback(node.getProxy())
+          })
+        },
         // detach(node) {
         //   self.detach(node)
         // },
