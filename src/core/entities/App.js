@@ -85,7 +85,7 @@ export class App extends Entity {
       try {
         this.script.exec(this.getWorldProxy(), this.getAppProxy())
       } catch (err) {
-        console.error('script crashed', this)
+        console.error('script crashed')
         console.error(err)
         return this.crash()
       }
