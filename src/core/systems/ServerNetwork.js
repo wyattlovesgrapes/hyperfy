@@ -5,7 +5,7 @@ import { addRole, hasRole, serializeRoles, uuid } from '../utils'
 import { System } from './System'
 import { createJWT, readJWT } from '../utils-server'
 
-const SAVE_RATE = 60 // seconds
+const SAVE_INTERVAL = parseInt(process.env.SAVE_INTERVAL || '60') // seconds
 const PING_RATE = 1 // seconds
 
 /**
@@ -45,7 +45,9 @@ export class ServerNetwork extends System {
       this.world.entities.add(data, true)
     }
     // queue first save
-    this.saveTimerId = setTimeout(this.save, SAVE_RATE * 1000)
+    if (SAVE_INTERVAL) {
+      this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000)
+    }
   }
 
   send(name, data, ignoreSocket) {
@@ -131,7 +133,7 @@ export class ServerNetwork extends System {
       `save complete [blueprints:${counts.upsertedBlueprints} apps:${counts.upsertedApps} apps-removed:${counts.deletedApps}]`
     )
     // queue again
-    this.saveTimerId = setTimeout(this.save, SAVE_RATE * 1000)
+    this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000)
   }
 
   async onConnection(ws, authToken) {
