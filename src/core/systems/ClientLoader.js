@@ -7,6 +7,7 @@ import { createNode } from '../extras/createNode'
 import { createVRMFactory } from '../extras/createVRMFactory'
 import { glbToNodes } from '../extras/glbToNodes'
 import { createEmoteFactory } from '../extras/createEmoteFactory'
+import { TextureLoader } from 'three'
 
 /**
  * Client Loader System
@@ -21,6 +22,7 @@ export class ClientLoader extends System {
     this.promises = new Map()
     this.results = new Map()
     this.rgbeLoader = new RGBELoader()
+    this.texLoader = new TextureLoader()
     this.gltfLoader = new GLTFLoader()
     this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
   }
@@ -48,6 +50,12 @@ export class ClientLoader extends System {
     let promise
     if (type === 'hdr') {
       promise = this.rgbeLoader.loadAsync(url).then(texture => {
+        this.results.set(key, texture)
+        return texture
+      })
+    }
+    if (type === 'tex') {
+      promise = this.texLoader.loadAsync(url).then(texture => {
         this.results.set(key, texture)
         return texture
       })

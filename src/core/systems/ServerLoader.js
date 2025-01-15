@@ -61,6 +61,9 @@ export class ServerLoader extends System {
       //   return texture
       // })
     }
+    if (type === 'tex') {
+      // ...
+    }
     if (type === 'glb') {
       promise = new Promise(async (resolve, reject) => {
         const buffer = await fs.readFile(url)
