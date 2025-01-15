@@ -88,7 +88,8 @@ export class ClientNetwork extends System {
     this.world.entities.remove(id)
   }
 
-  onClose = () => {
-    console.log('connection ended')
+  onClose = code => {
+    this.world.emit('disconnect', code || true)
+    console.log('disconnect', code)
   }
 }

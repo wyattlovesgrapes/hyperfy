@@ -6,7 +6,7 @@ import { CodePane } from './CodePane'
 import { ChatBox } from './ChatBox'
 import { css } from '@firebolt-dev/css'
 import { useElemSize } from './useElemSize'
-import { MessageCircleMoreIcon } from 'lucide-react'
+import { MessageCircleMoreIcon, UnplugIcon, WifiOffIcon } from 'lucide-react'
 
 export function GUI({ world }) {
   const [ref, width, height] = useElemSize()
@@ -30,14 +30,17 @@ function Content({ world, width, height }) {
   const [inspect, setInspect] = useState(null)
   const [code, setCode] = useState(false)
   const [chat, setChat] = useState(() => !touch)
+  const [disconnected, setDisconnected] = useState(false)
   useEffect(() => {
     world.on('context', setContext)
     world.on('inspect', setInspect)
     world.on('code', setCode)
+    world.on('disconnect', setDisconnected)
     return () => {
       world.off('context', setContext)
       world.off('inspect', setInspect)
       world.off('code', setCode)
+      world.off('disconnect', setDisconnected)
     }
   }, [])
   return (
@@ -73,6 +76,7 @@ function Content({ world, width, height }) {
       {context && <ContextWheel key={context.id} {...context} />}
       {inspect && <InspectPane world={world} entity={inspect} />}
       {code && <CodePane world={world} entity={code} />}
+      {disconnected && <Disconnected />}
     </>
   )
 }
@@ -101,6 +105,35 @@ function ChatBtn({ ...props }) {
       {...props}
     >
       <MessageCircleMoreIcon size={20} />
+    </div>
+  )
+}
+
+function Disconnected() {
+  return (
+    <div
+      css={css`
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(22, 22, 28, 1);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        box-shadow: rgba(0, 0, 0, 0.5) 0px 10px 30px;
+        height: 40px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        padding: 0 14px 0 17px;
+        svg {
+          margin-left: 8px;
+        }
+        span {
+          font-size: 14px;
+        }
+      `}
+    >
+      <span>Disconnected</span>
+      <WifiOffIcon size={16} />
     </div>
   )
 }
