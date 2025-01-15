@@ -4,6 +4,7 @@ import { Socket } from '../Socket'
 import { addRole, hasRole, serializeRoles, uuid } from '../utils'
 import { System } from './System'
 import { createJWT, readJWT } from '../utils-server'
+import { cloneDeep } from 'lodash-es'
 
 const SAVE_INTERVAL = parseInt(process.env.SAVE_INTERVAL || '60') // seconds
 const PING_RATE = 1 // seconds
@@ -25,6 +26,7 @@ export class ServerNetwork extends System {
     this.saveTimerId = null
     this.dirtyBlueprints = new Set()
     this.dirtyApps = new Set()
+    this.isServer = true
   }
 
   init({ db }) {
@@ -42,6 +44,7 @@ export class ServerNetwork extends System {
     const entities = await this.db('entities')
     for (const entity of entities) {
       const data = JSON.parse(entity.data)
+      data.state = {}
       this.world.entities.add(data, true)
     }
     // queue first save
@@ -50,11 +53,11 @@ export class ServerNetwork extends System {
     }
   }
 
-  send(name, data, ignoreSocket) {
+  send(name, data, ignoreSocketId) {
     // console.log('->>>', name, data)
     const packet = writePacket(name, data)
     this.sockets.forEach(socket => {
-      if (socket === ignoreSocket) return
+      if (socket.id === ignoreSocketId) return
       socket.sendPacket(packet)
     })
   }
@@ -107,6 +110,8 @@ export class ServerNetwork extends System {
           continue // ignore while uploading or moving
         }
         try {
+          const data = cloneDeep(entity.data)
+          data.state = null
           const record = {
             id: entity.data.id,
             data: JSON.stringify(entity.data),
@@ -253,12 +258,12 @@ export class ServerNetwork extends System {
     }
     // handle chat messages
     this.world.chat.add(msg, false)
-    this.send('chatAdded', msg, socket)
+    this.send('chatAdded', msg, socket.id)
   }
 
   onBlueprintAdded = (socket, blueprint) => {
     this.world.blueprints.add(blueprint)
-    this.send('blueprintAdded', blueprint, socket)
+    this.send('blueprintAdded', blueprint, socket.id)
     this.dirtyBlueprints.add(blueprint.id)
   }
 
@@ -267,7 +272,7 @@ export class ServerNetwork extends System {
     // if new version is greater than current version, allow it
     if (data.version > blueprint.version) {
       this.world.blueprints.modify(data)
-      this.send('blueprintModified', data, socket)
+      this.send('blueprintModified', data, socket.id)
       this.dirtyBlueprints.add(data.id)
     }
     // otherwise, send a revert back to client, because someone else modified before them
@@ -279,7 +284,7 @@ export class ServerNetwork extends System {
   onEntityAdded = (socket, data) => {
     // TODO: check client permission
     const entity = this.world.entities.add(data)
-    this.send('entityAdded', data, socket)
+    this.send('entityAdded', data, socket.id)
     if (entity.isApp) this.dirtyApps.add(entity.data.id)
   }
 
@@ -287,15 +292,21 @@ export class ServerNetwork extends System {
     // TODO: check client permission
     const entity = this.world.entities.get(data.id)
     entity.modify(data)
-    this.send('entityModified', data, socket)
+    this.send('entityModified', data, socket.id)
     if (entity.isApp) this.dirtyApps.add(entity.data.id)
+  }
+
+  onEntityEvent = (socket, event) => {
+    const [id, version, name, data] = event
+    const entity = this.world.entities.get(id)
+    entity?.onEvent(version, name, data, socket.id)
   }
 
   onEntityRemoved = (socket, id) => {
     // TODO: check client permission
     const entity = this.world.entities.get(id)
     this.world.entities.remove(id)
-    this.send('entityRemoved', id, socket)
+    this.send('entityRemoved', id, socket.id)
     if (entity.isApp) this.dirtyApps.add(id)
   }
 

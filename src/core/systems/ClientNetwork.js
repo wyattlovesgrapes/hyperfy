@@ -15,6 +15,7 @@ export class ClientNetwork extends System {
     this.ws = null
     this.apiUrl = null
     this.id = null
+    this.isClient = true
   }
 
   init({ wsUrl, apiUrl }) {
@@ -75,6 +76,12 @@ export class ClientNetwork extends System {
   onEntityModified = data => {
     const entity = this.world.entities.get(data.id)
     entity.modify(data)
+  }
+
+  onEntityEvent = event => {
+    const [id, version, name, data] = event
+    const entity = this.world.entities.get(id)
+    entity?.onEvent(version, name, data)
   }
 
   onEntityRemoved = id => {

@@ -133,6 +133,7 @@ export class ClientEditor extends System {
             quaternion: entity.data.quaternion,
             mover: this.world.network.id,
             uploader: null,
+            state: {},
           }
           this.world.entities.add(data, true)
         },
@@ -267,6 +268,7 @@ export class ClientEditor extends System {
       quaternion: [0, 0, 0, 1],
       mover: this.world.network.id,
       uploader: this.world.network.id,
+      state: {},
     }
     const app = this.world.entities.add(data, true)
     // upload the glb
