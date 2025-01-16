@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { isBoolean, isNumber } from 'lodash-es'
 
 import { System } from './System'
+import { storage } from '../storage'
 
 import * as THREE from '../extras/three'
 import { initYoga } from '../extras/yoga'
@@ -18,7 +19,7 @@ import { initYoga } from '../extras/yoga'
 export class Client extends System {
   constructor(world) {
     super(world)
-    this.storage = new LocalStorage() // TODO: memory storage when local storage not available (eg safari private mode)
+    this.storage = storage
     this.settings = new Settings(this)
     window.world = world
     window.THREE = THREE
@@ -141,34 +142,5 @@ class Settings extends EventEmitter {
     if (!this.changes) return
     this.emit('change', this.changes)
     this.changes = null
-  }
-}
-
-class LocalStorage {
-  get(key, defaultValue = null) {
-    const data = localStorage.getItem(key)
-    if (data === undefined) return defaultValue
-    let value
-    try {
-      value = JSON.parse(data)
-    } catch (err) {
-      console.error('error reading storage key:', key)
-      value = null
-    }
-    if (value === undefined) return defaultValue
-    return value || defaultValue
-  }
-
-  set(key, value) {
-    if (value === undefined || value === null) {
-      localStorage.removeItem(key)
-    } else {
-      const data = JSON.stringify(value)
-      localStorage.setItem(key, data)
-    }
-  }
-
-  remove(key) {
-    localStorage.removeItem(key)
   }
 }

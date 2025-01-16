@@ -1,43 +1,14 @@
+import { debounce } from 'lodash-es'
 import { useEffect } from 'react'
+import { storage } from '../../core/storage'
 
-const STORAGE_KEY = 'pane_configs'
-const WHITELISTED_IDS = ['code'] // Add your whitelisted IDs here
-let configs = {}
+const STORAGE_KEY = 'panes'
+
+let configs = storage.get(STORAGE_KEY, {})
 let count = 0
 let layer = 0
 
-// Load saved configs from localStorage only for whitelisted IDs
-try {
-  const savedConfigs = localStorage.getItem(STORAGE_KEY)
-  if (savedConfigs) {
-    const parsedConfigs = JSON.parse(savedConfigs)
-    // Only load whitelisted configs
-    configs = Object.keys(parsedConfigs)
-      .filter(key => WHITELISTED_IDS.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = parsedConfigs[key]
-        return obj
-      }, {})
-  }
-} catch (error) {
-  console.error('Error loading pane configs:', error)
-}
-
-// Save configs to localStorage (only whitelisted)
-const saveConfigs = () => {
-  try {
-    // Only save whitelisted configs
-    const configsToSave = Object.keys(configs)
-      .filter(key => WHITELISTED_IDS.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = configs[key]
-        return obj
-      }, {})
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(configsToSave))
-  } catch (error) {
-    console.error('Error saving pane configs:', error)
-  }
-}
+const persist = debounce(() => storage.set(STORAGE_KEY, configs), 300)
 
 export function usePane(id, paneRef, headRef) {
   useEffect(() => {
@@ -52,13 +23,18 @@ export function usePane(id, paneRef, headRef) {
         layer: 0,
       }
       configs[id] = config
-      if (WHITELISTED_IDS.includes(id)) {
-        saveConfigs()
-      }
+      persist()
     }
 
     layer++
     const pane = paneRef.current
+
+    // ensure pane is within screen bounds so it can't get lost
+    const maxX = window.innerWidth - pane.offsetWidth
+    const maxY = window.innerHeight - pane.offsetHeight
+    config.x = Math.min(Math.max(0, config.x), maxX)
+    config.y = Math.min(Math.max(0, config.y), maxY)
+
     pane.style.top = `${config.y}px`
     pane.style.left = `${config.x}px`
     pane.style.width = `${config.width}px`
@@ -79,24 +55,11 @@ export function usePane(id, paneRef, headRef) {
 
     const onPointerMove = e => {
       if (!moving) return
-
-      // Calculate new position
-      const newX = config.x + e.movementX
-      const newY = config.y + e.movementY
-
-      // Get window dimensions
-      const maxX = window.innerWidth - pane.offsetWidth
-      const maxY = window.innerHeight - pane.offsetHeight
-
-      // Clamp coordinates to keep window visible
-      config.x = Math.min(Math.max(0, newX), maxX)
-      config.y = Math.min(Math.max(0, newY), maxY)
-
+      config.x += e.movementX
+      config.y += e.movementY
       pane.style.top = `${config.y}px`
       pane.style.left = `${config.x}px`
-      if (WHITELISTED_IDS.includes(id)) {
-        saveConfigs()
-      }
+      persist()
     }
 
     const onPointerUp = e => {
@@ -108,9 +71,7 @@ export function usePane(id, paneRef, headRef) {
       if (entry) {
         config.width = entry.contentRect.width
         config.height = entry.contentRect.height
-        if (WHITELISTED_IDS.includes(id)) {
-          saveConfigs()
-        }
+        persist()
       }
     })
 
