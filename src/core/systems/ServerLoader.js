@@ -66,9 +66,9 @@ export class ServerLoader extends System {
     }
     if (type === 'glb') {
       promise = new Promise(async (resolve, reject) => {
-        const buffer = await fs.readFile(url)
-        const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         try {
+          const buffer = await fs.readFile(url)
+          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             let node
             glb.toNodes = () => {
@@ -87,9 +87,9 @@ export class ServerLoader extends System {
     }
     if (type === 'vrm') {
       promise = new Promise(async (resolve, reject) => {
-        const buffer = await fs.readFile(url)
-        const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         try {
+          const buffer = await fs.readFile(url)
+          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             const factory = createVRMFactory(glb, this.world)
             glb.toNodes = () => {
@@ -108,9 +108,9 @@ export class ServerLoader extends System {
     }
     if (type === 'emote') {
       promise = new Promise(async (resolve, reject) => {
-        const buffer = await fs.readFile(url)
-        const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
         try {
+          const buffer = await fs.readFile(url)
+          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             const factory = createEmoteFactory(glb, url)
             glb.toClip = factory.toClip
