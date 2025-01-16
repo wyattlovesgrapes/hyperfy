@@ -35,6 +35,17 @@ export function ChatBox({ className, world, active, onClose, ...props }) {
   }, [msgs])
   const send = async () => {
     if (!body) return
+    setBody('')
+    // check for client commands
+    if (body.startsWith('/')) {
+      const [cmd, arg1, arg2] = body.slice(1).split(' ')
+      if (cmd === 'stats') {
+        console.log('HI')
+        world.stats.toggle()
+        return
+      }
+    }
+    // otherwise post it
     const user = world.entities.player.data.user
     const msg = {
       id: uuid(),
@@ -44,7 +55,6 @@ export function ChatBox({ className, world, active, onClose, ...props }) {
       createdAt: moment().toISOString(),
     }
     world.chat.add(msg, true)
-    setBody('')
   }
   return (
     <div

@@ -26,6 +26,11 @@ export class PlayerRemote {
     this.base.add(this.vrm)
 
     this.world.setHot(this, true)
+    this.world.events.emit('enter', {
+      id: this.data.user.id,
+      name: this.data.user.name,
+      networkId: this.data.owner,
+    })
   }
 
   update(delta) {
@@ -56,5 +61,10 @@ export class PlayerRemote {
     this.base.deactivate()
     this.vrm = null
     this.world.setHot(this, false)
+    this.world.events.emit('leave', {
+      id: this.data.user.id,
+      name: this.data.user.name,
+      networkId: this.data.owner,
+    })
   }
 }

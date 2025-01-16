@@ -61,7 +61,16 @@ export class LOD extends Node {
 
   getProxy() {
     if (!this.proxy) {
+      const self = this
       const proxy = {
+        insert(pNode, maxDistance) {
+          if (!self.ctx.entity) {
+            return console.error('node has no ctx.entity')
+          }
+          const node = self.ctx.entity.nodes.get(pNode.id)
+          self.insert(node, maxDistance)
+          return this
+        },
         ...super.getProxy(),
       }
       this.proxy = proxy
