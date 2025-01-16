@@ -204,12 +204,17 @@ export class Collider extends Node {
         // set geometry(value) {
         //   throw new Error('[collider] cannot set geometry')
         // },
-        // get convex() {
-        //   return null
-        // },
-        // set convex(value) {
-        //   // ...
-        // },
+        get convex() {
+          return self.convex
+        },
+        set convex(value) {
+          if (self.convex === value) return
+          self.convex = value
+          if (self.shape) {
+            self.needsRebuild = true
+            self.setDirty()
+          }
+        },
         get trigger() {
           return self.trigger
         },
