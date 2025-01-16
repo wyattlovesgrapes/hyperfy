@@ -1,6 +1,7 @@
 export { Group as group } from './Group.js'
 export { Mesh as mesh } from './Mesh.js'
 export { LOD as lod } from './LOD.js'
+
 export { VRM as vrm } from './VRM.js'
 export { Action as action } from './Action.js'
 
