@@ -16,7 +16,7 @@ const defaults = {
   visible: true,
 }
 
-const types = ['box', 'sphere', 'custom']
+const types = ['box', 'sphere', 'geometry']
 
 let boxes = {}
 const upsertBox = (width, height, depth) => {
@@ -60,7 +60,7 @@ export class Mesh extends Node {
       geometry = upsertBox(this.width, this.height, this.depth)
     } else if (this.type === 'sphere') {
       geometry = upsertSphere(this.radius)
-    } else if (this.type === 'custom') {
+    } else if (this.type === 'geometry') {
       geometry = this.geometry
     }
 

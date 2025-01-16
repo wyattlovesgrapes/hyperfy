@@ -56,7 +56,7 @@ export function glbToNodes(glb, world) {
         const node = registerNode({
           id: object3d.name,
           name: 'collider',
-          type: 'custom',
+          type: 'geometry',
           geometry: object3d.geometry,
           convex: props.convex,
           position: object3d.position.toArray(),
@@ -77,7 +77,7 @@ export function glbToNodes(glb, world) {
         const node = registerNode({
           id: object3d.name,
           name: 'mesh',
-          type: 'custom',
+          type: 'geometry',
           geometry: object3d.geometry,
           material,
           instance: !hasMorphTargets,
