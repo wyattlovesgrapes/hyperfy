@@ -167,10 +167,6 @@ export class Node {
     // called when this thing should be removed from scene
   }
 
-  setMode(mode) {
-    // called when object changes mode, eg to disable physics when moving
-  }
-
   updateTransform() {
     if (this.isTransformed) {
       this.matrix.compose(this.position, this.quaternion, this.scale)
@@ -264,25 +260,28 @@ export class Node {
           return self.position
         },
         set position(value) {
-          throw new Error('Cannot modify node position')
+          throw new Error('Cannot replace node position')
         },
         get quaternion() {
           return self.quaternion
         },
         set quaternion(value) {
-          throw new Error('Cannot modify node quaternion')
+          throw new Error('Cannot replace node quaternion')
         },
         get rotation() {
           return self.rotation
         },
         set rotation(value) {
-          throw new Error('Cannot modify node position')
+          throw new Error('Cannot replace node position')
         },
         get scale() {
           return self.scale
         },
         set scale(value) {
-          throw new Error('Cannot modify node scale')
+          throw new Error('Cannot replace node scale')
+        },
+        get matrixWorld() {
+          return self.matrixWorld
         },
         get parent() {
           return self.parent?.getProxy()
@@ -315,7 +314,7 @@ export class Node {
         //   self.detach(node)
         // },
         get _ref() {
-          if (self.ctx.world._allowRefs) return self
+          if (self.ctx?.world?._allowRefs) return self
           return null
         },
       }

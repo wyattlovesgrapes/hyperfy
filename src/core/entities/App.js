@@ -1,3 +1,4 @@
+import { isString } from 'lodash-es'
 import * as THREE from '../extras/three'
 
 import { Entity } from './Entity'
@@ -25,6 +26,8 @@ export class App extends Entity {
     this.nodes = new Map()
     this.worldNodes = new Set()
     this.hotEvents = 0
+    this.worldListeners = new Map()
+    this.listeners = {}
     this.eventQueue = []
     this.build()
   }
@@ -112,7 +115,7 @@ export class App extends Entity {
     if (this.data.mover === this.world.network.id) {
       this.lastMoveSendTime = 0
       this.control = this.world.controls.bind({
-        priority: ControlPriorities.APP,
+        priority: ControlPriorities.ENTITY,
         onScroll: () => {
           return true
         },
@@ -123,7 +126,9 @@ export class App extends Entity {
     this.networkQuat = new LerpQuaternion(root.quaternion, this.world.networkRate)
     // execute any events we collected while building
     while (this.eventQueue.length) {
-      const event = this.eventQueue.shift()
+      const event = this.eventQueue[0]
+      if (event.version > this.blueprint.version) break // ignore future versions
+      this.eventQueue.shift()
       this.emit(event.name, event.data, event.clientId)
     }
     // finished!
@@ -140,7 +145,7 @@ export class App extends Entity {
     this.nodes.clear()
     this.worldNodes.clear()
     // clear script event listeners
-    this.events = {}
+    this.clearEventListeners()
     this.hotEvents = 0
     // release control
     if (this.control) {
@@ -205,11 +210,13 @@ export class App extends Entity {
         this.data.mover = null
         this.data.position = this.root.position.toArray()
         this.data.quaternion = this.root.quaternion.toArray()
+        this.data.state = {}
         this.world.network.send('entityModified', {
           id: this.data.id,
           mover: null,
           position: this.data.position,
           quaternion: this.data.quaternion,
+          state: this.data.state,
         })
         this.build()
       }
@@ -272,6 +279,10 @@ export class App extends Entity {
       this.data.quaternion = data.quaternion
       this.networkQuat.pushArray(data.quaternion)
     }
+    if (data.hasOwnProperty('state')) {
+      this.data.state = data.state
+      rebuild = true
+    }
     if (rebuild) {
       this.build()
     }
@@ -293,10 +304,10 @@ export class App extends Entity {
   }
 
   on(name, callback) {
-    if (!this.events[name]) {
-      this.events[name] = new Set()
+    if (!this.listeners[name]) {
+      this.listeners[name] = new Set()
     }
-    this.events[name].add(callback)
+    this.listeners[name].add(callback)
     if (hotEventNames.includes(name)) {
       this.hotEvents++
       this.world.setHot(this, this.hotEvents > 0)
@@ -304,8 +315,8 @@ export class App extends Entity {
   }
 
   off(name, callback) {
-    if (!this.events[name]) return
-    this.events[name].delete(callback)
+    if (!this.listeners[name]) return
+    this.listeners[name].delete(callback)
     if (hotEventNames.includes(name)) {
       this.hotEvents--
       this.world.setHot(this, this.hotEvents > 0)
@@ -313,18 +324,35 @@ export class App extends Entity {
   }
 
   emit(name, a1, a2) {
-    if (!this.events[name]) return
-    for (const callback of this.events[name]) {
+    if (!this.listeners[name]) return
+    for (const callback of this.listeners[name]) {
       callback(a1, a2)
     }
   }
 
-  onEvent(version, name, data, socketId) {
-    if (this.blueprint.version !== version) {
-      return
+  onWorldEvent(name, callback) {
+    this.worldListeners.set(callback, name)
+    this.world.events.on(name, callback)
+  }
+
+  offWorldEvent(name, callback) {
+    this.worldListeners.delete(callback)
+    this.world.events.off(name, callback)
+  }
+
+  clearEventListeners() {
+    // local
+    this.listeners = {}
+    // world
+    for (const [callback, name] of this.worldListeners) {
+      this.world.events.off(name, callback)
     }
-    if (this.building) {
-      this.eventQueue.push({ name, data, socketId })
+    this.worldListeners.clear()
+  }
+
+  onEvent(version, name, data, socketId) {
+    if (this.building || version > this.blueprint.version) {
+      this.eventQueue.push({ version, name, data, socketId })
     } else {
       this.emit(name, data, socketId)
     }
@@ -334,6 +362,9 @@ export class App extends Entity {
     const entity = this
     const world = this.world
     return {
+      get networkId() {
+        return world.network.id
+      },
       get isServer() {
         return world.network.isServer
       },
@@ -357,6 +388,23 @@ export class App extends Entity {
         entity.worldNodes.delete(node)
         node.deactivate()
       },
+      attach(pNode) {
+        const node = entity.nodes.get(pNode.id)
+        if (!node) return
+        const parent = node.parent
+        if (!parent) return
+        parent.remove(node)
+        node.matrix.copy(node.matrixWorld)
+        node.matrix.decompose(node.position, node.quaternion, node.scale)
+        node.activate({ world, entity, physics: true })
+        entity.worldNodes.add(node)
+      },
+      on(name, callback) {
+        entity.onWorldEvent(name, callback)
+      },
+      off(name, callback) {
+        entity.offWorldEvent(name, callback)
+      },
     }
   }
 
@@ -366,6 +414,9 @@ export class App extends Entity {
     return {
       get instanceId() {
         return entity.data.id
+      },
+      get version() {
+        return entity.blueprint.version
       },
       get state() {
         return entity.data.state
@@ -402,16 +453,16 @@ export class App extends Entity {
           return node.getProxy()
         }
       },
-      // control(options) {
-      //   // TODO: only allow on user interaction
-      //   // TODO: show UI with a button to release()
-      //   entity.control = world.input.bind({
-      //     ...options,
-      //     priority: 50,
-      //     object: entity,
-      //   })
-      //   return entity.control
-      // },
+      control(options) {
+        // TODO: only allow on user interaction
+        // TODO: show UI with a button to release()
+        entity.control = world.controls.bind({
+          ...options,
+          priority: ControlPriorities.APP,
+          object: entity,
+        })
+        return entity.control
+      },
       ...this.root.getProxy(),
     }
   }
