@@ -23,6 +23,7 @@ WORKDIR /app
 
 # Copy the build folder from the previous stage
 COPY --from=build /app/build ./build
+COPY ./src ./src
 
 # Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
