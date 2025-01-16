@@ -29,7 +29,11 @@ export class Events extends System {
   emit(name, a1, a2) {
     if (!this.listeners[name]) return
     for (const callback of this.listeners[name]) {
-      callback(a1, a2)
+      try {
+        callback(a1, a2)
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 }
