@@ -5,6 +5,7 @@ import { DEG2RAD, RAD2DEG } from '../extras/general'
 import { clamp, num } from '../utils'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
+import { secureFetch } from '../extras/secureFetch'
 
 /**
  * Script System
@@ -43,6 +44,7 @@ export class Scripts extends System {
       DEG2RAD,
       RAD2DEG,
       // pause: () => this.world.pause(),
+      fetch: secureFetch,
     })
   }
 
