@@ -50,8 +50,13 @@ export class App extends Entity {
     // fetch script (if any)
     let script
     if (blueprint.script) {
-      script = this.world.loader.get('script', blueprint.script)
-      if (!script) script = await this.world.loader.load('script', blueprint.script)
+      try {
+        script = this.world.loader.get('script', blueprint.script)
+        if (!script) script = await this.world.loader.load('script', blueprint.script)
+      } catch (err) {
+        console.error(err)
+        crashed = true
+      }
     }
     let root
     // if someone else is uploading glb, show a loading indicator
@@ -65,8 +70,9 @@ export class App extends Entity {
     // otherwise we can load the actual glb
     else {
       try {
-        let glb = this.world.loader.get('glb', blueprint.model)
-        if (!glb) glb = await this.world.loader.load('glb', blueprint.model)
+        const type = blueprint.model.endsWith('vrm') ? 'vrm' : 'glb'
+        let glb = this.world.loader.get(type, blueprint.model)
+        if (!glb) glb = await this.world.loader.load(type, blueprint.model)
         root = glb.toNodes()
       } catch (err) {
         console.error(err)

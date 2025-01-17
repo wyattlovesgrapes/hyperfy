@@ -83,7 +83,7 @@ export class PlayerLocal {
 
     // temp
     this.world.loader.load('vrm', 'asset://avatar.vrm').then(glb => {
-      this.vrm = glb.toNodes()
+      this.vrm = glb.toNodes().get('vrm')
       this.base.add(this.vrm)
     })
     // this.vrm = createNode({ name: 'mesh' })
