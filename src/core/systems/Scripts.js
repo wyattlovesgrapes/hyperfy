@@ -47,10 +47,15 @@ export class Scripts extends System {
   }
 
   evaluate(code) {
-    return {
-      exec: this.compartment.evaluate(wrapRawCode(code)),
+    let value
+    const result = {
+      exec: (...args) => {
+        if (!value) value = this.compartment.evaluate(wrapRawCode(code))
+        return value(...args)
+      },
       code,
     }
+    return result
   }
 }
 

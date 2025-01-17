@@ -22,7 +22,7 @@ export class PlayerRemote {
     this.emote = 'asset://emote-idle.glb'
 
     const glb = await this.world.loader.load('vrm', 'asset://avatar.vrm')
-    this.vrm = glb.toNodes()
+    this.vrm = glb.toNodes().get('vrm')
     this.base.add(this.vrm)
 
     this.world.setHot(this, true)

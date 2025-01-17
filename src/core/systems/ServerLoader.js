@@ -71,11 +71,16 @@ export class ServerLoader extends System {
           const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
             let node
+            let emote
             glb.toNodes = () => {
               if (!node) {
                 node = glbToNodes(glb, this.world)
               }
               return node.clone(true)
+            }
+            glb.toClip = options => {
+              if (!emote) emote = createEmoteFactory(glb, url)
+              return emote.toClip(options)
             }
             this.results.set(key, glb)
             resolve(glb)
@@ -88,35 +93,20 @@ export class ServerLoader extends System {
     if (type === 'vrm') {
       promise = new Promise(async (resolve, reject) => {
         try {
-          const buffer = await fs.readFile(url)
-          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-          this.gltfLoader.parse(arrayBuffer, '', glb => {
-            const factory = createVRMFactory(glb, this.world)
-            glb.toNodes = () => {
-              return createNode({
-                name: 'vrm',
-                factory,
-              })
-            }
-            this.results.set(key, glb)
-            resolve(glb)
-          })
-        } catch (err) {
-          reject(err)
-        }
-      })
-    }
-    if (type === 'emote') {
-      promise = new Promise(async (resolve, reject) => {
-        try {
-          const buffer = await fs.readFile(url)
-          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
-          this.gltfLoader.parse(arrayBuffer, '', glb => {
-            const factory = createEmoteFactory(glb, url)
-            glb.toClip = factory.toClip
-            this.results.set(key, glb)
-            resolve(glb)
-          })
+          // NOTE: we can't load vrms on the server yet but we don't need 'em anyway
+          let node
+          const glb = {
+            toNodes: () => {
+              if (!node) {
+                node = createNode({ name: 'group' })
+                const vrm = createNode({ id: 'vrm', name: 'vrm', factory: null })
+                node.add(vrm)
+              }
+              return node.clone(true)
+            },
+          }
+          this.results.set(key, glb)
+          resolve(glb)
         } catch (err) {
           reject(err)
         }
@@ -124,10 +114,14 @@ export class ServerLoader extends System {
     }
     if (type === 'script') {
       promise = new Promise(async (resolve, reject) => {
-        const code = await fs.readFile(url, { encoding: 'utf8' })
-        const script = this.world.scripts.evaluate(code)
-        this.results.set(key, script)
-        resolve(script)
+        try {
+          const code = await fs.readFile(url, { encoding: 'utf8' })
+          const script = this.world.scripts.evaluate(code)
+          this.results.set(key, script)
+          resolve(script)
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     this.promises.set(key, promise)

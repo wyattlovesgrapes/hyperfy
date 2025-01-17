@@ -63,11 +63,16 @@ export class ClientLoader extends System {
     if (type === 'glb') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
         let node
+        let emote
         glb.toNodes = () => {
           if (!node) {
             node = glbToNodes(glb, this.world)
           }
           return node.clone(true)
+        }
+        glb.toClip = options => {
+          if (!emote) emote = createEmoteFactory(glb, url)
+          return emote.toClip(options)
         }
         this.results.set(key, glb)
         return glb
@@ -76,31 +81,30 @@ export class ClientLoader extends System {
     if (type === 'vrm') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
         const factory = createVRMFactory(glb, this.world)
+        let node
         glb.toNodes = () => {
-          return createNode({
-            name: 'vrm',
-            factory,
-          })
+          if (!node) {
+            node = createNode({ name: 'group' })
+            const vrm = createNode({ id: 'vrm', name: 'vrm', factory })
+            node.add(vrm)
+          }
+          return node.clone(true)
         }
-        this.results.set(key, glb)
-        return glb
-      })
-    }
-    if (type === 'emote') {
-      promise = this.gltfLoader.loadAsync(url).then(glb => {
-        const factory = createEmoteFactory(glb, url)
-        glb.toClip = factory.toClip
         this.results.set(key, glb)
         return glb
       })
     }
     if (type === 'script') {
       promise = new Promise(async (resolve, reject) => {
-        const resp = await fetch(url)
-        const code = await resp.text()
-        const script = this.world.scripts.evaluate(code)
-        this.results.set(key, script)
-        resolve(script)
+        try {
+          const resp = await fetch(url)
+          const code = await resp.text()
+          const script = this.world.scripts.evaluate(code)
+          this.results.set(key, script)
+          resolve(script)
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     this.promises.set(key, promise)
@@ -114,9 +118,30 @@ export class ClientLoader extends System {
     if (type === 'glb') {
       promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
         let node
+        let emote
         glb.toNodes = () => {
           if (!node) {
             node = glbToNodes(glb, this.world)
+          }
+          return node.clone(true)
+        }
+        glb.toClip = options => {
+          if (!emote) emote = createEmoteFactory(glb, url)
+          return emote.toClip(options)
+        }
+        this.results.set(key, glb)
+        return glb
+      })
+    }
+    if (type === 'vrm') {
+      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+        const factory = createVRMFactory(glb, this.world)
+        let node
+        glb.toNodes = () => {
+          if (!node) {
+            node = createNode({ name: 'group' })
+            const vrm = createNode({ id: 'vrm', name: 'vrm', factory })
+            node.add(vrm)
           }
           return node.clone(true)
         }
@@ -126,10 +151,14 @@ export class ClientLoader extends System {
     }
     if (type === 'script') {
       promise = new Promise(async (resolve, reject) => {
-        const code = await file.text()
-        const script = this.world.scripts.evaluate(code)
-        this.results.set(key, script)
-        resolve(script)
+        try {
+          const code = await file.text()
+          const script = this.world.scripts.evaluate(code)
+          this.results.set(key, script)
+          resolve(script)
+        } catch (err) {
+          reject(err)
+        }
       })
     }
     this.promises.set(key, promise)
