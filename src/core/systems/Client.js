@@ -1,9 +1,11 @@
-import * as THREE from '../extras/three'
 import EventEmitter from 'eventemitter3'
 import { isBoolean, isNumber } from 'lodash-es'
 
 import { System } from './System'
 import { storage } from '../storage'
+
+import * as THREE from '../extras/three'
+import { initYoga } from '../extras/yoga'
 
 /**
  * Client System
@@ -21,6 +23,11 @@ export class Client extends System {
     this.settings = new Settings(this)
     window.world = world
     window.THREE = THREE
+  }
+
+  async init({ loadYoga }) {
+    await loadYoga
+    initYoga()
   }
 
   start() {
