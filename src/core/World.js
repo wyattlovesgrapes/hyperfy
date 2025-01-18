@@ -154,6 +154,9 @@ export class World extends EventEmitter {
   }
 
   postLateUpdate(delta) {
+    for (const item of this.hot) {
+      item.postLateUpdate?.(delta)
+    }
     for (const system of this.systems) {
       system.postLateUpdate(delta)
     }
