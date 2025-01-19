@@ -124,7 +124,6 @@ export class UIText extends Node {
     if (this.ctx.world.network.isServer) return
     this.ui = this.parent?.ui
     if (!this.ui) return console.error('uiview: must be child of ui node')
-    console.log('uitext:mount')
     this.yogaNode = Yoga.Node.create()
     this.yogaNode.setMeasureFunc(this.measureTextFunc())
     this.yogaNode.setDisplay(Display[this.display])
@@ -137,7 +136,6 @@ export class UIText extends Node {
 
   unmount() {
     if (this.ctx.world.network.isServer) return
-    console.log('uitext:unmount')
     this.parent.yogaNode.removeChild(this.yogaNode)
     this.yogaNode.free()
     this.yogaNode = null

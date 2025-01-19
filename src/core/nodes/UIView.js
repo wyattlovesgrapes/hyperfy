@@ -68,7 +68,6 @@ export class UIView extends Node {
     if (this.ctx.world.network.isServer) return
     this.ui = this.parent?.ui
     if (!this.ui) return console.error('uiview: must be child of ui node')
-    console.log('uiview:mount')
     this.yogaNode = Yoga.Node.create()
     this.yogaNode.setDisplay(Display[this.display])
     this.yogaNode.setWidth(this.width === null ? undefined : this.width * this.ui.res)
@@ -93,7 +92,6 @@ export class UIView extends Node {
 
   unmount() {
     if (this.ctx.world.network.isServer) return
-    console.log('uiview:unmount')
     this.parent.yogaNode.removeChild(this.yogaNode)
     this.yogaNode.free()
     this.yogaNode = null
