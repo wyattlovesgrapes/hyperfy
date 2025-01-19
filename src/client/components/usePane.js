@@ -20,7 +20,7 @@ const persist = debounce(() => storage.set(STORAGE_KEY, info), 300)
 
 let layer = 0
 
-export function usePane(id, paneRef, headRef) {
+export function usePane(id, paneRef, headRef, resizable = false) {
   useEffect(() => {
     let config = info.configs[id]
     if (!config) {
@@ -36,20 +36,26 @@ export function usePane(id, paneRef, headRef) {
       persist()
     }
 
+    if (!resizable) {
+      config.width = paneRef.current.offsetWidth
+      config.height = paneRef.current.offsetHeight
+    }
+
     layer++
     const pane = paneRef.current
 
     // ensure pane is within screen bounds so it can't get lost
     const maxX = window.innerWidth - config.width
     const maxY = window.innerHeight - config.height
-
     config.x = Math.min(Math.max(0, config.x), maxX)
     config.y = Math.min(Math.max(0, config.y), maxY)
 
     pane.style.top = `${config.y}px`
     pane.style.left = `${config.x}px`
-    pane.style.width = `${config.width}px`
-    pane.style.height = `${config.height}px`
+    if (resizable) {
+      pane.style.width = `${config.width}px`
+      pane.style.height = `${config.height}px`
+    }
     pane.style.zIndex = `${layer}`
 
     const head = headRef.current
