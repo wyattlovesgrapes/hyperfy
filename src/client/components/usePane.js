@@ -4,17 +4,27 @@ import { storage } from '../../core/storage'
 
 const STORAGE_KEY = 'panes'
 
-let configs = storage.get(STORAGE_KEY, {})
-let count = 0
-let layer = 0
+let info = storage.get(STORAGE_KEY)
 
-const persist = debounce(() => storage.set(STORAGE_KEY, configs), 300)
+if (!info || info.v !== 1) {
+  info = {
+    v: 1,
+    count: 0,
+    configs: {
+      // [id]: { x, y, width, height }
+    },
+  }
+}
+
+const persist = debounce(() => storage.set(STORAGE_KEY, info), 300)
+
+let layer = 0
 
 export function usePane(id, paneRef, headRef) {
   useEffect(() => {
-    let config = configs[id]
+    let config = info.configs[id]
     if (!config) {
-      count++
+      const count = ++info.count
       config = {
         y: count * 20,
         x: count * 20,
@@ -22,7 +32,7 @@ export function usePane(id, paneRef, headRef) {
         height: paneRef.current.offsetHeight,
         layer: 0,
       }
-      configs[id] = config
+      info.configs[id] = config
       persist()
     }
 
@@ -30,8 +40,9 @@ export function usePane(id, paneRef, headRef) {
     const pane = paneRef.current
 
     // ensure pane is within screen bounds so it can't get lost
-    const maxX = window.innerWidth - pane.offsetWidth
-    const maxY = window.innerHeight - pane.offsetHeight
+    const maxX = window.innerWidth - config.width
+    const maxY = window.innerHeight - config.height
+
     config.x = Math.min(Math.max(0, config.x), maxX)
     config.y = Math.min(Math.max(0, config.y), maxY)
 
@@ -66,7 +77,7 @@ export function usePane(id, paneRef, headRef) {
       moving = false
     }
 
-    const onResize = new ResizeObserver(entries => {
+    const resizer = new ResizeObserver(entries => {
       const entry = entries[0]
       if (entry) {
         config.width = entry.contentRect.width
@@ -79,14 +90,14 @@ export function usePane(id, paneRef, headRef) {
     pane.addEventListener('pointerdown', onPanePointerDown)
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
-    onResize.observe(pane)
+    resizer.observe(pane)
 
     return () => {
       head.removeEventListener('pointerdown', onHeadPointerDown)
       pane.removeEventListener('pointerdown', onPanePointerDown)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
-      onResize.disconnect()
+      resizer.disconnect()
     }
   }, [])
 }
