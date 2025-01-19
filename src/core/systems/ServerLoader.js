@@ -2,7 +2,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { VRMLoaderPlugin } from '@pixiv/three-vrm'
+// import { VRMLoaderPlugin } from '@pixiv/three-vrm'
 
 import { System } from './System'
 import { createVRMFactory } from '../extras/createVRMFactory'
@@ -25,7 +25,7 @@ export class ServerLoader extends System {
     this.results = new Map()
     this.rgbeLoader = new RGBELoader()
     this.gltfLoader = new GLTFLoader()
-    this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
+    // this.gltfLoader.register(parser => new VRMLoaderPlugin(parser))
 
     // mock globals to allow gltf loader to work in nodejs
     globalThis.self = { URL }
