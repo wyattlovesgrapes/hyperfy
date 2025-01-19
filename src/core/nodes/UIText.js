@@ -154,7 +154,7 @@ export class UIText extends Node {
   getProxy() {
     var self = this
     if (!this.proxy) {
-      const proxy = {
+      let proxy = {
         get display() {
           return self.display
         },
@@ -219,8 +219,8 @@ export class UIText extends Node {
           self.yogaNode?.markDirty()
           self.ui?.redraw()
         },
-        ...super.getProxy(),
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

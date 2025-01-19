@@ -201,7 +201,7 @@ export class UI extends Node {
   getProxy() {
     var self = this
     if (!this.proxy) {
-      const proxy = {
+      let proxy = {
         get width() {
           return self.width
         },
@@ -321,8 +321,8 @@ export class UI extends Node {
           // self.yogaNode?.markDirty()
           self.redraw()
         },
-        ...super.getProxy(),
       }
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
       this.proxy = proxy
     }
     return this.proxy

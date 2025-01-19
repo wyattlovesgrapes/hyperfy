@@ -7,6 +7,7 @@ import { createNode } from '../extras/createNode'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { ControlPriorities } from '../extras/ControlPriorities'
+import { getRef } from '../nodes/Node'
 
 const hotEventNames = ['fixedUpdate', 'update', 'lateUpdate']
 const internalEvents = ['fixedUpdate', 'updated', 'lateUpdate']
@@ -32,8 +33,8 @@ export class App extends Entity {
     this.build()
   }
 
-  createNode(data) {
-    const node = createNode(data)
+  createNode(name) {
+    const node = createNode({ name })
     if (this.nodes.has(node.id)) {
       console.error('node with id already exists: ', node.id)
       return
@@ -378,7 +379,7 @@ export class App extends Entity {
         return world.network.isClient
       },
       add(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         if (node.parent) {
           node.parent.remove(node)
@@ -387,7 +388,7 @@ export class App extends Entity {
         node.activate({ world, entity, physics: true })
       },
       remove(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         if (node.parent) return // its not in world
         if (!entity.worldNodes.has(node)) return
@@ -395,7 +396,7 @@ export class App extends Entity {
         node.deactivate()
       },
       attach(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         const parent = node.parent
         if (!parent) return
@@ -450,14 +451,8 @@ export class App extends Entity {
         return node.getProxy()
       },
       create(name) {
-        if (isString(name)) {
-          const node = entity.createNode({ name })
-          return node.getProxy()
-        } else {
-          console.warn('TODO: migrate script to create(String)')
-          const node = entity.createNode(name)
-          return node.getProxy()
-        }
+        const node = entity.createNode(name)
+        return node.getProxy()
       },
       control(options) {
         // TODO: only allow on user interaction
