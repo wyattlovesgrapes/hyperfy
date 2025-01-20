@@ -446,6 +446,10 @@ export class App extends Entity {
         if (!format) return moment().toISOString()
         return moment().format(format)
       },
+      chat(msg, broadcast) {
+        if (!msg) return
+        world.chat.add(msg, broadcast)
+      },
     }
   }
 
