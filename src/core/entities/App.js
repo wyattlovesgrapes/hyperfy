@@ -1,5 +1,6 @@
 import { isString } from 'lodash-es'
 import * as THREE from '../extras/three'
+import moment from 'moment'
 
 import { Entity } from './Entity'
 import { glbToNodes } from '../extras/glbToNodes'
@@ -437,6 +438,10 @@ export class App extends Entity {
       },
       off(name, callback) {
         entity.offWorldEvent(name, callback)
+      },
+      getTimestamp(format) {
+        if (!format) return moment().toISOString()
+        return moment().format(format)
       },
     }
   }
