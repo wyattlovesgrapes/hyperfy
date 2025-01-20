@@ -45,7 +45,6 @@ export class Scripts extends System {
       RAD2DEG,
       uuid,
       // pause: () => this.world.pause(),
-      fetch: secureFetch,
     })
   }
 
@@ -66,7 +65,7 @@ function wrapRawCode(code) {
   return `
   (function() {
     const shared = {}
-    return (world, app) => {
+    return (world, app, fetch) => {
       ${code}
     }
   })()

@@ -107,9 +107,10 @@ export class App extends Entity {
     this.root.activate({ world: this.world, entity: this, physics: !this.data.mover })
     // execute script
     if (this.mode === Modes.ACTIVE && script && !crashed) {
+      this.abortController = new AbortController()
       this.script = script
       try {
-        this.script.exec(this.getWorldProxy(), this.getAppProxy())
+        this.script.exec(this.getWorldProxy(), this.getAppProxy(), this.fetch)
       } catch (err) {
         console.error('script crashed')
         console.error(err)
@@ -161,6 +162,9 @@ export class App extends Entity {
     }
     // cancel update tracking
     this.world.setHot(this, false)
+    // abort fetch's etc
+    this.abortController?.abort()
+    this.abortController = null
   }
 
   fixedUpdate(delta) {
@@ -362,6 +366,28 @@ export class App extends Entity {
       this.eventQueue.push({ version, name, data, socketId })
     } else {
       this.emit(name, data, socketId)
+    }
+  }
+
+  fetch = async (url, options = {}) => {
+    try {
+      const resp = await fetch(url, {
+        ...options,
+        signal: this.abortController.signal,
+      })
+      const secureResp = {
+        ok: resp.ok,
+        status: resp.status,
+        statusText: resp.statusText,
+        headers: Object.fromEntries(resp.headers.entries()),
+        json: async () => await resp.json(),
+        text: async () => await resp.text(),
+        blob: async () => await resp.blob(),
+      }
+      return secureResp
+    } catch (err) {
+      console.error(err)
+      // this.crash()
     }
   }
 
