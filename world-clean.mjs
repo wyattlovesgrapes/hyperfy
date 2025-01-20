@@ -1,3 +1,4 @@
+import 'dotenv-flow/config'
 import fs from 'fs-extra'
 import path from 'path'
 import Knex from 'knex'
@@ -6,18 +7,22 @@ import { fileURLToPath } from 'url'
 
 const DRY_RUN = false
 
+const world = process.env.WORLD || 'world'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(__dirname, './')
-const worldDir = path.join(rootDir, 'world')
-const assetsDir = path.join(rootDir, 'world/assets')
+const worldDir = path.join(rootDir, world)
+const assetsDir = path.join(worldDir, '/assets')
 
 const db = Knex({
   client: 'better-sqlite3',
   connection: {
-    filename: './world/db.sqlite',
+    filename: `./${world}/db.sqlite`,
   },
   useNullAsDefault: true,
 })
+
+// TODO: run any missing migrations first?
 
 let blueprints = new Set()
 const blueprintRows = await db('blueprints')

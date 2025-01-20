@@ -19,8 +19,8 @@ import { hashFile } from '../core/utils-server'
 import { getDB } from './db'
 
 const rootDir = path.join(__dirname, '../')
-const worldDir = path.join(rootDir, 'world')
-const assetsDir = path.join(rootDir, 'world/assets')
+const worldDir = path.join(rootDir, process.env.WORLD)
+const assetsDir = path.join(worldDir, '/assets')
 const port = process.env.PORT
 
 await fs.ensureDir(worldDir)
