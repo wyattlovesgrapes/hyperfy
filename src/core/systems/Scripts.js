@@ -2,7 +2,7 @@ import { System } from './System'
 
 import * as THREE from '../extras/three'
 import { DEG2RAD, RAD2DEG } from '../extras/general'
-import { clamp, num } from '../utils'
+import { clamp, num, uuid } from '../utils'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { secureFetch } from '../extras/secureFetch'
@@ -43,6 +43,7 @@ export class Scripts extends System {
       // Gradient: Gradient,
       DEG2RAD,
       RAD2DEG,
+      uuid,
       // pause: () => this.world.pause(),
       fetch: secureFetch,
     })
