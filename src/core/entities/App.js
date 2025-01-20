@@ -439,6 +439,9 @@ export class App extends Entity {
       off(name, callback) {
         entity.offWorldEvent(name, callback)
       },
+      getTime() {
+        return performance.now()
+      },
       getTimestamp(format) {
         if (!format) return moment().toISOString()
         return moment().format(format)
