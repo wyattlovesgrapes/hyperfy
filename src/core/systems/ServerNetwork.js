@@ -288,12 +288,20 @@ export class ServerNetwork extends System {
     if (entity.isApp) this.dirtyApps.add(entity.data.id)
   }
 
-  onEntityModified = (socket, data) => {
+  onEntityModified = async (socket, data) => {
     // TODO: check client permission
     const entity = this.world.entities.get(data.id)
     entity.modify(data)
     this.send('entityModified', data, socket.id)
-    if (entity.isApp) this.dirtyApps.add(entity.data.id)
+    if (entity.isApp) {
+      // mark for saving
+      this.dirtyApps.add(entity.data.id)
+    }
+    if (entity.isPlayer) {
+      // update player (only vrm field for now)
+      const { id, vrm } = entity.data.user
+      await this.db('users').where('id', id).update({ vrm })
+    }
   }
 
   onEntityEvent = (socket, event) => {

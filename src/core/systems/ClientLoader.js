@@ -28,7 +28,13 @@ export class ClientLoader extends System {
   }
 
   start() {
-    // ...
+    this.vrmAPI = {
+      camera: this.world.camera,
+      scene: this.world.stage.scene,
+      octree: this.world.stage.octree,
+      setupMaterial: this.world.setupMaterial,
+      loader: this.world.loader,
+    }
   }
 
   has(type, url) {
@@ -80,8 +86,9 @@ export class ClientLoader extends System {
     }
     if (type === 'vrm') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
-        const factory = createVRMFactory(glb, this.world)
+        const factory = createVRMFactory(glb, this.vrmAPI)
         let node
+        glb.factory = factory
         glb.toNodes = () => {
           if (!node) {
             node = createNode({ name: 'group' })
@@ -135,8 +142,9 @@ export class ClientLoader extends System {
     }
     if (type === 'vrm') {
       promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
-        const factory = createVRMFactory(glb, this.world)
+        const factory = createVRMFactory(glb, this.vrmAPI)
         let node
+        glb.factory = factory
         glb.toNodes = () => {
           if (!node) {
             node = createNode({ name: 'group' })

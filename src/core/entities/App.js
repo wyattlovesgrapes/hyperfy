@@ -502,6 +502,13 @@ export class App extends Entity {
         })
         return entity.control
       },
+      configure(fn) {
+        entity.getConfig = fn
+        entity.onConfigure?.(fn)
+      },
+      get config() {
+        return entity.blueprint.config
+      },
       ...this.root.getProxy(),
     }
   }
