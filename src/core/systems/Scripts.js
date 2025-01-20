@@ -5,7 +5,6 @@ import { DEG2RAD, RAD2DEG } from '../extras/general'
 import { clamp, num, uuid } from '../utils'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
-import { secureFetch } from '../extras/secureFetch'
 
 /**
  * Script System
