@@ -34,9 +34,9 @@ export class PlayerRemote {
   applyVRM() {
     const vrmUrl = this.data.user.vrm || 'asset://avatar.vrm'
     if (this.vrmUrl === vrmUrl) return
-    this.world.loader.load('vrm', vrmUrl).then(glb => {
+    this.world.loader.load('avatar', vrmUrl).then(src => {
       if (this.vrm) this.vrm.deactivate()
-      this.vrm = glb.toNodes().get('vrm')
+      this.vrm = src.toNodes().get('vrm')
       this.base.add(this.vrm)
       this.vrmUrl = vrmUrl
     })
@@ -45,7 +45,7 @@ export class PlayerRemote {
   update(delta) {
     this.position.update(delta)
     this.quaternion.update(delta)
-    this.vrm?.vrm?.setEmote(emotes[this.emote])
+    this.vrm?.setEmote(emotes[this.emote])
   }
 
   modify(data) {

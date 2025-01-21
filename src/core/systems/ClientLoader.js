@@ -28,7 +28,7 @@ export class ClientLoader extends System {
   }
 
   start() {
-    this.vrmAPI = {
+    this.vrmHooks = {
       camera: this.world.camera,
       scene: this.world.stage.scene,
       octree: this.world.stage.octree,
@@ -66,39 +66,47 @@ export class ClientLoader extends System {
         return texture
       })
     }
-    if (type === 'glb') {
+    if (type === 'model') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
-        let node
-        let emote
-        glb.toNodes = () => {
-          if (!node) {
-            node = glbToNodes(glb, this.world)
-          }
-          return node.clone(true)
+        const node = glbToNodes(glb, this.world)
+        const model = {
+          toNodes() {
+            return node.clone(true)
+          },
         }
-        glb.toClip = options => {
-          if (!emote) emote = createEmoteFactory(glb, url)
-          return emote.toClip(options)
-        }
-        this.results.set(key, glb)
-        return glb
+        this.results.set(key, model)
+        return model
       })
     }
-    if (type === 'vrm') {
+    if (type === 'emote') {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
-        const factory = createVRMFactory(glb, this.vrmAPI)
-        let node
-        glb.factory = factory
-        glb.toNodes = () => {
-          if (!node) {
-            node = createNode({ name: 'group' })
-            const vrm = createNode({ id: 'vrm', name: 'vrm', factory })
-            node.add(vrm)
-          }
-          return node.clone(true)
+        const factory = createEmoteFactory(glb, url)
+        const emote = {
+          toClip(options) {
+            return factory.toClip(options)
+          },
         }
-        this.results.set(key, glb)
-        return glb
+        this.results.set(key, emote)
+        return emote
+      })
+    }
+    if (type === 'avatar') {
+      promise = this.gltfLoader.loadAsync(url).then(glb => {
+        const factory = createVRMFactory(glb, this.world.setupMaterial)
+        const node = createNode({ name: 'group' })
+        const vrm = createNode({ id: 'vrm', name: 'vrm', factory, hooks: this.vrmHooks })
+        node.add(vrm)
+        const avatar = {
+          toNodes(customHooks) {
+            const clone = node.clone(true)
+            if (customHooks) {
+              clone.get('vrm').hooks = customHooks
+            }
+            return clone
+          },
+        }
+        this.results.set(key, avatar)
+        return avatar
       })
     }
     if (type === 'script') {
@@ -122,39 +130,47 @@ export class ClientLoader extends System {
     const key = `${type}/${url}`
     const localUrl = URL.createObjectURL(file)
     let promise
-    if (type === 'glb') {
+    if (type === 'model') {
       promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
-        let node
-        let emote
-        glb.toNodes = () => {
-          if (!node) {
-            node = glbToNodes(glb, this.world)
-          }
-          return node.clone(true)
+        const node = glbToNodes(glb, this.world)
+        const model = {
+          toNodes() {
+            return node.clone(true)
+          },
         }
-        glb.toClip = options => {
-          if (!emote) emote = createEmoteFactory(glb, url)
-          return emote.toClip(options)
-        }
-        this.results.set(key, glb)
-        return glb
+        this.results.set(key, model)
+        return model
       })
     }
-    if (type === 'vrm') {
+    if (type === 'emote') {
       promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
-        const factory = createVRMFactory(glb, this.vrmAPI)
-        let node
-        glb.factory = factory
-        glb.toNodes = () => {
-          if (!node) {
-            node = createNode({ name: 'group' })
-            const vrm = createNode({ id: 'vrm', name: 'vrm', factory })
-            node.add(vrm)
-          }
-          return node.clone(true)
+        const factory = createEmoteFactory(glb, url)
+        const emote = {
+          toClip(options) {
+            return factory.toClip(options)
+          },
         }
-        this.results.set(key, glb)
-        return glb
+        this.results.set(key, emote)
+        return emote
+      })
+    }
+    if (type === 'avatar') {
+      promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
+        const factory = createVRMFactory(glb, this.world.setupMaterial)
+        const node = createNode({ name: 'group' })
+        const vrm = createNode({ id: 'vrm', name: 'vrm', factory, hooks: this.vrmHooks })
+        node.add(vrm)
+        const avatar = {
+          toNodes(customHooks) {
+            const clone = node.clone(true)
+            if (customHooks) {
+              clone.get('vrm').hooks = customHooks
+            }
+            return clone
+          },
+        }
+        this.results.set(key, avatar)
+        return avatar
       })
     }
     if (type === 'script') {

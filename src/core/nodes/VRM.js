@@ -6,27 +6,28 @@ export class VRM extends Node {
     super(data)
     this.name = 'vrm'
     this.factory = data.factory
-    this.vrm = null
+    this.hooks = data.hooks
+    this.instance = null
   }
 
   mount() {
     if (this.factory) {
-      this.vrm = this.factory(this.matrixWorld, this)
-      this.ctx.world.setHot(this.vrm, true)
+      this.instance = this.factory(this.matrixWorld, this.hooks, this)
+      this.ctx.world?.setHot(this.instance, true)
     }
   }
 
   commit(didMove) {
     if (didMove) {
-      this.vrm?.move(this.matrixWorld)
+      this.instance?.move(this.matrixWorld)
     }
   }
 
   unmount() {
-    if (this.vrm) {
-      this.vrm.destroy()
-      this.vrm = null
-      this.ctx.world.setHot(this.vrm, false)
+    if (this.instance) {
+      this.instance.destroy()
+      this.instance = null
+      this.ctx.world?.setHot(this.instance, false)
     }
   }
 
@@ -55,9 +56,14 @@ export class VRM extends Node {
   //   }
   // }
 
+  setEmote(url) {
+    return this.instance?.setEmote(url)
+  }
+
   copy(source, recursive) {
     super.copy(source, recursive)
     this.factory = source.factory
+    this.hooks = source.hooks
     return this
   }
 
@@ -66,7 +72,7 @@ export class VRM extends Node {
       const self = this
       let proxy = {
         setEmote(url) {
-          return self.vrm?.setEmote(url)
+          return self.setEmote(url)
         },
       }
       proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties

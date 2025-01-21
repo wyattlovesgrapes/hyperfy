@@ -64,33 +64,47 @@ export class ServerLoader extends System {
     if (type === 'tex') {
       // ...
     }
-    if (type === 'glb') {
+    if (type === 'model') {
       promise = new Promise(async (resolve, reject) => {
         try {
           const buffer = await fs.readFile(url)
           const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
           this.gltfLoader.parse(arrayBuffer, '', glb => {
-            let node
-            let emote
-            glb.toNodes = () => {
-              if (!node) {
-                node = glbToNodes(glb, this.world)
-              }
-              return node.clone(true)
+            const node = glbToNodes(glb, this.world)
+            const model = {
+              toNodes() {
+                return node.clone(true)
+              },
             }
-            glb.toClip = options => {
-              if (!emote) emote = createEmoteFactory(glb, url)
-              return emote.toClip(options)
-            }
-            this.results.set(key, glb)
-            resolve(glb)
+            this.results.set(key, model)
+            resolve(model)
           })
         } catch (err) {
           reject(err)
         }
       })
     }
-    if (type === 'vrm') {
+    if (type === 'emote') {
+      promise = new Promise(async (resolve, reject) => {
+        try {
+          const buffer = await fs.readFile(url)
+          const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+          this.gltfLoader.parse(arrayBuffer, '', glb => {
+            const factory = createEmoteFactory(glb, url)
+            const emote = {
+              toClip(options) {
+                return factory.toClip(options)
+              },
+            }
+            this.results.set(key, emote)
+            resolve(emote)
+          })
+        } catch (err) {
+          reject(err)
+        }
+      })
+    }
+    if (type === 'avatar') {
       promise = new Promise(async (resolve, reject) => {
         try {
           // NOTE: we can't load vrms on the server yet but we don't need 'em anyway

@@ -104,12 +104,17 @@ export class PlayerLocal {
   applyVRM() {
     const vrmUrl = this.data.user.vrm || 'asset://avatar.vrm'
     if (this.vrmUrl === vrmUrl) return
-    this.world.loader.load('vrm', vrmUrl).then(glb => {
-      if (this.vrm) this.vrm.deactivate()
-      this.vrm = glb.toNodes().get('vrm')
-      this.base.add(this.vrm)
-      this.vrmUrl = vrmUrl
-    })
+    this.world.loader
+      .load('avatar', vrmUrl)
+      .then(src => {
+        if (this.vrm) this.vrm.deactivate()
+        this.vrm = src.toNodes().get('vrm')
+        this.base.add(this.vrm)
+        this.vrmUrl = vrmUrl
+      })
+      .catch(err => {
+        console.error(err)
+      })
   }
 
   initCapsule() {
@@ -538,7 +543,7 @@ export class PlayerLocal {
     } else {
       this.emote = Emotes.IDLE
     }
-    this.vrm?.vrm.setEmote(emotes[this.emote])
+    this.vrm?.setEmote(emotes[this.emote])
 
     // send network updates
     this.lastSendAt += delta

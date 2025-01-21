@@ -86,17 +86,17 @@ export class VRMPreview {
     texture.mapping = THREE.EquirectangularReflectionMapping
     this.scene.environment = texture
     // load VRM
-    this.glb = await this.world.loader.load('vrm', this.url)
-    this.vrmAPI = {
-      camera: this.camera,
-      scene: this.scene,
-      octree: null,
-      setupMaterial: this.world.setupMaterial,
-      loader: this.world.loader,
-    }
-    this.factory = createVRMFactory(this.glb, this.vrmAPI)
-    this.vrm = this.factory(new THREE.Matrix4())
-    this.vrm.setEmote(emotes[Emotes.IDLE])
+    this.avatar = await this.world.loader.load('avatar', this.url)
+    this.node = this.avatar
+      .toNodes({
+        camera: this.camera,
+        scene: this.scene,
+        octree: null,
+        loader: this.world.loader,
+      })
+      .get('vrm')
+    this.node.activate({})
+    this.node.setEmote(emotes[Emotes.IDLE])
     // check we're still alive / didnt destroy
     if (!this.renderer) return
     // position camera
@@ -112,8 +112,7 @@ export class VRMPreview {
 
   positionCamera() {
     const camera = this.camera
-    const vrm = this.vrm
-    const object = this.vrm.scene
+    const vrm = this.node.instance
     const hips = vrm.raw.userData.vrm.humanoid.getRawBone('hips').node
 
     // vrm.bones.leftShoulder.scale.setScalar(0)
@@ -148,7 +147,7 @@ export class VRMPreview {
     // size.max.x = 0.1
     // size.min.y =
     // size.x = 0.1
-    // object.position.y = -this.vrm.height
+    // object.position.y = -this.node.height
 
     // figure out how to fit the box in the view:
     // 1. figure out horizontal FOV (on non-1.0 aspects)
@@ -230,7 +229,7 @@ export class VRMPreview {
   update = time => {
     const delta = (this.lastTime ? time - this.lastTime : 0) / 1000
     this.lastTime = time
-    this.vrm.update(delta)
+    this.node.instance.update(delta)
     this.render()
   }
 
@@ -243,7 +242,7 @@ export class VRMPreview {
     console.log(this.renderer.info.render.triangles)
     const stats = {}
     // bounds
-    const bbox = new THREE.Box3().setFromObject(this.vrm.raw.scene)
+    const bbox = new THREE.Box3().setFromObject(this.node.instance.raw.scene)
     const bounds = bbox
       .getSize(v1)
       .toArray()
@@ -256,7 +255,7 @@ export class VRMPreview {
     }
     // triangles
     let triangles = 0
-    this.vrm.raw.scene.traverse(node => {
+    this.node.instance.raw.scene.traverse(node => {
       if (node.isMesh) {
         const geometry = node.geometry
         if (geometry.index !== null) {
@@ -272,7 +271,7 @@ export class VRMPreview {
     }
     // draws
     let draws = 0
-    this.vrm.raw.scene.traverse(function (node) {
+    this.node.instance.raw.scene.traverse(function (node) {
       if (node.isMesh) {
         const material = node.material
         if (Array.isArray(material)) {
@@ -296,7 +295,7 @@ export class VRMPreview {
     }
     // bones
     let skeleton = null
-    this.vrm.raw.scene.traverse(function (node) {
+    this.node.instance.raw.scene.traverse(function (node) {
       if (node.isSkinnedMesh) {
         skeleton = node.skeleton
       }
@@ -347,7 +346,7 @@ export class VRMPreview {
   }
 
   destroy() {
-    this.vrm?.destroy()
+    this.node?.deactivate()
     this.viewport.removeChild(this.renderer.domElement)
     this.renderer.setAnimationLoop(null)
     this.renderer.clear()

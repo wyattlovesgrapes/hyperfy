@@ -231,14 +231,14 @@ export class ClientEditor extends System {
     }
     const ext = file.name.split('.').pop().toLowerCase()
     if (ext === 'glb') {
-      this.addGLB(file)
+      this.addModel(file)
     }
     if (ext === 'vrm') {
-      this.addVRM(file)
+      this.addAvatar(file)
     }
   }
 
-  async addGLB(file) {
+  async addModel(file) {
     // immutable hash the file
     const hash = await hashFile(file)
     // use hash as glb filename
@@ -246,7 +246,7 @@ export class ClientEditor extends System {
     // canonical url to this file
     const url = `asset://${filename}`
     // cache file locally so this client can insta-load it
-    this.world.loader.insert('glb', url, file)
+    this.world.loader.insert('model', url, file)
     // make blueprint
     const blueprint = {
       id: uuid(),
@@ -280,7 +280,7 @@ export class ClientEditor extends System {
     app.onUploaded()
   }
 
-  async addVRM(file) {
+  async addAvatar(file) {
     // immutable hash the file
     const hash = await hashFile(file)
     // use hash as vrm filename
@@ -288,7 +288,7 @@ export class ClientEditor extends System {
     // canonical url to this file
     const url = `asset://${filename}`
     // cache file locally so this client can insta-load it
-    this.world.loader.insert('vrm', url, file)
+    this.world.loader.insert('avatar', url, file)
     this.world.emit('vrm', {
       file,
       url,

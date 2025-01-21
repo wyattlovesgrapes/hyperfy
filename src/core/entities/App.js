@@ -72,7 +72,7 @@ export class App extends Entity {
     // otherwise we can load the actual glb
     else {
       try {
-        const type = blueprint.model.endsWith('vrm') ? 'vrm' : 'glb'
+        const type = blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
         let glb = this.world.loader.get(type, blueprint.model)
         if (!glb) glb = await this.world.loader.load(type, blueprint.model)
         root = glb.toNodes()
@@ -83,8 +83,8 @@ export class App extends Entity {
     }
     // if script crashed (or failed to load model), show crash-block
     if (crashed || !root) {
-      let glb = this.world.loader.get('glb', 'asset://crash-block.glb')
-      if (!glb) glb = await this.world.loader.load('glb', 'asset://crash-block.glb')
+      let glb = this.world.loader.get('model', 'asset://crash-block.glb')
+      if (!glb) glb = await this.world.loader.load('model', 'asset://crash-block.glb')
       root = glb.toNodes()
     }
     // if a new build happened while we were fetching, stop here

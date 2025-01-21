@@ -66,7 +66,7 @@ export class ClientEnvironment extends System {
     // but eventually you'll do this with an environment app
 
     // ground
-    const glb = await this.world.loader.load('glb', '/base-environment.glb')
+    const glb = await this.world.loader.load('model', '/base-environment.glb')
     const root = glb.toNodes()
     root.activate({ world: this.world, physics: true })
     // sky
