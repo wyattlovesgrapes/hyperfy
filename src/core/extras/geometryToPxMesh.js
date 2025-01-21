@@ -11,6 +11,7 @@ export function geometryToPxMesh(world, geometry, convex) {
     const z = positionAttribute.getZ(i)
     const p = new PHYSX.PxVec3(x, y, z)
     points.push_back(p)
+    PHYSX.destroy(p)
   }
 
   // add indices to the triangles vector, if available
