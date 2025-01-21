@@ -93,6 +93,7 @@ export class UI extends Node {
   unbuild() {
     if (this.mesh) {
       this.ctx.world.stage.scene.remove(this.mesh)
+      this.texture.dispose()
       this.mesh.material.dispose()
       this.mesh.geometry.dispose()
       this.mesh = null
