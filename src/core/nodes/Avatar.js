@@ -1,10 +1,10 @@
 import { Node } from './Node'
 import * as THREE from 'three'
 
-export class VRM extends Node {
+export class Avatar extends Node {
   constructor(data = {}) {
     super(data)
-    this.name = 'vrm'
+    this.name = 'avatar'
     this.factory = data.factory
     this.hooks = data.hooks
     this.instance = null

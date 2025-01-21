@@ -107,4 +107,10 @@ const migrations = [
       }
     }
   },
+  // rename user.vrm -> user.avatar
+  async db => {
+    await db.schema.alterTable('users', table => {
+      table.renameColumn('vrm', 'avatar')
+    })
+  },
 ]

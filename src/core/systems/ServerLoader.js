@@ -113,8 +113,8 @@ export class ServerLoader extends System {
             toNodes: () => {
               if (!node) {
                 node = createNode({ name: 'group' })
-                const vrm = createNode({ id: 'vrm', name: 'vrm', factory: null })
-                node.add(vrm)
+                const node2 = createNode({ id: 'avatar', name: 'avatar', factory: null })
+                node.add(node2)
               }
               return node.clone(true)
             },

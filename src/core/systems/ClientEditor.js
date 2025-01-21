@@ -289,13 +289,13 @@ export class ClientEditor extends System {
     const url = `asset://${filename}`
     // cache file locally so this client can insta-load it
     this.world.loader.insert('avatar', url, file)
-    this.world.emit('vrm', {
+    this.world.emit('avatar', {
       file,
       url,
       hash,
       onPlace: async () => {
         // close pane
-        this.world.emit('vrm', null)
+        this.world.emit('avatar', null)
         // make blueprint
         const blueprint = {
           id: uuid(),
@@ -330,12 +330,12 @@ export class ClientEditor extends System {
       },
       onEquip: async () => {
         // close pane
-        this.world.emit('vrm', null)
+        this.world.emit('avatar', null)
         // prep new user data
         const player = this.world.entities.player
         const prevUser = player.data.user
         const newUser = cloneDeep(player.data.user)
-        newUser.vrm = url
+        newUser.avatar = url
         // update locally
         player.modify({ user: newUser })
         // upload

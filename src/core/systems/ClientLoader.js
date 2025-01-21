@@ -94,13 +94,13 @@ export class ClientLoader extends System {
       promise = this.gltfLoader.loadAsync(url).then(glb => {
         const factory = createVRMFactory(glb, this.world.setupMaterial)
         const node = createNode({ name: 'group' })
-        const vrm = createNode({ id: 'vrm', name: 'vrm', factory, hooks: this.vrmHooks })
-        node.add(vrm)
+        const node2 = createNode({ id: 'avatar', name: 'avatar', factory, hooks: this.vrmHooks })
+        node.add(node2)
         const avatar = {
           toNodes(customHooks) {
             const clone = node.clone(true)
             if (customHooks) {
-              clone.get('vrm').hooks = customHooks
+              clone.get('avatar').hooks = customHooks
             }
             return clone
           },
@@ -158,13 +158,13 @@ export class ClientLoader extends System {
       promise = this.gltfLoader.loadAsync(localUrl).then(glb => {
         const factory = createVRMFactory(glb, this.world.setupMaterial)
         const node = createNode({ name: 'group' })
-        const vrm = createNode({ id: 'vrm', name: 'vrm', factory, hooks: this.vrmHooks })
-        node.add(vrm)
+        const node2 = createNode({ id: 'avatar', name: 'avatar', factory, hooks: this.vrmHooks })
+        node.add(node2)
         const avatar = {
           toNodes(customHooks) {
             const clone = node.clone(true)
             if (customHooks) {
-              clone.get('vrm').hooks = customHooks
+              clone.get('avatar').hooks = customHooks
             }
             return clone
           },

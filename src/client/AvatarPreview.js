@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { isString } from 'lodash'
-import { createVRMFactory } from '../core/extras/createVRMFactory'
 import { emotes, Emotes } from '../core/extras/playerEmotes'
 
 const MAX_UPLOAD_SIZE = 1000000000000 // TODO
@@ -44,7 +43,7 @@ function getRenderer() {
   return renderer
 }
 
-export class VRMPreview {
+export class AvatarPreview {
   constructor(world, viewport) {
     this.world = world
     this.viewport = viewport
@@ -81,11 +80,11 @@ export class VRMPreview {
     if (this.file.size > MAX_UPLOAD_SIZE) {
       return { error: `Max file size ${MAX_UPLOAD_SIZE_LABEL}` }
     }
-    // load HDRI
+    // load hdri
     const texture = await this.world.loader.load('hdr', HDR_URL)
     texture.mapping = THREE.EquirectangularReflectionMapping
     this.scene.environment = texture
-    // load VRM
+    // load avatar
     this.avatar = await this.world.loader.load('avatar', this.url)
     this.node = this.avatar
       .toNodes({
@@ -94,7 +93,7 @@ export class VRMPreview {
         octree: null,
         loader: this.world.loader,
       })
-      .get('vrm')
+      .get('avatar')
     this.node.activate({})
     this.node.setEmote(emotes[Emotes.IDLE])
     // check we're still alive / didnt destroy
@@ -112,8 +111,8 @@ export class VRMPreview {
 
   positionCamera() {
     const camera = this.camera
-    const vrm = this.node.instance
-    const hips = vrm.raw.userData.vrm.humanoid.getRawBone('hips').node
+    const raw = this.node.instance.raw
+    const hips = raw.userData.vrm.humanoid.getRawBone('hips').node
 
     // vrm.bones.leftShoulder.scale.setScalar(0)
     // vrm.bones.rightShoulder.scale.setScalar(0)
@@ -126,7 +125,7 @@ export class VRMPreview {
     // see: https://wejn.org/2020/12/cracking-the-threejs-object-fitting-nut/
 
     const box = new THREE.Box3()
-    box.setFromObject(vrm.raw.scene)
+    box.setFromObject(raw.scene)
 
     const hipsY = hips.getWorldPosition(v1).y
     box.min.y = hipsY

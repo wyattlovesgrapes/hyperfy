@@ -81,7 +81,7 @@ export class PlayerLocal {
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
 
-    this.applyVRM()
+    this.applyAvatar()
 
     this.base.activate({ world: this.world, physics: true, entity: this.entity })
 
@@ -101,16 +101,16 @@ export class PlayerLocal {
     this.world.setHot(this, true)
   }
 
-  applyVRM() {
-    const vrmUrl = this.data.user.vrm || 'asset://avatar.vrm'
-    if (this.vrmUrl === vrmUrl) return
+  applyAvatar() {
+    const avatarUrl = this.data.user.avatar || 'asset://avatar.vrm'
+    if (this.avatarUrl === avatarUrl) return
     this.world.loader
-      .load('avatar', vrmUrl)
+      .load('avatar', avatarUrl)
       .then(src => {
-        if (this.vrm) this.vrm.deactivate()
-        this.vrm = src.toNodes().get('vrm')
-        this.base.add(this.vrm)
-        this.vrmUrl = vrmUrl
+        if (this.avatar) this.avatar.deactivate()
+        this.avatar = src.toNodes().get('avatar')
+        this.base.add(this.avatar)
+        this.avatarUrl = avatarUrl
       })
       .catch(err => {
         console.error(err)
@@ -543,7 +543,7 @@ export class PlayerLocal {
     } else {
       this.emote = Emotes.IDLE
     }
-    this.vrm?.setEmote(emotes[this.emote])
+    this.avatar?.setEmote(emotes[this.emote])
 
     // send network updates
     this.lastSendAt += delta
@@ -566,7 +566,7 @@ export class PlayerLocal {
   modify(data) {
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
-      this.applyVRM()
+      this.applyAvatar()
     }
   }
 }

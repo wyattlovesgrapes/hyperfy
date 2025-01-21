@@ -297,10 +297,10 @@ export class ServerNetwork extends System {
       // mark for saving
       this.dirtyApps.add(entity.data.id)
     }
-    if (entity.isPlayer) {
-      // update player (only vrm field for now)
-      const { id, vrm } = entity.data.user
-      await this.db('users').where('id', id).update({ vrm })
+    if (entity.isPlayer && data.user) {
+      // update player (only avatar field for now)
+      const { id, avatar } = entity.data.user
+      await this.db('users').where('id', id).update({ avatar })
     }
   }
 
