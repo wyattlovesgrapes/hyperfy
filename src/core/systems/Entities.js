@@ -19,12 +19,17 @@ export class Entities extends System {
   constructor(world) {
     super(world)
     this.items = new Map()
+    this.players = new Map()
     this.hot = new Set()
     this.removed = []
   }
 
   get(id) {
     return this.items.get(id)
+  }
+
+  getPlayer(userId) {
+    return this.players.get(userId)
   }
 
   add(data, local) {
@@ -34,12 +39,16 @@ export class Entities extends System {
     if (data.owner === this.world.network.id) {
       this.player = entity
     }
+    if (data.type === 'player') {
+      this.players.set(entity.data.user.id, entity)
+    }
     return entity
   }
 
   remove(id) {
     const entity = this.items.get(id)
     if (!entity) console.warn(`tried to remove entity that did not exist: ${id}`)
+    if (entity.isPlayer) this.players.delete(entity.data.user.id)
     entity.destroy()
     this.items.delete(id)
     this.removed.push(id)
