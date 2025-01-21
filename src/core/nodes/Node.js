@@ -15,6 +15,14 @@ const defaultScale = new THREE.Vector3(1, 1, 1)
 
 let nodeIds = -1
 
+const secure = { allowRef: false }
+export function getRef(pNode) {
+  secure.allowRef = true
+  const node = pNode._ref
+  secure.allowRef = false
+  return node
+}
+
 export class Node {
   constructor(data = {}) {
     this.id = data.id || `${++nodeIds}`
@@ -75,6 +83,7 @@ export class Node {
   }
 
   add(node) {
+    if (!node) return console.error('no node to add')
     if (node.parent) {
       node.parent.remove(node)
     }
@@ -290,18 +299,12 @@ export class Node {
           throw new Error('Cannot set parent directly')
         },
         add(pNode) {
-          if (!self.ctx.entity) {
-            return console.error('node has no ctx.entity')
-          }
-          const node = self.ctx.entity.nodes.get(pNode.id)
+          const node = getRef(pNode)
           self.add(node)
           return this
         },
         remove(pNode) {
-          if (!self.ctx.entity) {
-            return console.error('node has no ctx.entity')
-          }
-          const node = self.ctx.entity.nodes.get(pNode.id)
+          const node = getRef(pNode)
           self.remove(node)
           return this
         },
@@ -314,8 +317,8 @@ export class Node {
         //   self.detach(node)
         // },
         get _ref() {
-          if (self.ctx?.world?._allowRefs) return self
-          return null
+          if (!secure.allowRef) return null
+          return self
         },
       }
       this.proxy = proxy

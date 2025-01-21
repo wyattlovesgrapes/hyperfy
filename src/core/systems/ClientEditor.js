@@ -151,7 +151,7 @@ export class ClientEditor extends System {
             version: 0,
             model: entity.blueprint.model,
             script: entity.blueprint.script,
-            values: cloneDeep(entity.blueprint.values),
+            config: cloneDeep(entity.blueprint.config),
           }
           this.world.blueprints.add(blueprint, true)
           // assign new blueprint
@@ -233,6 +233,9 @@ export class ClientEditor extends System {
     if (ext === 'glb') {
       this.addGLB(file)
     }
+    if (ext === 'vrm') {
+      this.addVRM(file)
+    }
   }
 
   async addGLB(file) {
@@ -250,7 +253,7 @@ export class ClientEditor extends System {
       version: 0,
       model: url,
       script: null,
-      values: {},
+      config: {},
     }
     // register blueprint
     this.world.blueprints.add(blueprint, true)
@@ -275,5 +278,81 @@ export class ClientEditor extends System {
     await this.world.network.upload(file)
     // mark as uploaded so other clients can load it in
     app.onUploaded()
+  }
+
+  async addVRM(file) {
+    // immutable hash the file
+    const hash = await hashFile(file)
+    // use hash as vrm filename
+    const filename = `${hash}.vrm`
+    // canonical url to this file
+    const url = `asset://${filename}`
+    // cache file locally so this client can insta-load it
+    this.world.loader.insert('vrm', url, file)
+    this.world.emit('vrm', {
+      file,
+      url,
+      hash,
+      onPlace: async () => {
+        // close pane
+        this.world.emit('vrm', null)
+        // make blueprint
+        const blueprint = {
+          id: uuid(),
+          version: 0,
+          model: url,
+          script: null,
+          config: {},
+        }
+        // register blueprint
+        this.world.blueprints.add(blueprint, true)
+        // get spawn point
+        const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+        const position = hit ? hit.point.toArray() : [0, 0, 0]
+        // spawn the app moving
+        // - mover: follows this clients cursor until placed
+        // - uploader: other clients see a loading indicator until its fully uploaded
+        const data = {
+          id: uuid(),
+          type: 'app',
+          blueprint: blueprint.id,
+          position,
+          quaternion: [0, 0, 0, 1],
+          mover: this.world.network.id,
+          uploader: this.world.network.id,
+          state: {},
+        }
+        const app = this.world.entities.add(data, true)
+        // upload the glb
+        await this.world.network.upload(file)
+        // mark as uploaded so other clients can load it in
+        app.onUploaded()
+      },
+      onEquip: async () => {
+        // close pane
+        this.world.emit('vrm', null)
+        // prep new user data
+        const player = this.world.entities.player
+        const prevUser = player.data.user
+        const newUser = cloneDeep(player.data.user)
+        newUser.vrm = url
+        // update locally
+        player.modify({ user: newUser })
+        // upload
+        try {
+          await this.world.network.upload(file)
+        } catch (err) {
+          console.error(err)
+          // revert
+          player.modify({ user: prevUser })
+          return
+        }
+        // update for everyone
+        this.world.network.send('entityModified', {
+          id: player.data.id,
+          user: newUser,
+        })
+      },
+    })
   }
 }

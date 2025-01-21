@@ -40,6 +40,7 @@ export class Blueprints extends System {
         entity.build()
       }
     }
+    this.emit('modify', modified)
   }
 
   serialize() {

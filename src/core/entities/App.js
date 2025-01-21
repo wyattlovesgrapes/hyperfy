@@ -1,5 +1,6 @@
 import { isString } from 'lodash-es'
 import * as THREE from '../extras/three'
+import moment from 'moment'
 
 import { Entity } from './Entity'
 import { glbToNodes } from '../extras/glbToNodes'
@@ -7,6 +8,7 @@ import { createNode } from '../extras/createNode'
 import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { ControlPriorities } from '../extras/ControlPriorities'
+import { getRef } from '../nodes/Node'
 
 const hotEventNames = ['fixedUpdate', 'update', 'lateUpdate']
 const internalEvents = ['fixedUpdate', 'updated', 'lateUpdate']
@@ -32,8 +34,8 @@ export class App extends Entity {
     this.build()
   }
 
-  createNode(data) {
-    const node = createNode(data)
+  createNode(name) {
+    const node = createNode({ name })
     if (this.nodes.has(node.id)) {
       console.error('node with id already exists: ', node.id)
       return
@@ -50,8 +52,13 @@ export class App extends Entity {
     // fetch script (if any)
     let script
     if (blueprint.script) {
-      script = this.world.loader.get('script', blueprint.script)
-      if (!script) script = await this.world.loader.load('script', blueprint.script)
+      try {
+        script = this.world.loader.get('script', blueprint.script)
+        if (!script) script = await this.world.loader.load('script', blueprint.script)
+      } catch (err) {
+        console.error(err)
+        crashed = true
+      }
     }
     let root
     // if someone else is uploading glb, show a loading indicator
@@ -65,8 +72,9 @@ export class App extends Entity {
     // otherwise we can load the actual glb
     else {
       try {
-        let glb = this.world.loader.get('glb', blueprint.model)
-        if (!glb) glb = await this.world.loader.load('glb', blueprint.model)
+        const type = blueprint.model.endsWith('vrm') ? 'vrm' : 'glb'
+        let glb = this.world.loader.get(type, blueprint.model)
+        if (!glb) glb = await this.world.loader.load(type, blueprint.model)
         root = glb.toNodes()
       } catch (err) {
         console.error(err)
@@ -100,9 +108,10 @@ export class App extends Entity {
     this.root.activate({ world: this.world, entity: this, physics: !this.data.mover })
     // execute script
     if (this.mode === Modes.ACTIVE && script && !crashed) {
+      this.abortController = new AbortController()
       this.script = script
       try {
-        this.script.exec(this.getWorldProxy(), this.getAppProxy())
+        this.script.exec(this.getWorldProxy(), this.getAppProxy(), this.fetch)
       } catch (err) {
         console.error('script crashed')
         console.error(err)
@@ -154,6 +163,9 @@ export class App extends Entity {
     }
     // cancel update tracking
     this.world.setHot(this, false)
+    // abort fetch's etc
+    this.abortController?.abort()
+    this.abortController = null
   }
 
   fixedUpdate(delta) {
@@ -358,6 +370,28 @@ export class App extends Entity {
     }
   }
 
+  fetch = async (url, options = {}) => {
+    try {
+      const resp = await fetch(url, {
+        ...options,
+        signal: this.abortController.signal,
+      })
+      const secureResp = {
+        ok: resp.ok,
+        status: resp.status,
+        statusText: resp.statusText,
+        headers: Object.fromEntries(resp.headers.entries()),
+        json: async () => await resp.json(),
+        text: async () => await resp.text(),
+        blob: async () => await resp.blob(),
+      }
+      return secureResp
+    } catch (err) {
+      console.error(err)
+      // this.crash()
+    }
+  }
+
   getWorldProxy() {
     const entity = this
     const world = this.world
@@ -372,7 +406,7 @@ export class App extends Entity {
         return world.network.isClient
       },
       add(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         if (node.parent) {
           node.parent.remove(node)
@@ -381,7 +415,7 @@ export class App extends Entity {
         node.activate({ world, entity, physics: true })
       },
       remove(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         if (node.parent) return // its not in world
         if (!entity.worldNodes.has(node)) return
@@ -389,7 +423,7 @@ export class App extends Entity {
         node.deactivate()
       },
       attach(pNode) {
-        const node = entity.nodes.get(pNode.id)
+        const node = getRef(pNode)
         if (!node) return
         const parent = node.parent
         if (!parent) return
@@ -404,6 +438,17 @@ export class App extends Entity {
       },
       off(name, callback) {
         entity.offWorldEvent(name, callback)
+      },
+      getTime() {
+        return performance.now()
+      },
+      getTimestamp(format) {
+        if (!format) return moment().toISOString()
+        return moment().format(format)
+      },
+      chat(msg, broadcast) {
+        if (!msg) return
+        world.chat.add(msg, broadcast)
       },
     }
   }
@@ -444,14 +489,8 @@ export class App extends Entity {
         return node.getProxy()
       },
       create(name) {
-        if (isString(name)) {
-          const node = entity.createNode({ name })
-          return node.getProxy()
-        } else {
-          console.warn('TODO: migrate script to create(String)')
-          const node = entity.createNode(name)
-          return node.getProxy()
-        }
+        const node = entity.createNode(name)
+        return node.getProxy()
       },
       control(options) {
         // TODO: only allow on user interaction
@@ -462,6 +501,13 @@ export class App extends Entity {
           object: entity,
         })
         return entity.control
+      },
+      configure(fn) {
+        entity.getConfig = fn
+        entity.onConfigure?.(fn)
+      },
+      get config() {
+        return entity.blueprint.config
       },
       ...this.root.getProxy(),
     }

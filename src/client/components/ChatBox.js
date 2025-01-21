@@ -40,7 +40,6 @@ export function ChatBox({ className, world, active, onClose, ...props }) {
     if (body.startsWith('/')) {
       const [cmd, arg1, arg2] = body.slice(1).split(' ')
       if (cmd === 'stats') {
-        console.log('HI')
         world.stats.toggle()
         return
       }
