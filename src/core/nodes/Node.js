@@ -1,8 +1,5 @@
+import { isBoolean } from 'lodash-es'
 import * as THREE from '../extras/three'
-
-const DEFAULT_POSITION = [0, 0, 0]
-const DEFAULT_QUATERNION = [0, 0, 0, 1]
-const DEFAULT_SCALE = [1, 1, 1]
 
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
@@ -12,6 +9,13 @@ const _m2 = new THREE.Matrix4()
 const _m3 = new THREE.Matrix4()
 
 const defaultScale = new THREE.Vector3(1, 1, 1)
+
+const defaults = {
+  active: true,
+  position: [0, 0, 0],
+  quaternion: [0, 0, 0, 1],
+  scale: [1, 1, 1],
+}
 
 let nodeIds = -1
 
@@ -32,13 +36,13 @@ export class Node {
     this.children = []
     this.ctx = null
     this.position = new THREE.Vector3()
-    this.position.fromArray(data.position || DEFAULT_POSITION)
+    this.position.fromArray(data.position || defaults.position)
     this.quaternion = new THREE.Quaternion()
-    this.quaternion.fromArray(data.quaternion || DEFAULT_QUATERNION)
+    this.quaternion.fromArray(data.quaternion || defaults.quaternion)
     this.rotation = new THREE.Euler().setFromQuaternion(this.quaternion)
     this.rotation.reorder('YXZ')
     this.scale = new THREE.Vector3()
-    this.scale.fromArray(data.scale || DEFAULT_SCALE)
+    this.scale.fromArray(data.scale || defaults.scale)
     this.matrix = new THREE.Matrix4()
     this.matrixWorld = new THREE.Matrix4()
     this.position._onChange(() => {
@@ -52,6 +56,7 @@ export class Node {
       this.rotation.setFromQuaternion(this.quaternion, undefined, false)
       this.setTransformed()
     })
+    this._active = isBoolean(data.active) ? data.active : defaults.active
     // this.scale._onChange?
     this.isDirty = false
     this.isTransformed = true
@@ -60,6 +65,7 @@ export class Node {
 
   activate(ctx) {
     if (ctx) this.ctx = ctx
+    if (!this._active) return
     // top down mount
     if (this.mounted) return
     this.updateTransform()
@@ -146,6 +152,20 @@ export class Node {
     if (this.isDirty) return
     this.isDirty = true
     this.ctx.world.stage.dirtyNodes.add(this)
+  }
+
+  get active() {
+    return this._active
+  }
+
+  set active(value) {
+    if (this._active === value) return
+    this._active = value
+    if (!this._active && this.mounted) {
+      this.deactivate()
+    } else if (this._active && this.parent?.mounted) {
+      this.activate(this.ctx)
+    }
   }
 
   clean() {
@@ -291,6 +311,12 @@ export class Node {
         },
         get matrixWorld() {
           return self.matrixWorld
+        },
+        get active() {
+          return self.active
+        },
+        set active(value) {
+          self.active = value
         },
         get parent() {
           return self.parent?.getProxy()

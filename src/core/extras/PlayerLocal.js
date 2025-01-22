@@ -81,9 +81,12 @@ export class PlayerLocal {
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
 
-    this.applyAvatar()
+    this.nametag = createNode({ name: 'nametag', label: this.data.user.name, active: false })
+    this.base.add(this.nametag)
 
     this.base.activate({ world: this.world, physics: true, entity: this.entity })
+
+    this.applyAvatar()
 
     this.cam = {}
     this.cam.position = new THREE.Vector3().copy(this.base.position)
@@ -110,6 +113,8 @@ export class PlayerLocal {
         if (this.avatar) this.avatar.deactivate()
         this.avatar = src.toNodes().get('avatar')
         this.base.add(this.avatar)
+        this.nametag.position.y = this.avatar.height + 0.2
+        this.nametag.active = true
         this.avatarUrl = avatarUrl
       })
       .catch(err => {
@@ -566,6 +571,7 @@ export class PlayerLocal {
   modify(data) {
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
+      this.nametag.label = data.user.name
       this.applyAvatar()
     }
   }

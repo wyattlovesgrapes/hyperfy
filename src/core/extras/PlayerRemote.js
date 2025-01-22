@@ -15,13 +15,17 @@ export class PlayerRemote {
     this.base = createNode({ name: 'group' })
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
+
+    this.nametag = createNode({ name: 'nametag', label: this.data.user.name, active: false })
+    this.base.add(this.nametag)
+
     this.base.activate({ world: this.world, entity: this.entity, physics: true })
+
+    this.applyAvatar()
 
     this.position = new LerpVector3(this.base.position, this.world.networkRate)
     this.quaternion = new LerpQuaternion(this.base.quaternion, this.world.networkRate)
     this.emote = 'asset://emote-idle.glb'
-
-    this.applyAvatar()
 
     this.world.setHot(this, true)
     this.world.events.emit('enter', {
@@ -38,6 +42,8 @@ export class PlayerRemote {
       if (this.avatar) this.avatar.deactivate()
       this.avatar = src.toNodes().get('avatar')
       this.base.add(this.avatar)
+      this.nametag.position.y = this.avatar.height + 0.2
+      this.nametag.active = true
       this.avatarUrl = avatarUrl
     })
   }
@@ -63,6 +69,7 @@ export class PlayerRemote {
     }
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
+      this.nametag.label = data.user.name
       this.applyAvatar()
     }
   }

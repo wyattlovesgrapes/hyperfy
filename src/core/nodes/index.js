@@ -4,6 +4,7 @@ export { LOD as lod } from './LOD.js'
 
 export { Avatar as avatar } from './Avatar.js'
 export { Action as action } from './Action.js'
+export { Nametag as nametag } from './Nametag.js'
 
 export { UI as ui } from './UI.js'
 export { UIView as uiview } from './UIView.js'
