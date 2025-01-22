@@ -124,6 +124,7 @@ export class UI extends Node {
 
   mount() {
     if (this.ctx.world.network.isServer) return
+    if (this.parent?.ui) return console.error('ui: cannot be nested inside another ui')
     this.yogaNode = Yoga.Node.create()
     this.yogaNode.setWidth(this.width * this.res)
     this.yogaNode.setHeight(this.height * this.res)
@@ -138,7 +139,9 @@ export class UI extends Node {
   }
 
   commit(didMove) {
-    if (this.ctx.world.network.isServer) return
+    if (this.ctx.world.network.isServer) {
+      return
+    }
     if (this.needsRebuild) {
       this.build()
     }

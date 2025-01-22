@@ -92,9 +92,11 @@ export class UIView extends Node {
 
   unmount() {
     if (this.ctx.world.network.isServer) return
-    this.parent.yogaNode.removeChild(this.yogaNode)
-    this.yogaNode.free()
-    this.yogaNode = null
+    if (this.yogaNode) {
+      this.parent.yogaNode?.removeChild(this.yogaNode)
+      this.yogaNode.free()
+      this.yogaNode = null
+    }
   }
 
   copy(source, recursive) {
