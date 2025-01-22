@@ -56,6 +56,10 @@ export class Avatar extends Node {
   //   }
   // }
 
+  get height() {
+    return this.instance?.height || null
+  }
+
   setEmote(url) {
     return this.instance?.setEmote(url)
   }
@@ -71,6 +75,9 @@ export class Avatar extends Node {
     if (!this.proxy) {
       const self = this
       let proxy = {
+        get height() {
+          return self.height
+        },
         setEmote(url) {
           return self.setEmote(url)
         },
