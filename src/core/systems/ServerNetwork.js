@@ -239,6 +239,7 @@ export class ServerNetwork extends System {
       }
       if (cmd === 'name') {
         const name = arg1
+        if (!name) return
         const player = socket.player
         const id = player.data.id
         const user = player.data.user
