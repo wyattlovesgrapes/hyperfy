@@ -178,7 +178,9 @@ export class Node {
       if (didTransform) {
         node.updateTransform()
       }
-      node.commit(didTransform)
+      if (node.mounted) {
+        node.commit(didTransform)
+      }
       node.isDirty = false
     })
   }
