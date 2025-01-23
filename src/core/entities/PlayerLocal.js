@@ -1,12 +1,13 @@
-import * as THREE from './three'
-import { Layers } from './Layers'
-import { DEG2RAD, RAD2DEG } from './general'
-import { createNode } from './createNode'
+import { Entity } from './Entity'
 import { clamp } from '../utils'
-import { bindRotations } from './bindRotations'
-import { simpleCamLerp } from './simpleCamLerp'
-import { Emotes, emotes } from './playerEmotes'
-import { ControlPriorities } from './ControlPriorities'
+import * as THREE from '../extras/three'
+import { Layers } from '../extras/Layers'
+import { DEG2RAD, RAD2DEG } from '../extras/general'
+import { createNode } from '../extras/createNode'
+import { bindRotations } from '../extras/bindRotations'
+import { simpleCamLerp } from '../extras/simpleCamLerp'
+import { Emotes, emotes } from '../extras/playerEmotes'
+import { ControlPriorities } from '../extras/ControlPriorities'
 
 const UP = new THREE.Vector3(0, 1, 0)
 const DOWN = new THREE.Vector3(0, -1, 0)
@@ -35,11 +36,10 @@ const m1 = new THREE.Matrix4()
 const m2 = new THREE.Matrix4()
 const m3 = new THREE.Matrix4()
 
-export class PlayerLocal {
-  constructor(entity) {
-    this.entity = entity
-    this.data = entity.data
-    this.world = entity.world
+export class PlayerLocal extends Entity {
+  constructor(world, data, local) {
+    super(world, data, local)
+    this.isPlayer = true
     this.init()
   }
 
@@ -84,6 +84,34 @@ export class PlayerLocal {
     this.nametag = createNode({ name: 'nametag', label: this.data.user.name, active: false })
     this.base.add(this.nametag)
 
+    this.bubble = createNode({
+      name: 'ui',
+      width: 300,
+      height: 512,
+      size: 0.005,
+      pivot: 'bottom-center',
+      billboard: 'full',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      active: false,
+    })
+    this.bubbleBox = createNode({
+      name: 'uiview',
+      backgroundColor: 'rgba(0, 0, 0, 0.95)',
+      borderRadius: 20,
+      padding: 20,
+    })
+    this.bubbleText = createNode({
+      name: 'uitext',
+      color: 'white',
+      fontWeight: 100,
+      lineHeight: 1.4,
+      fontSize: 16,
+    })
+    this.bubble.add(this.bubbleBox)
+    this.bubbleBox.add(this.bubbleText)
+    this.base.add(this.bubble)
+
     this.base.activate({ world: this.world, physics: true, entity: this.entity })
 
     this.applyAvatar()
@@ -114,7 +142,10 @@ export class PlayerLocal {
         this.avatar = src.toNodes().get('avatar')
         this.base.add(this.avatar)
         this.nametag.position.y = this.avatar.height + 0.2
-        this.nametag.active = true
+        this.bubble.position.y = this.avatar.height + 0.2
+        if (!this.bubble.active) {
+          this.nametag.active = true
+        }
         this.avatarUrl = avatarUrl
       })
       .catch(err => {
@@ -568,11 +599,52 @@ export class PlayerLocal {
     simpleCamLerp(this.world, this.control.camera, this.cam, delta)
   }
 
+  chat(msg) {
+    this.nametag.active = false
+    this.bubbleText.value = msg
+    this.bubble.active = true
+    clearTimeout(this.chatTimer)
+    this.chatTimer = setTimeout(() => {
+      this.bubble.active = false
+      this.nametag.active = true
+    }, 5000)
+  }
+
   modify(data) {
     if (data.hasOwnProperty('user')) {
       this.data.user = data.user
       this.nametag.label = data.user.name
       this.applyAvatar()
     }
+  }
+
+  getProxy() {
+    if (!this.proxy) {
+      const self = this
+      const position = new THREE.Vector3()
+      const rotation = new THREE.Euler()
+      const quaternion = new THREE.Quaternion()
+      this.proxy = {
+        get entityId() {
+          return self.data.id
+        },
+        get id() {
+          return self.data.user.id
+        },
+        get name() {
+          return self.data.user.name
+        },
+        get position() {
+          return position.copy(self.base.position)
+        },
+        get rotation() {
+          return rotation.copy(self.base.rotation)
+        },
+        get quaternion() {
+          return quaternion.copy(self.base.quaternion)
+        },
+      }
+    }
+    return this.proxy
   }
 }
