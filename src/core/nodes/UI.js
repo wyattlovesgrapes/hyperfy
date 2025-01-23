@@ -27,7 +27,7 @@ const defaults = {
   pivot: 'center',
 
   transparent: true,
-  backgroundColor: 'white',
+  backgroundColor: null,
   borderRadius: 0,
   padding: 0,
   flexDirection: 'column',
