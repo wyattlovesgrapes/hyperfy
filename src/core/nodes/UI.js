@@ -26,7 +26,8 @@ const defaults = {
   billboard: null,
   pivot: 'center',
 
-  backgroundColor: null,
+  transparent: true,
+  backgroundColor: 'white',
   borderRadius: 0,
   padding: 0,
   flexDirection: 'column',
@@ -50,6 +51,7 @@ export class UI extends Node {
     this.billboard = data.billboard === undefined ? defaults.billboard : data.billboard
     this.pivot = data.pivot === undefined ? defaults.pivot : data.pivot
 
+    this.transparent = data.transparent === undefined ? defaults.transparent : data.transparent
     this.backgroundColor = data.backgroundColor === undefined ? defaults.backgroundColor : data.backgroundColor
     this.borderRadius = data.borderRadius === undefined ? defaults.borderRadius : data.borderRadius
     this.padding = data.padding === undefined ? defaults.padding : data.padding
@@ -75,7 +77,7 @@ export class UI extends Node {
     this.geometry = new THREE.PlaneGeometry(this._width, this._height)
     this.geometry.scale(this._size, this._size, this._size)
     applyPivot(this._pivot, this.geometry, this._width * this._size, this._height * this._size)
-    this.material = this.createMaterial(this._lit, this.texture, this._billboard)
+    this.material = this.createMaterial(this._lit, this.texture, this._billboard, this._transparent)
     this.mesh = new THREE.Mesh(this.geometry, this.material)
     this.mesh.matrixAutoUpdate = false
     this.mesh.matrixWorldAutoUpdate = false
@@ -192,13 +194,13 @@ export class UI extends Node {
     return this
   }
 
-  createMaterial(lit, texture, billboard) {
+  createMaterial(lit, texture, billboard, transparent) {
     if (!billboard) {
       const material = lit
         ? new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 })
         : new THREE.MeshBasicMaterial({})
       material.color.set('white')
-      material.transparent = true
+      material.transparent = transparent
       material.map = texture
       material.side = THREE.DoubleSide
       this.ctx.world.setupMaterial(material)
@@ -212,7 +214,9 @@ export class UI extends Node {
       baseMaterial: lit ? THREE.MeshStandardMaterial : THREE.MeshBasicMaterial,
       ...(lit ? { roughness: 1, metalness: 0 } : {}),
       color: 'white',
-      transparent: true,
+      transparent,
+      // depthTest: true,
+      // depthWrite: false,
       map: texture,
       side: THREE.DoubleSide,
       uniforms,
@@ -326,6 +330,15 @@ export class UI extends Node {
   set pivot(value) {
     this._pivot = value || defaults.pivot
     this.rebuild()
+  }
+
+  get transparent() {
+    return this._transparent
+  }
+
+  set transparent(value) {
+    this._transparent = value || defaults.transparent
+    this.redraw()
   }
 
   get backgroundColor() {
@@ -452,6 +465,12 @@ export class UI extends Node {
         },
         set pivot(value) {
           self.pivot = value
+        },
+        get transparent() {
+          return self.transparent
+        },
+        set transparent(value) {
+          self.transparent = value
         },
         get backgroundColor() {
           return self.backgroundColor
