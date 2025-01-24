@@ -598,7 +598,7 @@ export class PlayerLocal extends Entity {
     if (!this.pointerState) this.pointerState = new PointerState()
     // console.time('pointer')
     const hit = this.control.pointer.locked ? null : this.world.stage.raycastPointer(this.control.pointer.position)[0]
-    this.pointerState.update(hit)
+    this.pointerState.update(hit, this.control.pressed.MouseLeft, this.control.released.MouseLeft)
     // console.timeEnd('pointer')
   }
 
@@ -663,9 +663,11 @@ export class PlayerLocal extends Entity {
 const PointerEvents = {
   ENTER: 'pointerenter',
   LEAVE: 'pointerleave',
+  DOWN: 'pointerdown',
+  UP: 'pointerup',
 }
 
-const CursorDefault = 'default'
+const CURSOR_DEFAULT = 'default'
 
 class PointerEvent {
   constructor() {
@@ -687,10 +689,11 @@ class PointerState {
   constructor() {
     this.activePath = new Set()
     this.event = new PointerEvent()
-    this.cursor = 'default'
+    this.cursor = CURSOR_DEFAULT
+    this.pressedNodes = new Set()
   }
 
-  update(hit) {
+  update(hit, pointerPressed, pointerReleased) {
     const newPath = hit ? this.getAncestorPath(hit) : []
     const oldPath = Array.from(this.activePath)
 
@@ -698,7 +701,7 @@ class PointerState {
     let i = 0
     while (i < newPath.length && i < oldPath.length && newPath[i] === oldPath[i]) i++
 
-    // leave events bubble up from leaf
+    // pointer leave events bubble up from leaf
     for (let j = oldPath.length - 1; j >= i; j--) {
       if (oldPath[j].onPointerLeave) {
         this.event.set(PointerEvents.LEAVE)
@@ -708,7 +711,7 @@ class PointerState {
       this.activePath.delete(oldPath[j])
     }
 
-    // enter events bubble down from divergence
+    // pointer enter events bubble down from divergence
     for (let j = i; j < newPath.length; j++) {
       if (newPath[j].onPointerEnter) {
         this.event.set(PointerEvents.ENTER)
@@ -719,7 +722,7 @@ class PointerState {
     }
 
     // set cursor - check from leaf to root for first defined cursor
-    let cursor = CursorDefault
+    let cursor = CURSOR_DEFAULT
     if (newPath.length > 0) {
       for (let i = newPath.length - 1; i >= 0; i--) {
         if (newPath[i].cursor) {
@@ -728,10 +731,34 @@ class PointerState {
         }
       }
     }
-    // only update DOM if cursor changed
     if (cursor !== this.cursor) {
       document.body.style.cursor = cursor
       this.cursor = cursor
+    }
+
+    // handle pointer down events
+    if (pointerPressed) {
+      for (let i = newPath.length - 1; i >= 0; i--) {
+        const node = newPath[i]
+        if (node.onPointerDown) {
+          this.event.set(PointerEvents.DOWN)
+          node.onPointerDown(this.event)
+          this.pressedNodes.add(node)
+          if (this.event._propagationStopped) break
+        }
+      }
+    }
+
+    // handle pointer up events
+    if (pointerReleased) {
+      for (const node of this.pressedNodes) {
+        if (node.onPointerUp) {
+          this.event.set(PointerEvents.UP)
+          node.onPointerUp(this.event)
+          if (this.event._propagationStopped) break
+        }
+      }
+      this.pressedNodes.clear()
     }
   }
 

@@ -58,6 +58,8 @@ export class Node {
     })
     this._onPointerEnter = data.onPointerEnter
     this._onPointerLeave = data.onPointerLeave
+    this._onPointerDown = data.onPointerDown
+    this._onPointerUp = data.onPointerUp
     this._active = isBoolean(data.active) ? data.active : defaults.active
     // this.scale._onChange?
     this.isDirty = false
@@ -235,6 +237,8 @@ export class Node {
     this.scale.copy(source.scale)
     this._onPointerEnter = source._onPointerEnter
     this._onPointerLeave = source._onPointerLeave
+    this._onPointerDown = source._onPointerDown
+    this._onPointerUp = source._onPointerUp
     this._cursor = source._cursor
     if (recursive) {
       for (let i = 0; i < source.children.length; i++) {
@@ -287,7 +291,6 @@ export class Node {
   }
 
   set onPointerEnter(value) {
-    console.log('Node.set on poointerneter', this, value)
     this._onPointerEnter = value
   }
 
@@ -296,8 +299,23 @@ export class Node {
   }
 
   set onPointerLeave(value) {
-    console.log('Node.set on poointerleave', this, value)
     this._onPointerLeave = value
+  }
+
+  get onPointerDown() {
+    return this._onPointerDown
+  }
+
+  set onPointerDown(value) {
+    this._onPointerDown = value
+  }
+
+  get onPointerUp() {
+    return this._onPointerUp
+  }
+
+  set onPointerUp(value) {
+    this._onPointerUp = value
   }
 
   get cursor() {
@@ -390,6 +408,18 @@ export class Node {
         },
         set onPointerLeave(value) {
           self.onPointerLeave = value
+        },
+        get onPointerDown() {
+          return self.onPointerDown
+        },
+        set onPointerDown(value) {
+          self.onPointerDown = value
+        },
+        get onPointerUp() {
+          return self.onPointerUp
+        },
+        set onPointerUp(value) {
+          self.onPointerUp = value
         },
         get cursor() {
           return self.cursor
