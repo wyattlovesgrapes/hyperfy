@@ -33,9 +33,9 @@ export class PlayerRemote extends Entity {
     })
     this.bubbleBox = createNode({
       name: 'uiview',
-      backgroundColor: 'rgba(0, 0, 0, 0.95)',
-      borderRadius: 20,
-      padding: 20,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      borderRadius: 10,
+      padding: 10,
     })
     this.bubbleText = createNode({
       name: 'uitext',
