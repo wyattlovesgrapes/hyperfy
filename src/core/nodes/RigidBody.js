@@ -222,6 +222,10 @@ export class RigidBody extends Node {
         set onTriggerLeave(value) {
           self.onTriggerLeave = value
         },
+        get sleeping() {
+          if (!self.actor) return false
+          return self.actor.isSleeping()
+        },
         addForce(force, mode) {
           // TODO: modes + enums injected into script
           self.actor?.addForce(force.toPxVec3(), PHYSX.PxForceModeEnum.eFORCE, true)
