@@ -593,6 +593,13 @@ export class PlayerLocal extends Entity {
       })
       this.lastSendAt = 0
     }
+
+    // handle node hover enter/leave
+    if (!this.pointerState) this.pointerState = new PointerState()
+    // console.time('pointer')
+    const hit = this.control.pointer.locked ? null : this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    this.pointerState.update(hit)
+    // console.timeEnd('pointer')
   }
 
   lateUpdate(delta) {
@@ -650,5 +657,91 @@ export class PlayerLocal extends Entity {
       }
     }
     return this.proxy
+  }
+}
+
+const PointerEvents = {
+  ENTER: 'pointerenter',
+  LEAVE: 'pointerleave',
+}
+
+const CursorDefault = 'default'
+
+class PointerEvent {
+  constructor() {
+    this.type = null
+    this._propagationStopped = false
+  }
+
+  set(type) {
+    this.type = type
+    this._propagationStopped = false
+  }
+
+  stopPropagation() {
+    this._propagationStopped = true
+  }
+}
+
+class PointerState {
+  constructor() {
+    this.activePath = new Set()
+    this.event = new PointerEvent()
+    this.cursor = 'default'
+  }
+
+  update(hit) {
+    const newPath = hit ? this.getAncestorPath(hit) : []
+    const oldPath = Array.from(this.activePath)
+
+    // find divergence point
+    let i = 0
+    while (i < newPath.length && i < oldPath.length && newPath[i] === oldPath[i]) i++
+
+    // leave events bubble up from leaf
+    for (let j = oldPath.length - 1; j >= i; j--) {
+      if (oldPath[j].onPointerLeave) {
+        this.event.set(PointerEvents.LEAVE)
+        oldPath[j].onPointerLeave?.(this.event)
+        // if (this.event._propagationStopped) break
+      }
+      this.activePath.delete(oldPath[j])
+    }
+
+    // enter events bubble down from divergence
+    for (let j = i; j < newPath.length; j++) {
+      if (newPath[j].onPointerEnter) {
+        this.event.set(PointerEvents.ENTER)
+        newPath[j].onPointerEnter?.(this.event)
+        if (this.event._propagationStopped) break
+      }
+      this.activePath.add(newPath[j])
+    }
+
+    // set cursor - check from leaf to root for first defined cursor
+    let cursor = CursorDefault
+    if (newPath.length > 0) {
+      for (let i = newPath.length - 1; i >= 0; i--) {
+        if (newPath[i].cursor) {
+          cursor = newPath[i].cursor
+          break
+        }
+      }
+    }
+    // only update DOM if cursor changed
+    if (cursor !== this.cursor) {
+      document.body.style.cursor = cursor
+      this.cursor = cursor
+    }
+  }
+
+  getAncestorPath(hit) {
+    const path = []
+    let node = hit.node?.resolveHit?.(hit) || hit.node
+    while (node) {
+      path.unshift(node)
+      node = node.parent
+    }
+    return path
   }
 }

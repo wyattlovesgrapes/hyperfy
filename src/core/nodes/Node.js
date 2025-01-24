@@ -56,6 +56,8 @@ export class Node {
       this.rotation.setFromQuaternion(this.quaternion, undefined, false)
       this.setTransformed()
     })
+    this._onPointerEnter = data.onPointerEnter
+    this._onPointerLeave = data.onPointerLeave
     this._active = isBoolean(data.active) ? data.active : defaults.active
     // this.scale._onChange?
     this.isDirty = false
@@ -231,6 +233,9 @@ export class Node {
     this.position.copy(source.position)
     this.quaternion.copy(source.quaternion)
     this.scale.copy(source.scale)
+    this._onPointerEnter = source._onPointerEnter
+    this._onPointerLeave = source._onPointerLeave
+    this._cursor = source._cursor
     if (recursive) {
       for (let i = 0; i < source.children.length; i++) {
         const child = source.children[i]
@@ -275,6 +280,32 @@ export class Node {
 
   getStats() {
     return null
+  }
+
+  get onPointerEnter() {
+    return this._onPointerEnter
+  }
+
+  set onPointerEnter(value) {
+    console.log('Node.set on poointerneter', this, value)
+    this._onPointerEnter = value
+  }
+
+  get onPointerLeave() {
+    return this._onPointerLeave
+  }
+
+  set onPointerLeave(value) {
+    console.log('Node.set on poointerleave', this, value)
+    this._onPointerLeave = value
+  }
+
+  get cursor() {
+    return this._cursor
+  }
+
+  set cursor(value) {
+    this._cursor = value
   }
 
   getProxy() {
@@ -347,6 +378,24 @@ export class Node {
         get _ref() {
           if (!secure.allowRef) return null
           return self
+        },
+        get onPointerEnter() {
+          return self.onPointerEnter
+        },
+        set onPointerEnter(value) {
+          self.onPointerEnter = value
+        },
+        get onPointerLeave() {
+          return self.onPointerLeave
+        },
+        set onPointerLeave(value) {
+          self.onPointerLeave = value
+        },
+        get cursor() {
+          return self.cursor
+        },
+        set cursor(value) {
+          self.cursor = value
         },
       }
       this.proxy = proxy
