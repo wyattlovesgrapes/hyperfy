@@ -219,6 +219,7 @@ export class PlayerLocal extends Entity {
     }
     this.removeCapsule = this.world.physics.addActor(this.capsule, {
       tag: 'player',
+      player: this.getProxy(),
       onInterpolate: position => {
         this.base.position.copy(position)
       },
@@ -625,6 +626,9 @@ export class PlayerLocal extends Entity {
       const rotation = new THREE.Euler()
       const quaternion = new THREE.Quaternion()
       this.proxy = {
+        get networkId() {
+          return self.data.owner
+        },
         get entityId() {
           return self.data.id
         },
