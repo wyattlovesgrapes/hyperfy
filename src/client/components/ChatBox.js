@@ -4,6 +4,7 @@ import { MessageCircleMoreIcon, SendHorizonalIcon } from 'lucide-react'
 import moment from 'moment'
 import { uuid } from '../../core/utils'
 import { cls } from '../utils'
+import { generateMeshy, textureMeshy } from './generateMeshy'
 
 const CHAT_TIME_REFRESH_RATE = 30 // every x seconds
 
@@ -38,9 +39,18 @@ export function ChatBox({ className, world, active, onClose, ...props }) {
     setBody('')
     // check for client commands
     if (body.startsWith('/')) {
-      const [cmd, arg1, arg2] = body.slice(1).split(' ')
+      const cmd = body.slice(1).split(' ')[0]
       if (cmd === 'stats') {
         world.stats.toggle()
+        return
+      }
+      if (cmd === 'generate') {
+        const prompt = body.replace('/generate ', '')
+        generateMeshy(world, prompt)
+        return
+      }
+      if (cmd === 'texture') {
+        textureMeshy(world)
         return
       }
     }

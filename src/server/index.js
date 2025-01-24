@@ -123,6 +123,25 @@ fastify.get('/health', async (request, reply) => {
   }
 })
 
+fastify.get('/proxy/*', async (request, reply) => {
+  const url = request.url.replace('/proxy/', '')
+  try {
+    // forward original headers except host
+    const headers = { ...request.headers }
+    delete headers.host
+    const response = await fetch(url, { headers })
+    const contentType = response.headers.get('content-type')
+    // stream the response
+    reply
+      .code(response.status)
+      .headers(Object.fromEntries(response.headers))
+      .type(contentType || 'application/octet-stream')
+    return response.body
+  } catch (error) {
+    reply.code(500).send({ error: 'Proxy request failed' })
+  }
+})
+
 fastify.setErrorHandler((err, req, reply) => {
   console.error(err)
   reply.status(500).send()
