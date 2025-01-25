@@ -480,7 +480,7 @@ function FieldFile({ world, field, value, modify }) {
   const nRef = useRef(0)
   const update = useUpdate()
   const [loading, setLoading] = useState(null)
-  const kind = kinds[field.kind]
+  const kind = kinds[field.kind] || kinds.model
   const set = async e => {
     // trigger input rebuild
     const n = ++nRef.current
