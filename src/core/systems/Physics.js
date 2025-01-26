@@ -99,7 +99,7 @@ export class Physics extends System {
           const e = this.contactEvent.get()
           if (handle0.contactedHandles.has(handle1)) {
             e.tag = handle1.tag
-            e.tag = handle1.player
+            e.player = handle1.player
             // e.isAuthority = handle1.isAuthority
             try {
               handle0.onContactEnd?.(e)
