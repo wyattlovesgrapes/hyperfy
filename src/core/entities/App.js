@@ -454,7 +454,7 @@ export class App extends Entity {
         world.chat.add(msg, broadcast)
       },
       getPlayer(playerId) {
-        const player = world.entities.getPlayer(playerId)
+        const player = world.entities.getPlayer(playerId || world.entities.player?.data.id)
         return player?.getProxy()
       },
     }
