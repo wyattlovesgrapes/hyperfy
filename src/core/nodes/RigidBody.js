@@ -66,14 +66,15 @@ export class RigidBody extends Node {
       this.actor.attachShape(shape)
     }
     const self = this
+    const player = this.ctx.entity?.isPlayer ? this.ctx.entity.getProxy() : null
     this.actorHandle = this.ctx.world.physics.addActor(this.actor, {
       onInterpolate: this.type === 'kinematic' || this.type === 'dynamic' ? this.onInterpolate : null,
       get tag() {
         return self.tag
       },
-      // get isAuthority() {
-      //   return self.ctx.entity.isAuthority()
-      // },
+      get player() {
+        return player
+      },
       get onContactStart() {
         return self.onContactStart
       },
