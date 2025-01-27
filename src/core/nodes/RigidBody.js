@@ -188,10 +188,12 @@ export class RigidBody extends Node {
         set mass(value) {
           if (!isNumber(value) || value < 0) throw new Error('[rigidbody] mass must be >= 0')
           self.mass = value
+          self.needsRebuild = true
+          self.setDirty()
           // self.actor?.setMass?.(value)
-          if (self.actor) {
-            PHYSX.PxRigidBodyExt.prototype.setMassAndUpdateInertia(self.actor, self.mass)
-          }
+          // if (self.actor) {
+          //   PHYSX.PxRigidBodyExt.prototype.setMassAndUpdateInertia(self.actor, self.mass)
+          // }
         },
         get tag() {
           return self.tag
@@ -265,14 +267,14 @@ export class RigidBody extends Node {
           return vec3.fromPxVec3(self.actor.getLinearVelocity())
         },
         setLinearVelocity(vec3) {
-          self.actor?.setLinearVelocity(vec3.toPxVec3())
+          self.actor?.setLinearVelocity?.(vec3.toPxVec3())
         },
         getAngularVelocity(vec3 = _v1) {
           if (!self.actor) return vec3.set(0, 0, 0)
           return vec3.fromPxVec3(self.actor.getAngularVelocity())
         },
         setAngularVelocity(vec3) {
-          self.actor?.setAngularVelocity(vec3.toPxVec3())
+          self.actor?.setAngularVelocity?.(vec3.toPxVec3())
         },
         setKinematicTarget(position, quaternion) {
           if (self.type !== 'kinematic') {
