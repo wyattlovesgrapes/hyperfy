@@ -138,6 +138,7 @@ export class Physics extends System {
         const otherHandle = this.handles.get(pair.otherShape.getActor().ptr)
         if (!triggerHandle || !otherHandle) continue
         triggerResult.tag = otherHandle.tag
+        triggerResult.player = otherHandle.player
         if (pair.status === PHYSX.PxPairFlagEnum.eNOTIFY_TOUCH_FOUND) {
           if (!otherHandle.triggeredHandles.has(triggerHandle)) {
             triggerHandle.onTriggerEnter?.(triggerResult)
@@ -285,6 +286,7 @@ export class Physics extends System {
         if (handle.triggeredHandles.size) {
           for (const triggerHandle of handle.triggeredHandles) {
             triggerResult.tag = handle.tag
+            triggerResult.player = handle.player
             triggerHandle.onTriggerLeave?.(triggerResult)
           }
         }
