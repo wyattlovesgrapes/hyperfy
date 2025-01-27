@@ -437,6 +437,9 @@ export class App extends Entity {
         entity.offWorldEvent(name, callback)
       },
       emit(name, data) {
+        if (internalEvents.includes(name)) {
+          return console.error(`apps cannot emit internal events (${name})`)
+        }
         world.events.emit(name, data)
       },
       getTime() {
@@ -481,7 +484,7 @@ export class App extends Entity {
       },
       send(name, data, ignoreSocketId) {
         if (internalEvents.includes(name)) {
-          return console.error(`apps cannot emit internal events (${name})`)
+          return console.error(`apps cannot send internal events (${name})`)
         }
         // NOTE: on the client ignoreSocketId is a no-op because it can only send events to the server
         const event = [entity.data.id, entity.blueprint.version, name, data]
