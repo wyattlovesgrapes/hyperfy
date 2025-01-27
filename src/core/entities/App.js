@@ -436,6 +436,9 @@ export class App extends Entity {
       off(name, callback) {
         entity.offWorldEvent(name, callback)
       },
+      emit(name, data) {
+        world.events.emit(name, data)
+      },
       getTime() {
         return performance.now()
       },
