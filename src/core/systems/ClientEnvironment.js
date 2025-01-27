@@ -12,7 +12,6 @@ const csmLevels = {
     lightIntensity: 3,
     // shadowBias: 0.000002,
     // shadowNormalBias: 0.001,
-    shadowIntensity: 2,
   },
   low: {
     cascades: 1,
@@ -21,7 +20,6 @@ const csmLevels = {
     lightIntensity: 1,
     shadowBias: 0.0000009,
     shadowNormalBias: 0.001,
-    shadowIntensity: 2,
   },
   med: {
     cascades: 3,
@@ -30,7 +28,6 @@ const csmLevels = {
     lightIntensity: 1,
     shadowBias: 0.000002,
     shadowNormalBias: 0.002,
-    shadowIntensity: 2,
   },
   high: {
     cascades: 3,
@@ -39,7 +36,6 @@ const csmLevels = {
     lightIntensity: 1,
     shadowBias: 0.000003,
     shadowNormalBias: 0.002,
-    shadowIntensity: 2,
   },
 }
 
@@ -179,8 +175,8 @@ export class ClientEnvironment extends System {
       shadowMapSize: 2048,
       maxFar: 100,
       lightIntensity: 1,
-      lightDirection: new THREE.Vector3(-1, -2, -2).normalize(),
-      fade: true,
+      lightDirection: new THREE.Vector3(0, -1, 0).normalize(),
+      // fade: true,
       parent: scene,
       camera: camera,
       // note: you can play with bias in console like this:
@@ -197,9 +193,6 @@ export class ClientEnvironment extends System {
       ...options,
       // note: you can test changes in console and then call csm.updateFrustrums() to debug
     })
-    for (const light of this.csm.lights) {
-      light.shadow.intensity = options.shadowIntensity
-    }
     if (!options.castShadow) {
       for (const light of this.csm.lights) {
         light.castShadow = false
