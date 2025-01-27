@@ -1,4 +1,4 @@
-import { isNumber } from 'lodash-es'
+import { isNumber, isString } from 'lodash-es'
 
 import { Node } from './Node'
 import { Display } from '../extras/yoga'
@@ -173,7 +173,7 @@ export class UIText extends Node {
 
   set value(val) {
     if (this._value === val) return
-    this._value = val || defaults.value
+    this._value = isString(val) ? val : defaults.value
     this.yogaNode?.markDirty()
     this.ui?.redraw()
   }
