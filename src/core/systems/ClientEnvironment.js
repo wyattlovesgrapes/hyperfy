@@ -175,8 +175,8 @@ export class ClientEnvironment extends System {
       shadowMapSize: 2048,
       maxFar: 100,
       lightIntensity: 1,
-      lightDirection: new THREE.Vector3(0, -1, 0).normalize(),
-      // fade: true,
+      lightDirection: new THREE.Vector3(-1, -2, -2).normalize(),
+      fade: true,
       parent: scene,
       camera: camera,
       // note: you can play with bias in console like this:
