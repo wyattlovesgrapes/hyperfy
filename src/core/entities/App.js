@@ -443,7 +443,7 @@ export class App extends Entity {
         world.events.emit(name, data)
       },
       getTime() {
-        return performance.now()
+        return world.network.getTime()
       },
       getTimestamp(format) {
         if (!format) return moment().toISOString()
