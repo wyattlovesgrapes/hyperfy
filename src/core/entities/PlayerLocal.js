@@ -46,6 +46,9 @@ export class PlayerLocal extends Entity {
   }
 
   async init() {
+    if (this.world.loader.preloader) {
+      await this.world.loader.preloader
+    }
     this.mass = 1
     this.gravity = 20
     this.effectiveGravity = this.gravity * this.mass
