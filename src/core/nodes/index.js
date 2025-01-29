@@ -11,6 +11,7 @@ export { Sky as sky } from './Sky.js'
 export { UI as ui } from './UI.js'
 export { UIView as uiview } from './UIView.js'
 export { UIText as uitext } from './UIText.js'
+export { UIImage as uimage } from './UIImage.js'
 
 export { Controller as controller } from './Controller.js'
 export { RigidBody as rigidbody } from './RigidBody.js'
