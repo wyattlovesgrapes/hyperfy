@@ -168,9 +168,12 @@ export class ServerNetwork extends System {
       }
     }
     // log
-    console.log(
-      `save complete [blueprints:${counts.upsertedBlueprints} apps:${counts.upsertedApps} apps-removed:${counts.deletedApps}]`
-    )
+    const didSave = counts.upsertedBlueprints > 0 || counts.upsertedApps > 0 || counts.deletedApps > 0
+    if (didSave) {
+      console.log(
+        `world saved (${counts.upsertedBlueprints} blueprints, ${counts.upsertedApps} apps, ${counts.deletedApps} apps removed)`
+      )
+    }
     // queue again
     this.saveTimerId = setTimeout(this.save, SAVE_INTERVAL * 1000)
   }
