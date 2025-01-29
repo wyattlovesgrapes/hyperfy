@@ -8,7 +8,7 @@ const defaults = {
   width: null,
   height: null,
   objectFit: 'contain', // contain, cover, fill
-  backgroundColor: null
+  backgroundColor: null,
 }
 
 export class UIImage extends Node {
@@ -23,142 +23,94 @@ export class UIImage extends Node {
     this.objectFit = data.objectFit === undefined ? defaults.objectFit : data.objectFit
     this.backgroundColor = data.backgroundColor === undefined ? defaults.backgroundColor : data.backgroundColor
 
-    this._image = null
-    this._imageLoaded = false
-    this._needsUpdate = false
-    this._cursor = data.cursor
-    this._onPointerDown = data.onPointerDown
-    this._onPointerUp = data.onPointerUp
-  }
-
-  async loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-
-      img.onload = () => {
-        if (!this.ui) return
-
-        this._image = img
-        this._imageLoaded = true
-        this._needsUpdate = true
-
-        // Let the UI know it needs to update
-        if (this.ui && this.ui.needsUpdate !== undefined) {
-          this.ui.needsUpdate = true
-        }
-
-        resolve(img)
-      }
-
-      img.onerror = (error) => {
-        console.error('Failed to load image:', error)
-        reject(error)
-      }
-
-      img.src = src
-    })
-  }
-
-  update() {
-    if (this._needsUpdate) {
-      this._needsUpdate = false
-      if (this.yogaNode && !this.yogaNode.isDead) {
-        try {
-          this.yogaNode.markDirty()
-        } catch (e) {
-          console.warn('Failed to mark yoga node dirty:', e)
-        }
-      }
-    }
+    this.img = null
   }
 
   draw(ctx, offsetLeft, offsetTop) {
-    if (this._display === 'none' || !this._imageLoaded) return
-
+    if (this._display === 'none' || !this.img) return
     const left = offsetLeft + this.yogaNode.getComputedLeft()
     const top = offsetTop + this.yogaNode.getComputedTop()
     const width = this.yogaNode.getComputedWidth()
     const height = this.yogaNode.getComputedHeight()
-
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(left, top, width, height)
+    ctx.clip()
     if (this._backgroundColor) {
       ctx.fillStyle = this._backgroundColor
       ctx.fillRect(left, top, width, height)
     }
-
-    if (this._image) {
-      const drawParams = this.calculateDrawParameters(
-        this._image.width,
-        this._image.height,
-        width,
-        height
-      )
-
-      ctx.drawImage(
-        this._image,
-        left + drawParams.x,
-        top + drawParams.y,
-        drawParams.width,
-        drawParams.height
-      )
+    if (this.img) {
+      const drawParams = this.calculateDrawParameters(this.img.width, this.img.height, width, height)
+      ctx.drawImage(this.img, left + drawParams.x, top + drawParams.y, drawParams.width, drawParams.height)
     }
-
+    ctx.restore()
     this.box = { left, top, width, height }
-  }
-
-  calculateDrawParameters(imgWidth, imgHeight, containerWidth, containerHeight) {
-    let width, height, x = 0, y = 0
-    const aspectRatio = imgWidth / imgHeight
-
-    if (this._objectFit === 'cover') {
-      if (containerWidth / containerHeight > aspectRatio) {
-        width = containerWidth
-        height = containerWidth / aspectRatio
-        y = (containerHeight - height) / 2
-      } else {
-        height = containerHeight
-        width = containerHeight * aspectRatio
-        x = (containerWidth - width) / 2
-      }
-    } else if (this._objectFit === 'contain') {
-      if (containerWidth / containerHeight > aspectRatio) {
-        height = containerHeight
-        width = containerHeight * aspectRatio
-        x = (containerWidth - width) / 2
-      } else {
-        width = containerWidth
-        height = containerWidth / aspectRatio
-        y = (containerHeight - height) / 2
-      }
-    } else { // fill
-      width = containerWidth
-      height = containerHeight
-    }
-
-    return { width, height, x, y }
   }
 
   mount() {
     if (this.ctx.world.network.isServer) return
     this.ui = this.parent?.ui
     if (!this.ui) return console.error('uiimage: must be child of ui node')
-
-    // Clean up old yoga node if it exists
-    if (this.yogaNode) {
-      this.parent.yogaNode?.removeChild(this.yogaNode)
-      this.yogaNode.free()
-    }
-
     this.yogaNode = Yoga.Node.create()
     this.yogaNode.setDisplay(Display[this._display])
-    this.yogaNode.setWidth(this._width === null ? undefined : this._width * this.ui._res)
-    this.yogaNode.setHeight(this._height === null ? undefined : this._height * this.ui._res)
-
+    // measure function
+    this.yogaNode.setMeasureFunc((width, widthMode, height, heightMode) => {
+      // no image? zero size
+      if (!this.img) {
+        return { width: 0, height: 0 }
+      }
+      const imgAspectRatio = this.img.width / this.img.height
+      let finalWidth
+      let finalHeight
+      // handle explicitly set dimensions first
+      if (this._width !== null && this._height !== null) {
+        return {
+          width: this._width * this.ui._res,
+          height: this._height * this.ui._res,
+        }
+      }
+      // handle cases where one dimension is specified
+      if (this._width !== null) {
+        finalWidth = this._width * this.ui._res
+        finalHeight = finalWidth / imgAspectRatio
+      } else if (this._height !== null) {
+        finalHeight = this._height * this.ui._res
+        finalWidth = finalHeight * imgAspectRatio
+      } else {
+        // neither dimension specified - use natural size with constraints
+        if (widthMode === Yoga.MEASURE_MODE_EXACTLY) {
+          finalWidth = width
+          finalHeight = width / imgAspectRatio
+        } else if (widthMode === Yoga.MEASURE_MODE_AT_MOST) {
+          finalWidth = Math.min(this.img.width * this.ui._res, width)
+          finalHeight = finalWidth / imgAspectRatio
+        } else {
+          // use natural size
+          finalWidth = this.img.width * this.ui._res
+          finalHeight = this.img.height * this.ui._res
+        }
+        // apply height constraints if any
+        if (heightMode === Yoga.MEASURE_MODE_EXACTLY) {
+          finalHeight = height
+          if (this._objectFit === 'contain') {
+            finalWidth = Math.min(finalWidth, height * imgAspectRatio)
+          }
+        } else if (heightMode === Yoga.MEASURE_MODE_AT_MOST && finalHeight > height) {
+          finalHeight = height
+          finalWidth = height * imgAspectRatio
+        }
+      }
+      return { width: finalWidth, height: finalHeight }
+    })
     this.parent.yogaNode.insertChild(this.yogaNode, this.parent.yogaNode.getChildCount())
-
-    if (this._src && !this._imageLoaded) {
+    if (this._src && !this.img) {
       this.loadImage(this._src)
     }
+  }
+
+  commit() {
+    // ...
   }
 
   unmount() {
@@ -168,9 +120,98 @@ export class UIImage extends Node {
       this.yogaNode.free()
       this.yogaNode = null
       this.box = null
+      this.img = null
+      this.ui?.redraw()
     }
-    this._image = null
-    this._imageLoaded = false
+  }
+
+  loadImage(src) {
+    return new Promise(async (resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        if (!this.ui) return
+        this.img = img
+        this.yogaNode?.markDirty()
+        this.ui?.redraw()
+        resolve(img)
+      }
+      img.onerror = error => {
+        console.error('uiimage: failed to load:', error)
+        reject(error)
+      }
+      img.src = src
+    })
+  }
+
+  calculateDrawParameters(imgWidth, imgHeight, containerWidth, containerHeight) {
+    const aspectRatio = imgWidth / imgHeight
+    switch (this._objectFit) {
+      case 'cover': {
+        // Scale to cover entire container while maintaining aspect ratio
+        if (containerWidth / containerHeight > aspectRatio) {
+          const width = containerWidth
+          const height = width / aspectRatio
+          return {
+            width,
+            height,
+            x: 0,
+            y: (containerHeight - height) / 2,
+          }
+        } else {
+          const height = containerHeight
+          const width = height * aspectRatio
+          return {
+            width,
+            height,
+            x: (containerWidth - width) / 2,
+            y: 0,
+          }
+        }
+      }
+      case 'contain': {
+        // Scale to fit within container while maintaining aspect ratio
+        if (containerWidth / containerHeight > aspectRatio) {
+          const height = containerHeight
+          const width = height * aspectRatio
+          return {
+            width,
+            height,
+            x: (containerWidth - width) / 2,
+            y: 0,
+          }
+        } else {
+          const width = containerWidth
+          const height = width / aspectRatio
+          return {
+            width,
+            height,
+            x: 0,
+            y: (containerHeight - height) / 2,
+          }
+        }
+      }
+      case 'fill':
+      default:
+        // Stretch to fill container
+        return {
+          width: containerWidth,
+          height: containerHeight,
+          x: 0,
+          y: 0,
+        }
+    }
+  }
+
+  get display() {
+    return this._display
+  }
+
+  set display(value) {
+    if (this._display === value) return
+    this._display = value
+    this.yogaNode?.setDisplay(Display[this._display])
+    this.ui?.redraw()
   }
 
   get src() {
@@ -183,8 +224,7 @@ export class UIImage extends Node {
     if (this._src) {
       this.loadImage(this._src)
     } else {
-      this._image = null
-      this._imageLoaded = false
+      this.img = null
       this.ui?.redraw()
     }
   }
@@ -196,7 +236,7 @@ export class UIImage extends Node {
   set width(value) {
     if (this._width === value) return
     this._width = isNumber(value) ? value : defaults.width
-    this.yogaNode?.setWidth(this._width === null ? undefined : this._width * this.ui._res)
+    this.yogaNode?.markDirty()
     this.ui?.redraw()
   }
 
@@ -207,7 +247,7 @@ export class UIImage extends Node {
   set height(value) {
     if (this._height === value) return
     this._height = isNumber(value) ? value : defaults.height
-    this.yogaNode?.setHeight(this._height === null ? undefined : this._height * this.ui._res)
+    this.yogaNode?.markDirty()
     this.ui?.redraw()
   }
 
@@ -231,34 +271,16 @@ export class UIImage extends Node {
     this.ui?.redraw()
   }
 
-  get cursor() {
-    return this._cursor
-  }
-
-  set cursor(value) {
-    this._cursor = value
-  }
-
-  get onPointerDown() {
-    return this._onPointerDown
-  }
-
-  set onPointerDown(value) {
-    this._onPointerDown = value
-  }
-
-  get onPointerUp() {
-    return this._onPointerUp
-  }
-
-  set onPointerUp(value) {
-    this._onPointerUp = value
-  }
-
   getProxy() {
     if (!this.proxy) {
       const self = this
-      const proxy = {
+      let proxy = {
+        get display() {
+          return self.display
+        },
+        set display(value) {
+          self.display = value
+        },
         get src() {
           return self.src
         },
@@ -278,7 +300,7 @@ export class UIImage extends Node {
           self.height = value
         },
         get objectFit() {
-          return self.objectFit  
+          return self.objectFit
         },
         set objectFit(value) {
           self.objectFit = value
@@ -288,11 +310,10 @@ export class UIImage extends Node {
         },
         set backgroundColor(value) {
           self.backgroundColor = value
-        }
+        },
       }
-
-      // Inherit from Node's proxy
-      this.proxy = Object.create(super.getProxy(), Object.getOwnPropertyDescriptors(proxy))
+      proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(super.getProxy())) // inherit Node properties
+      this.proxy = proxy
     }
     return this.proxy
   }
