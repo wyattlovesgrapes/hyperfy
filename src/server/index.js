@@ -168,3 +168,16 @@ async function worldNetwork(fastify) {
 }
 
 console.log(`running on port ${port}`)
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('SIGINT signal received.')
+  await fastify.close()
+  process.exit(0)
+})
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM signal received.')
+  await fastify.close()
+  process.exit(0)
+})
