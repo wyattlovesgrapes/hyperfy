@@ -6,7 +6,14 @@ import { LerpVector3 } from '../extras/LerpVector3'
 import { emotes } from '../extras/playerEmotes'
 import { createPlayerProxy } from '../extras/createPlayerProxy'
 
-const colliderGeometry = new THREE.BoxGeometry(0.6, 2.2, 0.6).translate(0, 1.1, 0) // matches PlayerLocal capsule size
+let capsuleGeometry
+{
+  const radius = 0.3
+  const inner = 1.2
+  const height = radius + inner + radius
+  capsuleGeometry = new THREE.CapsuleGeometry(radius, inner) // matches PlayerLocal capsule size
+  capsuleGeometry.translate(0, height / 2, 0)
+}
 
 export class PlayerRemote extends Entity {
   constructor(world, data, local) {
@@ -20,12 +27,24 @@ export class PlayerRemote extends Entity {
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
 
-    if (this.world.network.isServer) {
-      this.body = createNode({ name: 'rigidbody', type: 'kinematic' })
-      this.collider = createNode({ name: 'collider', convex: true, geometry: colliderGeometry })
-      this.body.add(this.collider)
-      this.base.add(this.body)
-    }
+    this.body = createNode({ name: 'rigidbody', type: 'kinematic' })
+    this.base.add(this.body)
+    this.collider = createNode({
+      name: 'collider',
+      type: 'geometry',
+      convex: true,
+      geometry: capsuleGeometry,
+      layer: 'player',
+    })
+    this.body.add(this.collider)
+
+    // this.caps = createNode({
+    //   name: 'mesh',
+    //   type: 'geometry',
+    //   geometry: capsuleGeometry,
+    //   material: new THREE.MeshStandardMaterial({ color: 'white' }),
+    // })
+    // this.base.add(this.caps)
 
     this.nametag = createNode({ name: 'nametag', label: this.data.user.name, active: false })
     this.base.add(this.nametag)
