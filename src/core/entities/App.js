@@ -155,6 +155,8 @@ export class App extends Entity {
     // abort fetch's etc
     this.abortController?.abort()
     this.abortController = null
+    // clear config
+    this.onConfigure?.(null)
   }
 
   fixedUpdate(delta) {
