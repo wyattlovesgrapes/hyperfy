@@ -10,8 +10,9 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY . .
-
 COPY .env.example .env
+
+RUN npm run build || exit 0
 
 ARG COMMIT_HASH=local
 ENV COMMIT_HASH=${COMMIT_HASH:-local}
@@ -20,4 +21,4 @@ ENV COMMIT_HASH=${COMMIT_HASH:-local}
 EXPOSE 3000
 
 # Start the application
-CMD [ "npm", "run", "prod" ]
+CMD [ "npm", "run", "start" ]
