@@ -327,8 +327,8 @@ export class Audio extends Node {
     const audio = this.ctx.world.audio
     if (!audio) return
     this.n++
+    this.offset = 0
     if (this.source) {
-      this.offset = 0
       this.source.onended = null
       this.source?.stop()
       this.source = null
