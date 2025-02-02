@@ -169,7 +169,7 @@ export class UIView extends Node {
   }
 
   set height(value = defaults.height) {
-    if (value !== null && !isNumber(height)) {
+    if (value !== null && !isNumber(value)) {
       throw new Error(`[uiview] height not a number`)
     }
     if (this._height === value) return
