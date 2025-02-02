@@ -22,6 +22,7 @@ const ZOOM_SPEED = 2
 const MIN_ZOOM = 2
 const MAX_ZOOM = 100 // 16
 const STICK_MAX_DISTANCE = 50
+const CAM_HEIGHT = 1.2
 
 const v1 = new THREE.Vector3()
 const v2 = new THREE.Vector3()
@@ -123,7 +124,7 @@ export class PlayerLocal extends Entity {
 
     this.cam = {}
     this.cam.position = new THREE.Vector3().copy(this.base.position)
-    this.cam.position.y += 1.6
+    this.cam.position.y += CAM_HEIGHT
     this.cam.quaternion = new THREE.Quaternion()
     this.cam.rotation = new THREE.Euler(0, 0, 0, 'YXZ')
     bindRotations(this.cam.quaternion, this.cam.rotation)
@@ -573,7 +574,7 @@ export class PlayerLocal extends Entity {
     // make camera follow our position horizontally
     // and vertically at our vrm model height
     this.cam.position.copy(this.base.position)
-    this.cam.position.y += 1.6
+    this.cam.position.y += CAM_HEIGHT
 
     // emote
     if (this.jumping) {
@@ -631,7 +632,7 @@ export class PlayerLocal extends Entity {
     })
     // snap camera
     this.cam.position.copy(this.base.position)
-    this.cam.position.y += 1.6
+    this.cam.position.y += CAM_HEIGHT
     if (hasRotation) this.cam.rotation.y = rotationY
     this.control.camera.position.copy(this.cam.position)
     this.control.camera.quaternion.copy(this.cam.quaternion)
