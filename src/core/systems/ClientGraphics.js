@@ -46,7 +46,7 @@ export class ClientGraphics extends System {
     this.renderer.toneMappingExposure = 1
     this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.xr.enabled = true
-    this.renderer.xr.setReferenceSpaceType('local-floor')
+    this.renderer.xr.setReferenceSpaceType('local')
     this.renderer.xr.setFoveation(1)
     this.maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy()
     this.usePostprocessing = this.world.client.settings.postprocessing

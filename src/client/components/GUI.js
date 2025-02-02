@@ -7,6 +7,7 @@ import { InspectPane } from './InspectPane'
 import { CodePane } from './CodePane'
 import { AvatarPane } from './AvatarPane'
 import { ChatBox } from './ChatBox'
+import { XRButton } from './XRButton'
 import { useElemSize } from './useElemSize'
 
 export function GUI({ world }) {
@@ -80,6 +81,7 @@ function Content({ world, width, height }) {
           onClose={() => setChat(false)}
         />
       )}
+      {world.xr.supportsVR && <XRButton world={world} />}
       {context && <ContextWheel key={context.id} {...context} />}
       {inspect && <InspectPane key={`inspect-${inspect.data.id}`} world={world} entity={inspect} />}
       {inspect && code && <CodePane key={`code-${inspect.data.id}`} world={world} entity={inspect} />}
