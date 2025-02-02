@@ -6,37 +6,91 @@ As Hyperfy is in alpha, the scripting API is likely to evolve fast with breaking
 This means your apps can and will break as you upgrade worlds.
 Once scripting is stable we'll move toward a forward compatible model, which will allow apps to be shared/traded with more confidence that they will continue to run correctly.
 
-## Lifecycle
+## Scripting Interface
 
-TODO: explain the app lifecycle across client and server
+To open the in world scripting window, right click on a model to inspect it and click script. Save your scripts with `cmd + s` or `ctrl + s` depending on your OS. 
 
-## Globals
+## World Hierarchy
 
-Apps run inside their own secure environment with a strict API that allows apps built by many different authors to co-exist in a real-time digital world.
+Worlds are made up of the following hierarchy:
+```
+Worlds contain:
+  └─ Entities which include:
+      ├─ Players which contain:
+      |   └─ Nodes (e.g. avatar, joint) 
+      └─ Apps  which contain:
+          └─ Nodes (e.g. mesh, collider, rigidbody) 
+```
 
-Just as websites run inside a DOM-based environment that provides browser APIs via globals, Apps run inside an app-based environment that provides app specific APIs by way of its own set of globals.
+Certain `entity` and `node` attributes within a world can be accesed from the global world API:
 
-- [app](/docs/ref/App.md)
-- [world](/docs/ref/World.md)
+- [world](/docs/ref/world/World.md)
+
+## Global Entites
+
+Apps run inside their own secure environment, which allow apps built by many different authors to co-exist in a real-time digital world.
+
+Just as websites run inside a DOM-based environment that provides browser APIs via globals, apps are provided with specific APIs for the global app and player entities:
+
+- [app](/docs/ref/world/entity/App.md)
+- [player](/docs/ref/world/entity/Player.md)
+
+## Nodes
+
+Apps are made up of a hierarchy of nodes that you can view and modify within the app runtime using scripts. 
+Nodes contain certain default attributes that are inherited by all other nodes such as `node.position` or `node.scale`. Information on the standard node attributes can be found in [Node.md](/docs/ref/world/nodes/Node.md)
+
+Other node attributes are based on common standards in [Three.js](https://threejs.org/) with more information found externally below:
+
 - [Vector3](https://threejs.org/docs/#api/en/math/Vector3)
 - [Quaternion](https://threejs.org/docs/#api/en/math/Quaternion)
 - [Euler](https://threejs.org/docs/#api/en/math/Euler)
 - [Matrix4](https://threejs.org/docs/#api/en/math/Matrix4)
 
-## Nodes
+## Entity Nodes
 
-Apps are made up of a hierarchy of nodes that you can view and modify within the app runtime using scripts.
+When a model is added to a scene, a [group node](/docs/ref/world/nodes/Group.md) is created containing a collection of nodes which mirrors your gltf model hierarchy. It is important to be mindful of these naming conventions when working on a model in software like Blender so you can access these mesh nodes like:
 
-The gltf model that each app is based on is automatically converted into nodes and inserted into the app runtime for you to interact with.
+`app.get(<mesh-node-name>)` 
 
-Some nodes can also be created and used on the fly using `app.create(nodeName)`.
+If you are importing a model from someplace like [Sketchfab](https://sketchfab.com/) and you don't know the root model name, you can return it with `const id = app.id`. You can then find the id's of sub meshes by traversing the node hierarchy.
 
-- [Group](/docs/ref/Group.md)
-- [Mesh](/docs/ref/Mesh.md)
-- [LOD](/docs/ref/LOD.md)
-- [Avatar](/docs/ref/Avatar.md)
-- [Action](/docs/ref/Action.md)
-- [Controller](/docs/ref/Controller.md)
-- [RigidBody](/docs/ref/RigidBody.md)
-- [Collider](/docs/ref/Collider.md)
-- [Joint](/docs/ref/Joint.md)
+### Creating Nodes
+
+Some nodes can/need to be created using `app.create('<node-name>')`. Information on using each node type and thier attributes can be found below:
+
+**Model**
+- [Mesh](/docs/ref/world/nodes/Mesh.md)
+- [LOD](/docs/ref/world/nodes/LOD.md)
+
+**Interaction**
+- [Action](/docs/ref/world/nodes/Action.md)
+- [Collider](/docs/ref/world/nodes/Collider.md)
+- [RigidBody](/docs/ref/world/nodes/RigidBody.md)
+- [Controller](/docs/ref/world/nodes/Controller.md)
+
+**Environment**
+- [Audio](/docs/ref/world/nodes/Audio.md)
+- [Sky](/docs/ref/world/nodes/Sky.md)
+
+**Generic**
+- [Group](/docs/ref/world/nodes/Group.md)
+- [Node](/docs/ref/world/nodes/Node.md)
+
+
+## Player Entity
+
+Some nodes are specific to the `player` entity: 
+
+- [Avatar](/docs/ref/world/nodes/Avatar.md)
+- [Joint](/docs/ref/world/nodes/Joint.md)
+
+## Examples
+
+[Example](/docs/examples) scripts that may help you get started can be found below: 
+
+- [working?](/docs/examples/working.js) - a hello world script using [action](/docs/ref/world/nodes/Action.md) (:
+
+## Lifecycle
+
+TODO: explain the app lifecycle across client and server

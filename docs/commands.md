@@ -6,7 +6,7 @@ There are a few commands that can be used by entering them in the chat.
 
 If your world has an admin code set, the only way to become an admin is to use this command with your code (see your .env file).
 
-If you're .env doesn't have an ADMIN_CODE set, then all players are given the admin role temporarily.
+If you're .env doesn't have an ADMIN_CODE set, then all players are given the admin role by default.
 
 ### `/spawn set`
 
@@ -20,3 +20,4 @@ Resets the spawn point back to origin. Requires admin role.
 
 Sets your name.
 This is currently the only way to change your name, until the UI for it is built.
+This is stored locally on your device and will erase by clearing your browser cache.
