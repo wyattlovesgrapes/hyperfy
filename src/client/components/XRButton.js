@@ -1,23 +1,23 @@
 import { css } from '@firebolt-dev/css'
 
-export function XRButton({ world, ...props }) {
-  const onSessionStart = async (session) => {
-    world.entities.player.avatar.instance.setFirstPersonMode(true);
-    world.entities.player.cam.rotation.set(0, 0, 0);
-    world.graphics.renderer.xr.setSession(session);
-    world.xr.setSession(session);
+export function XRButton({ world }) {
+  const onSessionStart = async session => {
+    world.entities.player.avatar.instance.setFirstPersonMode(true)
+    world.entities.player.cam.rotation.set(0, 0, 0)
+    world.graphics.renderer.xr.setSession(session)
+    world.xr.setSession(session)
   }
 
   const onSessionEnd = () => {
-    world.entities.player.avatar.instance.setFirstPersonMode(false);
-    world.camera.position.set(0, 0, 0);
-    world.camera.rotation.set(0, 0, 0);
+    world.entities.player.avatar.instance.setFirstPersonMode(false)
+    world.camera.position.set(0, 0, 0)
+    world.camera.rotation.set(0, 0, 0)
   }
 
   const onClick = async () => {
-    const session = await navigator.xr.requestSession('immersive-vr');
-    session.addEventListener('end', onSessionEnd);
-    onSessionStart(session);
+    const session = await navigator.xr.requestSession('immersive-vr')
+    session.addEventListener('end', onSessionEnd)
+    onSessionStart(session)
   }
 
   return (
