@@ -1,5 +1,5 @@
 import * as THREE from '../extras/three'
-import { every, isBoolean, isNumber } from 'lodash-es'
+import { every, isBoolean, isNumber, isString } from 'lodash-es'
 
 import { Node } from './Node'
 
@@ -109,7 +109,10 @@ export class Audio extends Node {
     return this._src
   }
 
-  set src(value) {
+  set src(value = defaults.src) {
+    if (!isString(value) && value !== null) {
+      throw new Error('[audio] src not a string')
+    }
     this._src = value || null
     this.needsRebuild = true
     this.setDirty()
@@ -119,17 +122,25 @@ export class Audio extends Node {
     return this._volume
   }
 
-  set volume(value) {
-    this._volume = isNumber(value) ? value : defaults.volume
-    if (this.gainNode) this.gainNode.gain.value = this._volume
+  set volume(value = defaults.volume) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] volume not a number')
+    }
+    this._volume = value
+    if (this.gainNode) {
+      this.gainNode.gain.value = this._volume
+    }
   }
 
   get loop() {
     return this._loop
   }
 
-  set loop(value) {
-    this._loop = isBoolean(value) ? value : defaults.loop
+  set loop(value = defaults.loop) {
+    if (!isBoolean(value)) {
+      throw new Error('[audio] loop not a boolean')
+    }
+    this._loop = value
     this.needsRebuild = true
     this.setDirty()
   }
@@ -138,8 +149,11 @@ export class Audio extends Node {
     return this._group
   }
 
-  set group(value) {
-    this._group = isCategory(value) ? value : defaults.group
+  set group(value = defaults.group) {
+    if (!isGroup(value)) {
+      throw new Error('[audio] group not valid')
+    }
+    this._group = value
     this.needsRebuild = true
     this.setDirty()
   }
@@ -148,8 +162,11 @@ export class Audio extends Node {
     return this._spatial
   }
 
-  set spatial(value) {
-    this._spatial = isBoolean(value) ? value : defaults.spatial
+  set spatial(value = defaults.spatial) {
+    if (!isBoolean(value)) {
+      throw new Error('[audio] spatial not a boolean')
+    }
+    this._spatial = value
     this.needsRebuild = true
     this.setDirty()
   }
@@ -158,8 +175,11 @@ export class Audio extends Node {
     return this._distanceModel
   }
 
-  set distanceModel(value) {
-    this._distanceModel = isDistanceModel(value) ? value : defaults.distanceModel
+  set distanceModel(value = defaults.distanceModel) {
+    if (!isDistanceModel(value)) {
+      throw new Error('[audio] distanceModel not valid')
+    }
+    this._distanceModel = value
     if (this.pannerNode) {
       this.pannerNode.distanceModel = this._distanceModel
     }
@@ -169,8 +189,11 @@ export class Audio extends Node {
     return this._refDistance
   }
 
-  set refDistance(value) {
-    this._refDistance = isNumber(value) ? value : defaults.refDistance
+  set refDistance(value = defaults.refDistance) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] refDistance not a number')
+    }
+    this._refDistance = value
     if (this.pannerNode) {
       this.pannerNode.refDistance = this._refDistance
     }
@@ -180,8 +203,11 @@ export class Audio extends Node {
     return this._maxDistance
   }
 
-  set maxDistance(value) {
-    this._maxDistance = isNumber(value) ? value : defaults.maxDistance
+  set maxDistance(value = defaults.maxDistance) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] maxDistance not a number')
+    }
+    this._maxDistance = value
     if (this.pannerNode) {
       this.pannerNode.maxDistance = this._maxDistance
     }
@@ -191,8 +217,11 @@ export class Audio extends Node {
     return this._rolloffFactor
   }
 
-  set rolloffFactor(value) {
-    this._rolloffFactor = isNumber(value) ? value : defaults.rolloffFactor
+  set rolloffFactor(value = defaults.rolloffFactor) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] rolloffFactor not a number')
+    }
+    this._rolloffFactor = value
     if (this.pannerNode) {
       this.pannerNode.rolloffFactor = this._rolloffFactor
     }
@@ -202,8 +231,11 @@ export class Audio extends Node {
     return this._coneInnerAngle
   }
 
-  set coneInnerAngle(value) {
-    this._coneInnerAngle = isNumber(value) ? value : defaults.coneInnerAngle
+  set coneInnerAngle(value = defaults.coneInnerAngle) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] coneInnerAngle not a number')
+    }
+    this._coneInnerAngle = value
     if (this.pannerNode) {
       this.pannerNode.coneInnerAngle = this._coneInnerAngle
     }
@@ -213,8 +245,11 @@ export class Audio extends Node {
     return this._coneOuterAngle
   }
 
-  set coneOuterAngle(value) {
-    this._coneOuterAngle = isNumber(value) ? value : defaults.coneOuterAngle
+  set coneOuterAngle(value = defaults.coneOuterAngle) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] coneOuterAngle not a number')
+    }
+    this._coneOuterAngle = value
     if (this.pannerNode) {
       this.pannerNode.coneOuterAngle = this._coneOuterAngle
     }
@@ -224,8 +259,11 @@ export class Audio extends Node {
     return this._coneOuterGain
   }
 
-  set coneOuterGain(value) {
-    this._coneOuterGain = isNumber(value) ? value : defaults.coneOuterGain
+  set coneOuterGain(value = defaults.coneOuterGain) {
+    if (!isNumber(value)) {
+      throw new Error('[audio] coneOuterGain not a number')
+    }
+    this._coneOuterGain = value
     if (this.pannerNode) {
       this.pannerNode.coneOuterGain = this._coneOuterGain
     }
@@ -243,7 +281,9 @@ export class Audio extends Node {
   }
 
   set currentTime(time) {
-    if (!isNumber(time)) return
+    if (!isNumber(time)) {
+      throw new Error('[audio] currentTime not a number')
+    }
     const offset = Math.max(0, time)
     if (this.source) {
       this.stop()
@@ -252,6 +292,10 @@ export class Audio extends Node {
     } else {
       this.offset = offset
     }
+  }
+
+  get isPlaying() {
+    return !!this.source
   }
 
   async play() {
@@ -421,6 +465,9 @@ export class Audio extends Node {
         set currentTime(value) {
           self.currentTime = value
         },
+        get isPlaying() {
+          return self.isPlaying
+        },
         play() {
           self.play()
         },
@@ -442,6 +489,6 @@ function isDistanceModel(value) {
   return distanceModels.includes(value)
 }
 
-function isCategory(value) {
+function isGroup(value) {
   return groups.includes(value)
 }
