@@ -33,8 +33,8 @@ export class App extends Entity {
     this.build()
   }
 
-  createNode(name) {
-    const node = createNode({ name })
+  createNode(name, data) {
+    const node = createNode(name, data)
     return node
   }
 
@@ -57,7 +57,7 @@ export class App extends Entity {
     let root
     // if someone else is uploading glb, show a loading indicator
     if (this.data.uploader && this.data.uploader !== this.world.network.id) {
-      root = createNode({ name: 'mesh' })
+      root = createNode('mesh')
       root.type = 'box'
       root.width = 1
       root.height = 1
@@ -504,8 +504,8 @@ export class App extends Entity {
         if (!node) return null
         return node.getProxy()
       },
-      create(name) {
-        const node = entity.createNode(name)
+      create(name, data) {
+        const node = entity.createNode(name, data)
         return node.getProxy()
       },
       control(options) {

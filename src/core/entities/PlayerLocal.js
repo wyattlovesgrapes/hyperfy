@@ -83,15 +83,14 @@ export class PlayerLocal extends Entity {
 
     this.lastSendAt = 0
 
-    this.base = createNode({ name: 'group' })
+    this.base = createNode('group')
     this.base.position.fromArray(this.data.position)
     this.base.quaternion.fromArray(this.data.quaternion)
 
     // this.nametag = createNode({ name: 'nametag', label: this.data.user.name, active: false })
     // this.base.add(this.nametag)
 
-    this.bubble = createNode({
-      name: 'ui',
+    this.bubble = createNode('ui', {
       width: 300,
       height: 512,
       size: 0.005,
@@ -101,14 +100,12 @@ export class PlayerLocal extends Entity {
       alignItems: 'center',
       active: false,
     })
-    this.bubbleBox = createNode({
-      name: 'uiview',
+    this.bubbleBox = createNode('uiview', {
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       borderRadius: 10,
       padding: 10,
     })
-    this.bubbleText = createNode({
-      name: 'uitext',
+    this.bubbleText = createNode('uitext', {
       color: 'white',
       fontWeight: 100,
       lineHeight: 1.4,
