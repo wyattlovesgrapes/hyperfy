@@ -1,7 +1,7 @@
 import * as THREE from '../extras/three'
 
 import { Node } from './Node'
-import { isFunction, isNumber } from 'lodash-es'
+import { isFunction, isNumber, isString } from 'lodash-es'
 
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
