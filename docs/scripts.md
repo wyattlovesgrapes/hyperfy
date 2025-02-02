@@ -61,6 +61,7 @@ Some nodes can/need to be created using `app.create('<node-name>')`. Information
 
 **Model**
 - [Mesh](/docs/ref/world/nodes/Mesh.md)
+- [Material](/docs/ref/world/nodes/Material.md)
 - [LOD](/docs/ref/world/nodes/LOD.md)
 
 **Interaction**
@@ -68,6 +69,12 @@ Some nodes can/need to be created using `app.create('<node-name>')`. Information
 - [Collider](/docs/ref/world/nodes/Collider.md)
 - [RigidBody](/docs/ref/world/nodes/RigidBody.md)
 - [Controller](/docs/ref/world/nodes/Controller.md)
+
+**UI**
+- [UI](/docs/ref/world/nodes/UI.md)
+- [UIText](/docs/ref/world/nodes/UIText.md)
+- [UIViews](/docs/ref/world/nodes/UIView.md)
+
 
 **Environment**
 - [Audio](/docs/ref/world/nodes/Audio.md)
