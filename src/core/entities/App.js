@@ -30,6 +30,7 @@ export class App extends Entity {
     this.worldListeners = new Map()
     this.listeners = {}
     this.eventQueue = []
+    this.fields = []
     this.build()
   }
 
