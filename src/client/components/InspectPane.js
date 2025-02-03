@@ -281,26 +281,26 @@ function PlayerPane({ world, player }) {
 
 function Fields({ app, blueprint }) {
   const world = app.world
-  const [fields, setFields] = useState(app.getConfig?.() || [])
-  const config = blueprint.config
+  const [fields, setFields] = useState(app.fields)
+  const props = blueprint.props
   useEffect(() => {
-    app.onConfigure = fn => setFields(fn?.() || [])
+    app.onFields = setFields
     return () => {
-      app.onConfigure = null
+      app.onFields = null
     }
   }, [])
   const modify = (key, value) => {
-    if (config[key] === value) return
-    config[key] = value
+    if (props[key] === value) return
+    props[key] = value
     // update blueprint locally (also rebuilds apps)
     const id = blueprint.id
     const version = blueprint.version + 1
-    world.blueprints.modify({ id, version, config })
+    world.blueprints.modify({ id, version, props })
     // broadcast blueprint change to server + other clients
-    world.network.send('blueprintModified', { id, version, config })
+    world.network.send('blueprintModified', { id, version, props })
   }
   return fields.map(field => (
-    <Field key={field.key} world={world} config={config} field={field} value={config[field.key]} modify={modify} />
+    <Field key={field.key} world={world} props={props} field={field} value={props[field.key]} modify={modify} />
   ))
 }
 
@@ -310,18 +310,18 @@ const fieldTypes = {
   textarea: FieldTextArea,
   file: FieldFile,
   switch: FieldSwitch,
-  empty: () => null,
 }
 
-function Field({ world, config, field, value, modify }) {
+function Field({ world, props, field, value, modify }) {
   if (field.when) {
     for (const rule of field.when) {
-      if (rule.op === 'eq' && config[rule.key] !== rule.value) {
+      if (rule.op === 'eq' && props[rule.key] !== rule.value) {
         return null
       }
     }
   }
-  const FieldControl = fieldTypes[field.type] || fieldTypes.empty
+  const FieldControl = fieldTypes[field.type]
+  if (!FieldControl) return null
   return <FieldControl world={world} field={field} value={value} modify={modify} />
 }
 
@@ -392,6 +392,7 @@ function FieldText({ world, field, value, modify }) {
         <input
           type='text'
           value={localValue || ''}
+          placeholder={field.placeholder}
           onChange={e => setLocalValue(e.target.value)}
           onKeyDown={e => {
             if (e.code === 'Enter') {
@@ -546,7 +547,7 @@ function FieldFile({ world, field, value, modify }) {
           overflow: hidden;
           display: flex;
           align-items: center;
-          height: 36px;
+          height: 34px;
           background-color: #252630;
           border-radius: 10px;
           padding: 0 0 0 8px;
@@ -572,7 +573,7 @@ function FieldFile({ world, field, value, modify }) {
           }
           .field-file-x {
             width: 30px;
-            height: 36px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -580,7 +581,7 @@ function FieldFile({ world, field, value, modify }) {
           }
           .field-file-loading {
             width: 30px;
-            height: 36px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;

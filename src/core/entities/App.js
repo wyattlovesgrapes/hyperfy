@@ -1,4 +1,4 @@
-import { isString } from 'lodash-es'
+import { isArray, isFunction, isString } from 'lodash-es'
 import * as THREE from '../extras/three'
 import moment from 'moment'
 
@@ -101,7 +101,7 @@ export class App extends Entity {
       this.abortController = new AbortController()
       this.script = script
       try {
-        this.script.exec(this.getWorldProxy(), this.getAppProxy(), this.fetch, blueprint.config)
+        this.script.exec(this.getWorldProxy(), this.getAppProxy(), this.fetch, blueprint.props)
       } catch (err) {
         console.error('script crashed')
         console.error(err)
@@ -155,8 +155,8 @@ export class App extends Entity {
     // abort fetch's etc
     this.abortController?.abort()
     this.abortController = null
-    // clear config
-    this.onConfigure?.(null)
+    // clear fields
+    this.onFields?.([])
   }
 
   fixedUpdate(delta) {
@@ -518,12 +518,30 @@ export class App extends Entity {
         })
         return entity.control
       },
-      configure(fn) {
-        entity.getConfig = fn
-        entity.onConfigure?.(fn)
+      configure(fnOrArray) {
+        if (isArray(fnOrArray)) {
+          entity.fields = fnOrArray
+        } else if (isFunction(fnOrArray)) {
+          entity.fields = fnOrArray() // deprecated
+        }
+        if (!isArray(entity.fields)) {
+          entity.fields = []
+        }
+        // apply any initial values
+        const props = entity.blueprint.props
+        for (const field of entity.fields) {
+          if (field.initial && props[field.key] === undefined) {
+            props[field.key] = field.initial
+          }
+        }
+        entity.onFields?.(entity.fields)
+      },
+      get props() {
+        return entity.blueprint.props
       },
       get config() {
-        return entity.blueprint.config
+        // deprecated. will be removed
+        return entity.blueprint.props
       },
     }
     proxy = Object.defineProperties(proxy, Object.getOwnPropertyDescriptors(this.root.getProxy())) // inherit root Node properties

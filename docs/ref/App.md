@@ -60,3 +60,7 @@ Creates and returns a node of the specified name.
 
 TODO: provides control to a client to respond to inputs and move the camera etc
 
+#### `.configure(fields)`
+
+Configures custom UI for your app. See [Props](/docs/ref/Props.md) for more info.
+

@@ -60,11 +60,13 @@ export class Scripts extends System {
   }
 }
 
+// NOTE: config is deprecated and renamed to props
 function wrapRawCode(code) {
   return `
   (function() {
     const shared = {}
-    return (world, app, fetch, config) => {
+    return (world, app, fetch, props) => {
+      const config = props // deprecated
       ${code}
     }
   })()
