@@ -204,7 +204,16 @@ export class ClientEditor extends System {
     // ensure we have admin/builder role
     const roles = this.world.entities.player.data.user.roles
     const canDrop = hasRole(roles, 'admin', 'builder')
-    if (!canDrop) return
+    if (!canDrop) {
+      this.world.chat.add({
+        id: uuid(),
+        from: null,
+        fromId: null,
+        body: `You don't have permission to do that.`,
+        createdAt: moment().toISOString(),
+      })
+      return
+    }
     // handle drop
     let file
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
