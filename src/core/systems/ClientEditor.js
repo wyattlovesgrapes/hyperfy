@@ -151,7 +151,7 @@ export class ClientEditor extends System {
             version: 0,
             model: entity.blueprint.model,
             script: entity.blueprint.script,
-            config: cloneDeep(entity.blueprint.config),
+            props: cloneDeep(entity.blueprint.props),
             preload: entity.blueprint.preload,
           }
           this.world.blueprints.add(blueprint, true)
