@@ -171,7 +171,8 @@ export class ClientEditor extends System {
         },
       })
     }
-    if (context.actions.length) {
+    const hasActions = context.actions.find(action => action.visible)
+    if (hasActions) {
       this.setContext(context)
     }
   }
