@@ -254,7 +254,7 @@ export class ClientEditor extends System {
       version: 0,
       model: url,
       script: null,
-      config: {},
+      props: {},
       preload: false,
     }
     // register blueprint
@@ -304,7 +304,7 @@ export class ClientEditor extends System {
           version: 0,
           model: url,
           script: null,
-          config: {},
+          props: {},
           preload: false,
         }
         // register blueprint
