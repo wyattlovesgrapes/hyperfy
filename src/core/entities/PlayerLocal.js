@@ -237,11 +237,13 @@ export class PlayerLocal extends Entity {
       priority: ControlPriorities.PLAYER,
       onPress: code => {
         if (code === 'MouseRight') {
+          this.control._looking = true
           this.control.pointer.lock()
         }
       },
       onRelease: code => {
         if (code === 'MouseRight') {
+          this.control._looking = false
           this.control.pointer.unlock()
         }
       },
@@ -503,7 +505,7 @@ export class PlayerLocal extends Entity {
 
   update(delta) {
     // rotate camera when looking (holding right mouse + dragging)
-    if (this.control.pointer.locked) {
+    if (this.control._looking) {
       this.cam.rotation.y += -this.control.pointer.delta.x * POINTER_LOOK_SPEED * delta
       this.cam.rotation.x += -this.control.pointer.delta.y * POINTER_LOOK_SPEED * delta
     }

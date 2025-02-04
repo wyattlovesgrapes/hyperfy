@@ -116,6 +116,20 @@ export class App extends Entity {
       this.lastMoveSendTime = 0
       this.control = this.world.controls.bind({
         priority: ControlPriorities.ENTITY,
+        onPress: code => {
+          if (code === 'ShiftLeft') {
+            this.control._lifting = true
+            this.control.pointer.lock()
+            return true
+          }
+        },
+        onRelease: code => {
+          if (code === 'ShiftLeft') {
+            this.control._lifting = false
+            this.control.pointer.unlock()
+            return true
+          }
+        },
         onScroll: () => {
           return true
         },
@@ -148,6 +162,9 @@ export class App extends Entity {
     this.hotEvents = 0
     // release control
     if (this.control) {
+      if (this.control._lifting) {
+        this.control.pointer.unlock()
+      }
       this.control?.release()
       this.control = null
     }
@@ -177,7 +194,7 @@ export class App extends Entity {
   update(delta) {
     // if we're moving the app, handle that
     if (this.data.mover === this.world.network.id) {
-      if (this.control.buttons.ShiftLeft) {
+      if (this.control._lifting) {
         // if shift is down we're raising and lowering the app
         this.root.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
       } else {
