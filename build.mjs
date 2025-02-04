@@ -10,8 +10,6 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(dirname, './')
 const buildDir = path.join(rootDir, 'build')
 
-process.env.PUBLIC_VERSION = getVersion()
-
 await fs.emptyDir(buildDir)
 
 /**
@@ -100,6 +98,8 @@ let spawn
         name: 'server-finalize-plugin',
         setup(build) {
           build.onEnd(async result => {
+            // make version file
+            await fs.writeFile(path.join(rootDir, 'build/version.txt'), getVersion())
             // copy over physx wasm
             const physxWasmSrc = path.join(rootDir, 'src/server/physx/physx-js-webidl.wasm')
             const physxWasmDest = path.join(rootDir, 'build/physx-js-webidl.wasm')
