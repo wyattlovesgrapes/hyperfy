@@ -8,6 +8,7 @@ import { ControlPriorities } from '../extras/ControlPriorities'
 import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
 import { cloneDeep } from 'lodash-es'
 import moment from 'moment'
+import { importApp, isAppCompatible } from '../extras/appTools'
 
 contextBreakers = ['MouseLeft', 'Escape']
 
@@ -241,11 +242,64 @@ export class ClientEditor extends System {
       return
     }
     const ext = file.name.split('.').pop().toLowerCase()
+    if (ext === 'hyp') {
+      this.addApp(file)
+    }
     if (ext === 'glb') {
       this.addModel(file)
     }
     if (ext === 'vrm') {
       this.addAvatar(file)
+    }
+  }
+
+  async addApp(file) {
+    const info = await importApp(file)
+    if (!isAppCompatible(info.version)) {
+      this.world.chat.add({
+        id: uuid(),
+        from: null,
+        fromId: null,
+        body: `That app is not compatible (${info.version} > ${process.env.PUBLIC_VERSION})`,
+        createdAt: moment().toISOString(),
+      })
+      return
+    }
+    for (const asset of info.assets) {
+      this.world.loader.insert(asset.type, asset.url, asset.file)
+    }
+    const blueprint = {
+      id: uuid(),
+      version: 0,
+      model: info.blueprint.model,
+      script: info.blueprint.script,
+      props: info.blueprint.props,
+      preload: info.blueprint.preload,
+    }
+    this.world.blueprints.add(blueprint, true)
+    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const position = hit ? hit.point.toArray() : [0, 0, 0]
+    const data = {
+      id: uuid(),
+      type: 'app',
+      blueprint: blueprint.id,
+      position,
+      quaternion: [0, 0, 0, 1],
+      mover: this.world.network.id,
+      uploader: this.world.network.id,
+      state: {},
+    }
+    const app = this.world.entities.add(data, true)
+    const promises = info.assets.map(asset => {
+      return this.world.network.upload(asset.file)
+    })
+    try {
+      await Promise.all(promises)
+      app.onUploaded()
+    } catch (err) {
+      console.error('failed to upload .hyp assets')
+      console.error(err)
+      app.destroy()
     }
   }
 

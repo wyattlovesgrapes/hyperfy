@@ -1,7 +1,7 @@
 import 'dotenv-flow/config'
 import fs from 'fs-extra'
 import path from 'path'
-import { fork } from 'child_process'
+import { fork, execSync } from 'child_process'
 import * as esbuild from 'esbuild'
 import { fileURLToPath } from 'url'
 
@@ -9,6 +9,8 @@ const dev = process.argv.includes('--dev')
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.join(dirname, './')
 const buildDir = path.join(rootDir, 'build')
+
+process.env.PUBLIC_VERSION = getVersion()
 
 await fs.emptyDir(buildDir)
 
@@ -120,5 +122,28 @@ let spawn
     await serverCtx.watch()
   } else {
     await serverCtx.rebuild()
+  }
+}
+
+export function getVersion() {
+  try {
+    // get version from package.json
+    const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+    let version = packageJson.version
+    // check if there are unstaged changes
+    const hasUnstagedChanges = execSync('git status --porcelain').toString().length > 0
+    // check if we're on main branch
+    const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', {
+      encoding: 'utf8',
+    }).trim()
+    const isMainBranch = currentBranch === 'main'
+    // append -dev if either condition is true
+    if (hasUnstagedChanges || !isMainBranch) {
+      version += '-dev'
+    }
+    return version
+  } catch (error) {
+    console.error('error getting version:', error)
+    return null
   }
 }

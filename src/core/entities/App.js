@@ -44,18 +44,9 @@ export class App extends Entity {
     const n = ++this.n
     // fetch blueprint
     const blueprint = this.world.blueprints.get(this.data.blueprint)
-    // fetch script (if any)
-    let script
-    if (blueprint.script) {
-      try {
-        script = this.world.loader.get('script', blueprint.script)
-        if (!script) script = await this.world.loader.load('script', blueprint.script)
-      } catch (err) {
-        console.error(err)
-        crashed = true
-      }
-    }
+
     let root
+    let script
     // if someone else is uploading glb, show a loading indicator
     if (this.data.uploader && this.data.uploader !== this.world.network.id) {
       root = createNode('mesh')
@@ -64,7 +55,7 @@ export class App extends Entity {
       root.height = 1
       root.depth = 1
     }
-    // otherwise we can load the actual glb
+    // otherwise we can load the model and script
     else {
       try {
         const type = blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
@@ -74,6 +65,16 @@ export class App extends Entity {
       } catch (err) {
         console.error(err)
         // no model, will use crash block below
+      }
+      // fetch script (if any)
+      if (blueprint.script) {
+        try {
+          script = this.world.loader.get('script', blueprint.script)
+          if (!script) script = await this.world.loader.load('script', blueprint.script)
+        } catch (err) {
+          console.error(err)
+          crashed = true
+        }
       }
     }
     // if script crashed (or failed to load model), show crash-block
