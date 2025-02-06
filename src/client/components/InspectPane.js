@@ -42,8 +42,9 @@ const allowedModels = ['glb', 'vrm']
 export function AppPane({ world, app }) {
   const paneRef = useRef()
   const headRef = useRef()
-  const [tab, setTab] = useState('overview')
   const [blueprint, setBlueprint] = useState(app.blueprint)
+  const canEdit = !blueprint.frozen && hasRole(world.entities.player.data.user.roles, 'admin', 'builder')
+  const [tab, setTab] = useState(canEdit ? 'edit' : 'overview')
   usePane('inspect', paneRef, headRef)
   useEffect(() => {
     window.app = app
@@ -66,7 +67,7 @@ export function AppPane({ world, app }) {
       console.error(err)
     }
   }
-  const canEdit = !blueprint.frozen && hasRole(world.entities.player.data.user.roles, 'admin', 'builder')
+
   return (
     <div
       ref={paneRef}
