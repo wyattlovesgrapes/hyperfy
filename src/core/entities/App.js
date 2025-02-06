@@ -9,6 +9,7 @@ import { LerpVector3 } from '../extras/LerpVector3'
 import { LerpQuaternion } from '../extras/LerpQuaternion'
 import { ControlPriorities } from '../extras/ControlPriorities'
 import { getRef } from '../nodes/Node'
+import { DEG2RAD } from '../extras/general'
 
 const hotEventNames = ['fixedUpdate', 'update', 'lateUpdate']
 const internalEvents = ['fixedUpdate', 'updated', 'lateUpdate', 'enter', 'leave', 'chat']
@@ -16,6 +17,7 @@ const internalEvents = ['fixedUpdate', 'updated', 'lateUpdate', 'enter', 'leave'
 const v1 = new THREE.Vector3()
 
 const SNAP_DISTANCE = 0.5
+const SNAP_DEGREES = 5
 
 const Modes = {
   ACTIVE: 'active',
@@ -240,6 +242,12 @@ export class App extends Entity {
       // apply movement
       this.root.position.copy(this.target.position)
       this.root.quaternion.copy(this.target.quaternion)
+      // snap rotation to degrees
+      const newY = this.target.rotation.y
+      const degrees = newY / DEG2RAD
+      const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
+      this.root.rotation.y = snappedDegrees * DEG2RAD
+      // update matrix
       this.root.clean()
       // and snap to any nearby points
       for (const pos of this.snaps) {
