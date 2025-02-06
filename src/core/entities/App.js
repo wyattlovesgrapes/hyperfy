@@ -208,9 +208,17 @@ export class App extends Entity {
   update(delta) {
     // if we're moving the app, handle that
     if (this.data.mover === this.world.network.id) {
+      // we cant just update the root directly and must track where it
+      // should be theoretically, and then apply snap points on top of that.
+      if (!this.target) {
+        this.target = new THREE.Object3D()
+        this.target.position.copy(this.root.position)
+        this.target.quaternion.copy(this.root.quaternion)
+        this.target.rotation.reorder('YXZ')
+      }
       if (this.control._lifting) {
         // if shift is down we're raising and lowering the app
-        this.root.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
+        this.target.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
       } else {
         // otherwise move with the cursor
         const position = this.world.controls.pointer.position
@@ -224,19 +232,22 @@ export class App extends Entity {
           break
         }
         if (hit) {
-          this.root.position.copy(hit.point)
+          this.target.position.copy(hit.point)
         }
         // and rotate with the mouse wheel
-        this.root.rotation.y += this.control.scroll.delta * 0.1 * delta
-        this.root.clean()
-        // and snap to any nearby points
-        for (const pos of this.snaps) {
-          const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
-          if (result) {
-            const offset = v1.copy(result.position).sub(pos)
-            this.root.position.add(offset)
-            break
-          }
+        this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+      }
+      // apply movement
+      this.root.position.copy(this.target.position)
+      this.root.quaternion.copy(this.target.quaternion)
+      this.root.clean()
+      // and snap to any nearby points
+      for (const pos of this.snaps) {
+        const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
+        if (result) {
+          const offset = v1.copy(result.position).sub(pos)
+          this.root.position.add(offset)
+          break
         }
       }
 
