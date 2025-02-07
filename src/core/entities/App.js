@@ -251,12 +251,14 @@ export class App extends Entity {
       // update matrix
       this.root.clean()
       // and snap to any nearby points
-      for (const pos of this.snaps) {
-        const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
-        if (result) {
-          const offset = v1.copy(result.position).sub(pos)
-          this.root.position.add(offset)
-          break
+      if (!this.control.buttons.ControlLeft) {
+        for (const pos of this.snaps) {
+          const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
+          if (result) {
+            const offset = v1.copy(result.position).sub(pos)
+            this.root.position.add(offset)
+            break
+          }
         }
       }
 
