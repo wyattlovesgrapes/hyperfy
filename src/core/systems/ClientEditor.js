@@ -231,11 +231,16 @@ export class ClientEditor extends System {
       if (item.kind === 'file') {
         file = item.getAsFile()
       }
-      if (item.type === 'text/uri-list') {
-        const url = await getAsString(item)
-        const resp = await fetch(url)
-        const blob = await resp.blob()
-        file = new File([blob], url.split('/').pop(), { type: resp.headers.get('content-type') })
+      // Handle multiple MIME types for URLs
+      if (item.type === 'text/uri-list' || item.type === 'text/plain' || item.type === 'text/html') {
+        const text = await new Promise(res => item.getAsString((a) => res(a)))
+        // Extract URL from the text (especially important for text/html type)
+        const url = text.trim().split('\n')[0] // Take first line in case of multiple
+        if (url.startsWith('http')) { // Basic URL validation
+          const resp = await fetch(url)
+          const blob = await resp.blob()
+          file = new File([blob], url.split('/').pop(), { type: resp.headers.get('content-type') })
+        }
       }
     } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       file = e.dataTransfer.files[0]
