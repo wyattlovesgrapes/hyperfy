@@ -239,7 +239,7 @@ export class ClientEditor extends System {
         if (url.startsWith('http')) { // Basic URL validation
           const resp = await fetch(url)
           const blob = await resp.blob()
-          file = new File([blob], url.split('/').pop(), { type: resp.headers.get('content-type') })
+          file = new File([blob], new URL(url).pathname.split('/').pop(), { type: resp.headers.get('content-type') })
         }
       }
     } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
