@@ -217,6 +217,7 @@ export class App extends Entity {
         this.target.position.copy(this.root.position)
         this.target.quaternion.copy(this.root.quaternion)
         this.target.rotation.reorder('YXZ')
+        document.body.style.cursor = 'grabbing'
       }
       if (this.control._lifting) {
         // if shift is down we're raising and lowering the app
@@ -283,6 +284,8 @@ export class App extends Entity {
           state: this.data.state,
         })
         this.build()
+        this.target = null
+        document.body.style.cursor = 'default'
       }
     }
     // if someone else is moving the app, interpolate updates
