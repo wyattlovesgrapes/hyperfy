@@ -208,7 +208,7 @@ export class ClientEditor extends System {
     }
   }
 
-  onDrop = e => {
+  onDrop = async e => {
     e.preventDefault()
     this.dropping = false
     // ensure we have admin/builder role
@@ -232,7 +232,10 @@ export class ClientEditor extends System {
         file = item.getAsFile()
       }
       if (item.type === 'text/uri-list') {
-        // ...
+        const url = await getAsString(item)
+        const resp = await fetch(url)
+        const blob = await resp.blob()
+        file = new File([blob], url.split('/').pop(), { type: resp.headers.get('content-type') })
       }
     } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       file = e.dataTransfer.files[0]
@@ -443,4 +446,10 @@ export class ClientEditor extends System {
       },
     })
   }
+}
+
+function getAsString(item) {
+  return new Promise(resolve => {
+    item.getAsString(resolve)
+  })
 }
