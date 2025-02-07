@@ -233,7 +233,7 @@ export class ClientEditor extends System {
       }
       // Handle multiple MIME types for URLs
       if (item.type === 'text/uri-list' || item.type === 'text/plain' || item.type === 'text/html') {
-        const text = await new Promise(res => item.getAsString((a) => res(a)))
+        const text = await getAsString(item)
         // Extract URL from the text (especially important for text/html type)
         const url = text.trim().split('\n')[0] // Take first line in case of multiple
         if (url.startsWith('http')) { // Basic URL validation
