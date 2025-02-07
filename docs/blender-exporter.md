@@ -3,7 +3,7 @@
 If you are building any kind of kit sets in blender and have a bunch of objects all spread out, The following blender script auto-exports each individual object, properly centering each object at its own origin.
 It will also ignore hidden objects, and automatically enable "custom properties" on the gltf export so that you can export colliders etc.
 
-```jsx
+```py
 import bpy
 import os
 import shutil
