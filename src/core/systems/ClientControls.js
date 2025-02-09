@@ -98,7 +98,7 @@ export class ClientControls extends System {
     this.viewport.addEventListener('touchcancel', this.onTouchEnd)
     this.viewport.addEventListener('pointerup', this.onPointerUp)
     this.viewport.addEventListener('wheel', this.onScroll, { passive: false }) // prettier-ignore
-    this.viewport.addEventListener('contextmenu', this.onContextMenu)
+    document.body.addEventListener('contextmenu', this.onContextMenu)
     window.addEventListener('resize', this.onResize)
     window.addEventListener('blur', this.onBlur)
   }
@@ -205,10 +205,12 @@ export class ClientControls extends System {
   }
 
   onPointerDown = e => {
+    if (e.isGUI) return
     this.checkPointerChanges(e)
   }
 
   onPointerMove = e => {
+    if (e.isGUI) return
     this.checkPointerChanges(e)
     const rect = this.viewport.getBoundingClientRect()
     const offsetX = e.pageX - rect.left
@@ -222,6 +224,7 @@ export class ClientControls extends System {
   }
 
   onPointerUp = e => {
+    if (e.isGUI) return
     this.checkPointerChanges(e)
   }
 

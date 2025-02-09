@@ -86,6 +86,16 @@ function Content({ world, width, height }) {
       {avatar && <AvatarPane key={avatar.hash} world={world} info={avatar} />}
       {disconnected && <Disconnected />}
       {!ready && <LoadingOverlay />}
+      <div
+        css={css`
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 2px;
+          height: 2px;
+          background: white;
+        `}
+      />
     </>
   )
 }

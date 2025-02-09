@@ -135,7 +135,7 @@ export class PlayerLocal extends Entity {
     bindRotations(this.cam.quaternion, this.cam.rotation)
     this.cam.quaternion.copy(this.base.quaternion)
     this.cam.rotation.x += -15 * DEG2RAD
-    this.cam.zoom = 4
+    this.cam.zoom = 3
 
     this.initCapsule()
     this.initControl()
@@ -158,7 +158,7 @@ export class PlayerLocal extends Entity {
         //   this.nametag.active = true
         // }
         this.avatarUrl = avatarUrl
-        this.camHeight = this.avatar.height * 0.9
+        this.camHeight = this.avatar.height * 1.1
       })
       .catch(err => {
         console.error(err)
@@ -242,16 +242,10 @@ export class PlayerLocal extends Entity {
     this.control = this.world.controls.bind({
       priority: ControlPriorities.PLAYER,
       onPress: code => {
-        if (code === 'MouseRight') {
-          this.control._looking = true
-          this.control.pointer.lock()
-        }
+        // ...
       },
       onRelease: code => {
-        if (code === 'MouseRight') {
-          this.control._looking = false
-          this.control.pointer.unlock()
-        }
+        // ...
       },
       onTouch: touch => {
         if (!this.stick && touch.position.x < this.control.screen.width / 2) {
@@ -562,7 +556,7 @@ export class PlayerLocal extends Entity {
 
   update(delta) {
     // rotate camera when looking (holding right mouse + dragging)
-    if (this.control._looking) {
+    if (this.control.pointer.locked) {
       this.cam.rotation.y += -this.control.pointer.delta.x * POINTER_LOOK_SPEED * delta
       this.cam.rotation.x += -this.control.pointer.delta.y * POINTER_LOOK_SPEED * delta
     }
@@ -674,7 +668,7 @@ export class PlayerLocal extends Entity {
     // handle node hover enter/leave
     if (!this.pointerState) this.pointerState = new PointerState()
     // console.time('pointer')
-    const hit = this.control.pointer.locked ? null : this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const hit = this.control.pointer.locked ? this.world.stage.raycastReticle()[0] : null
     this.pointerState.update(hit, this.control.pressed.MouseLeft, this.control.released.MouseLeft)
     // console.timeEnd('pointer')
 
@@ -684,6 +678,18 @@ export class PlayerLocal extends Entity {
         this.toggleFlying()
       }
       this.lastJumpAt = this.world.time
+    }
+
+    // left-click lock pointer
+    if (!this.control.pointer.locked && this.control.pressed.MouseLeft) {
+      this.control.pointer.lock()
+    }
+
+    // right-click open context wheel
+    if (this.control.pointer.locked && this.control.pressed.MouseRight) {
+      // TODO: ClientEditor.js needs reconcile
+      const didOpen = this.world.editor.tryContext()
+      if (didOpen) this.control.pointer.unlock()
     }
   }
 

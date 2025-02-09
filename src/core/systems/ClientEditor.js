@@ -27,61 +27,41 @@ export class ClientEditor extends System {
     super(world)
     this.target = null
     this.file = null
-    this.contextTracker = {
-      downAt: null,
-      movement: new THREE.Vector3(),
-    }
   }
 
   async init({ viewport }) {
-    viewport.addEventListener('dragover', this.onDragOver)
-    viewport.addEventListener('dragenter', this.onDragEnter)
-    viewport.addEventListener('dragleave', this.onDragLeave)
-    viewport.addEventListener('drop', this.onDrop)
+    this.viewport = viewport
+    this.viewport.addEventListener('dragover', this.onDragOver)
+    this.viewport.addEventListener('dragenter', this.onDragEnter)
+    this.viewport.addEventListener('dragleave', this.onDragLeave)
+    this.viewport.addEventListener('drop', this.onDrop)
   }
 
   start() {
     this.control = this.world.controls.bind({
       priority: ControlPriorities.EDITOR,
-      onPress: code => {
-        if (code === 'MouseRight') {
-          this.contextTracker.downAt = performance.now()
-          this.contextTracker.movement.set(0, 0, 0)
-        }
-      },
-      onRelease: code => {
-        if (code === 'MouseRight') {
-          const elapsed = performance.now() - this.contextTracker.downAt
-          const distance = this.contextTracker.movement.length()
-          if (elapsed < 300 && distance < 30) {
-            this.tryContext()
-          }
-        }
-        if (this.context && contextBreakers.includes(code)) {
-          this.setContext(null)
-        }
-      },
     })
   }
 
   update(delta) {
-    if (this.control.buttons.MouseRight) {
-      this.contextTracker.movement.add(this.control.pointer.delta)
+    if (this.control.pressed.MouseLeft && this.context) {
+      this.setContext(null)
     }
   }
 
   tryContext() {
-    const hits = this.world.stage.raycastPointer(this.world.controls.pointer.position)
+    const hits = this.world.stage.raycastReticle()
     let entity
     for (const hit of hits) {
       entity = hit.getEntity?.()
       if (entity) break
     }
     if (!entity) return
+    const rect = this.viewport.getBoundingClientRect()
     const context = {
       id: uuid(),
-      x: this.world.controls.pointer.position.x,
-      y: this.world.controls.pointer.position.y,
+      x: rect.width / 2,
+      y: rect.height / 2,
       actions: [],
     }
     if (entity.isPlayer) {
@@ -116,6 +96,7 @@ export class ClientEditor extends System {
         visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
+          this.control.pointer.lock()
           this.setContext(null)
           entity.move()
         },
@@ -126,6 +107,7 @@ export class ClientEditor extends System {
         visible: isAdmin || isBuilder,
         disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
+          this.control.pointer.lock()
           this.setContext(null)
           const data = {
             id: uuid(),
@@ -146,6 +128,7 @@ export class ClientEditor extends System {
         visible: isAdmin || isBuilder,
         disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
+          this.control.pointer.lock()
           this.setContext(null)
           // duplicate the blueprint
           const blueprint = {
@@ -176,6 +159,7 @@ export class ClientEditor extends System {
         visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
+          this.control.pointer.lock()
           this.setContext(null)
           entity.destroy(true)
         },
@@ -184,6 +168,7 @@ export class ClientEditor extends System {
     const hasActions = context.actions.find(action => action.visible)
     if (hasActions) {
       this.setContext(context)
+      return true
     }
   }
 
@@ -236,7 +221,8 @@ export class ClientEditor extends System {
         const text = await getAsString(item)
         // Extract URL from the text (especially important for text/html type)
         const url = text.trim().split('\n')[0] // Take first line in case of multiple
-        if (url.startsWith('http')) { // Basic URL validation
+        if (url.startsWith('http')) {
+          // Basic URL validation
           const resp = await fetch(url)
           const blob = await resp.blob()
           file = new File([blob], new URL(url).pathname.split('/').pop(), { type: resp.headers.get('content-type') })

@@ -1,3 +1,4 @@
+import * as THREE from './three'
 import { createNode } from './createNode'
 
 const groupTypes = ['Scene', 'Group', 'Object3D']

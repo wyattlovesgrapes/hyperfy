@@ -15,9 +15,13 @@ const hotEventNames = ['fixedUpdate', 'update', 'lateUpdate']
 const internalEvents = ['fixedUpdate', 'updated', 'lateUpdate', 'enter', 'leave', 'chat']
 
 const v1 = new THREE.Vector3()
+const FORWARD = new THREE.Vector3(0, 0, -1)
 
-const SNAP_DISTANCE = 0.5
+const SNAP_DISTANCE = 1
 const SNAP_DEGREES = 5
+const PROJECT_SPEED = 0.5
+const PROJECT_MIN = 3
+const PROJECT_MAX = 50
 
 const Modes = {
   ACTIVE: 'active',
@@ -37,6 +41,8 @@ export class App extends Entity {
     this.listeners = {}
     this.eventQueue = []
     this.fields = []
+    this.target = null
+    this.projectLimit = Infinity
     this.build()
   }
 
@@ -133,18 +139,18 @@ export class App extends Entity {
       this.control = this.world.controls.bind({
         priority: ControlPriorities.ENTITY,
         onPress: code => {
-          if (code === 'ShiftLeft') {
-            this.control._lifting = true
-            this.control.pointer.lock()
-            return true
-          }
+          // if (code === 'ShiftLeft') {
+          //   this.control._lifting = true
+          //   this.control.pointer.lock()
+          //   return true
+          // }
         },
         onRelease: code => {
-          if (code === 'ShiftLeft') {
-            this.control._lifting = false
-            this.control.pointer.unlock()
-            return true
-          }
+          // if (code === 'ShiftLeft') {
+          //   this.control._lifting = false
+          //   this.control.pointer.unlock()
+          //   return true
+          // }
         },
         onScroll: () => {
           return true
@@ -178,9 +184,6 @@ export class App extends Entity {
     this.hotEvents = 0
     // release control
     if (this.control) {
-      if (this.control._lifting) {
-        this.control.pointer.unlock()
-      }
       this.control?.release()
       this.control = null
     }
@@ -218,14 +221,25 @@ export class App extends Entity {
         this.target.quaternion.copy(this.root.quaternion)
         this.target.rotation.reorder('YXZ')
         document.body.style.cursor = 'grabbing'
+        this.projectLimit = PROJECT_MAX
+        // const hits = this.world.stage.raycastReticle()
+        // let hit
+        // for (const _hit of hits) {
+        //   const entity = _hit.getEntity?.()
+        //   // ignore self and players
+        //   if (entity === this || entity?.isPlayer) continue
+        //   hit = _hit
+        //   break
+        // }
+        // this.projectLimit = hit ? hit.distance : Infinity
+        // console.log(this.projectLimit)
       }
-      if (this.control._lifting) {
+      if (false /*this.control.buttons.ShiftLeft*/) {
         // if shift is down we're raising and lowering the app
-        this.target.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
+        // this.target.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
       } else {
         // otherwise move with the cursor
-        const position = this.world.controls.pointer.position
-        const hits = this.world.stage.raycastPointer(position)
+        const hits = this.world.stage.raycastReticle()
         let hit
         for (const _hit of hits) {
           const entity = _hit.getEntity?.()
@@ -234,11 +248,32 @@ export class App extends Entity {
           hit = _hit
           break
         }
-        if (hit) {
+        // place at distance
+        const camPos = this.world.rig.position
+        const camDir = v1.copy(FORWARD).applyQuaternion(this.world.rig.quaternion)
+        const hitDistance = hit ? hit.point.distanceTo(camPos) : 0
+        if (hit && hitDistance < this.projectLimit) {
+          // within range, use hit point
           this.target.position.copy(hit.point)
+          // if (hitDistance <= this.projectLimit) {
+          // } else {
+          //   // beyond range, project to max distance
+          //   this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
+          // }
+        } else {
+          // no hit, project to limit
+          this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
         }
-        // and rotate with the mouse wheel
-        this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+        // if holding shift, mouse wheel moves app in and out
+        if (this.control.buttons.ShiftLeft && this.control.scroll.delta) {
+          this.projectLimit += this.control.scroll.delta * PROJECT_SPEED * delta
+          if (this.projectLimit < PROJECT_MIN) this.projectLimit = PROJECT_MIN
+          if (hitDistance && this.projectLimit > hitDistance) this.projectLimit = hitDistance
+        }
+        // if not holding shift, mouse wheel rotates
+        else {
+          this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+        }
       }
       // apply movement
       this.root.position.copy(this.target.position)

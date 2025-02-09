@@ -36,6 +36,8 @@ export class ClientGraphics extends System {
     this.renderer = new THREE.WebGLRenderer({
       powerPreference: 'high-performance',
       antialias: true,
+      // logarithmicDepthBuffer: true,
+      // reverseDepthBuffer: true,
     })
     this.renderer.setSize(this.width, this.height)
     this.renderer.setClearColor(0xffffff, 0)
@@ -85,7 +87,7 @@ export class ClientGraphics extends System {
     this.resizer = new ResizeObserver(() => {
       this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight)
     })
-    this.viewport.appendChild(this.renderer.domElement)
+    this.viewport.prepend(this.renderer.domElement)
     this.resizer.observe(this.viewport)
   }
 
