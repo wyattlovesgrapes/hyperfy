@@ -22,6 +22,7 @@ import {
   PersonStandingIcon,
   MagnetIcon,
   DumbbellIcon,
+  ChevronDown,
 } from 'lucide-react'
 
 import { hashFile } from '../../core/utils-client'
@@ -686,6 +687,7 @@ const fieldTypes = {
   number: FieldNumber,
   file: FieldFile,
   switch: FieldSwitch,
+  dropdown: FieldDropdown,
 }
 
 function Field({ world, props, field, value, modify }) {
@@ -829,6 +831,14 @@ function FieldSwitch({ world, field, value, modify }) {
   return (
     <FieldWithLabel label={field.label}>
       <InputSwitch options={field.options} value={value} onChange={value => modify(field.key, value)} />
+    </FieldWithLabel>
+  )
+}
+
+function FieldDropdown({ world, field, value, modify }) {
+  return (
+    <FieldWithLabel label={field.label}>
+      <InputDropdown options={field.options} value={value} onChange={value => modify(field.key, value)} />
     </FieldWithLabel>
   )
 }
@@ -1023,6 +1033,73 @@ function InputSwitch({ options, value, onChange }) {
           <span>{option.label}</span>
         </div>
       ))}
+    </div>
+  )
+}
+
+function InputDropdown({ options, value, onChange }) {
+  const current = options.find(o => o.value === value)
+  const [open, setOpen] = useState(false)
+  const toggle = () => setOpen(!open)
+  return (
+    <div
+      className='inputdropdown'
+      css={css`
+        position: relative;
+        .inputdropdown-current {
+          display: flex;
+          align-items: center;
+          background: #252630;
+          border-radius: 10px;
+          height: 34px;
+          padding: 0 8px;
+          cursor: pointer;
+          span {
+            font-size: 14px;
+            flex: 1;
+          }
+        }
+        .inputdropdown-menu {
+          z-index: 1;
+          margin: 3px 0 20px;
+          position: absolute;
+          left: 0;
+          right: 0;
+          background: #252630;
+          border-radius: 10px;
+          overflow: hidden;
+          padding: 4px 0;
+        }
+        .inputdropdown-option {
+          font-size: 14px;
+          padding: 8px;
+          &:hover {
+            cursor: pointer;
+            background: rgb(46, 47, 59);
+          }
+        }
+      `}
+    >
+      <div className='inputdropdown-current' onClick={toggle}>
+        <span>{current?.label || ''}</span>
+        <ChevronDown size={12} />
+      </div>
+      {open && (
+        <div className='inputdropdown-menu'>
+          {options.map(option => (
+            <div
+              key={option.value}
+              className={cls('inputdropdown-option', { selected: value === option.value })}
+              onClick={() => {
+                setOpen(false)
+                onChange(option.value)
+              }}
+            >
+              <span>{option.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
