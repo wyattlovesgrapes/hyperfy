@@ -64,5 +64,6 @@ export class XR extends System {
 
   setSession(session) {
     this.session = session
+    this.world.graphics.renderer.xr.setSession(session)
   }
 }

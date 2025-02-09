@@ -230,4 +230,8 @@ export class Nametags extends System {
     // update texture
     this.texture.needsUpdate = true
   }
+
+  setOrientationSource(source) {
+    this.material.uniforms.uOrientation.value = source
+  }
 }

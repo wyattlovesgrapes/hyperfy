@@ -2,14 +2,15 @@ import { css } from '@firebolt-dev/css'
 
 export function XRButton({ world }) {
   const onSessionStart = async session => {
-    world.entities.player.avatar.instance.setFirstPersonMode(true)
+    world.entities.player.avatar.unmount()
     world.entities.player.cam.rotation.set(0, 0, 0)
-    world.graphics.renderer.xr.setSession(session)
     world.xr.setSession(session)
+    world.nametags.setOrientationSource(world.graphics.renderer.xr.getCamera().quaternion)
   }
 
   const onSessionEnd = () => {
-    world.entities.player.avatar.instance.setFirstPersonMode(false)
+    world.entities.player.avatar.mount()
+    world.nametags.setOrientationSource(world.rig.quaternion)
     world.camera.position.set(0, 0, 0)
     world.camera.rotation.set(0, 0, 0)
   }
