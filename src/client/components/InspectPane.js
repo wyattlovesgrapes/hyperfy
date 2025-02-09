@@ -14,6 +14,14 @@ import {
   ShuffleIcon,
   XIcon,
   LayersIcon,
+  AtomIcon,
+  FolderIcon,
+  BlendIcon,
+  CircleIcon,
+  AnchorIcon,
+  PersonStandingIcon,
+  MagnetIcon,
+  DumbbellIcon,
 } from 'lucide-react'
 
 import { hashFile } from '../../core/utils-client'
@@ -463,7 +471,8 @@ function AppPaneHierarchy({ app }) {
         .ahierarchy-item {
           display: flex;
           align-items: center;
-          padding: 4px 0;
+          padding: 4px 6px;
+          border-radius: 10px;
           font-size: 14px;
           cursor: pointer;
           &:hover {
@@ -492,7 +501,7 @@ function AppPaneHierarchy({ app }) {
           text-align: center;
           padding: 20px;
         }
-        .ahierarchy-info {
+        .ahierarchy-details {
           flex-shrink: 0;
           border-top: 1px solid rgba(255, 255, 255, 0.05);
           padding-top: 20px;
@@ -500,7 +509,7 @@ function AppPaneHierarchy({ app }) {
           overflow-y: auto;
           padding-right: 10px;
         }
-        .ahierarchy-info-row {
+        .ahierarchy-detail {
           display: flex;
           margin-bottom: 8px;
           font-size: 14px;
@@ -512,6 +521,9 @@ function AppPaneHierarchy({ app }) {
           &-value {
             flex: 1;
             word-break: break-word;
+            &.copy {
+              cursor: pointer;
+            }
           }
         }
       `}
@@ -528,34 +540,36 @@ function AppPaneHierarchy({ app }) {
       </div>
 
       {selectedNode && (
-        <div className='ahierarchy-info'>
-          <InfoRow label='Name' value={selectedNode.id || selectedNode.name || 'Unnamed'} />
-          <InfoRow label='Type' value={selectedNode.type || 'Node'} />
+        <div className='ahierarchy-details'>
+          <HierarchyDetail label='Name' value={selectedNode.id || selectedNode.name || 'Unnamed'} copy />
+          <HierarchyDetail label='Type' value={selectedNode.type || 'Node'} />
 
           {/* Position */}
           {hasProperty(selectedNode, 'position') && getVectorString(selectedNode.position) && (
-            <InfoRow label='Position' value={getVectorString(selectedNode.position)} />
+            <HierarchyDetail label='Position' value={getVectorString(selectedNode.position)} />
           )}
 
           {/* Rotation */}
           {hasProperty(selectedNode, 'rotation') && getVectorString(selectedNode.rotation) && (
-            <InfoRow label='Rotation' value={getVectorString(selectedNode.rotation)} />
+            <HierarchyDetail label='Rotation' value={getVectorString(selectedNode.rotation)} />
           )}
 
           {/* Scale */}
           {hasProperty(selectedNode, 'scale') && getVectorString(selectedNode.scale) && (
-            <InfoRow label='Scale' value={getVectorString(selectedNode.scale)} />
+            <HierarchyDetail label='Scale' value={getVectorString(selectedNode.scale)} />
           )}
 
           {/* Visibility */}
-          {hasProperty(selectedNode, 'visible') && <InfoRow label='Visible' value={selectedNode.visible.toString()} />}
+          {hasProperty(selectedNode, 'visible') && (
+            <HierarchyDetail label='Visible' value={selectedNode.visible.toString()} />
+          )}
 
           {/* Material */}
           {hasProperty(selectedNode, 'material') && selectedNode.material && (
             <>
-              <InfoRow label='Material' value={selectedNode.material.type || 'Standard'} />
+              <HierarchyDetail label='Material' value={selectedNode.material.type || 'Standard'} />
               {hasProperty(selectedNode.material, 'color') && selectedNode.material.color && (
-                <InfoRow
+                <HierarchyDetail
                   label='Color'
                   value={
                     selectedNode.material.color.getHexString
@@ -569,7 +583,7 @@ function AppPaneHierarchy({ app }) {
 
           {/* Geometry */}
           {hasProperty(selectedNode, 'geometry') && selectedNode.geometry && (
-            <InfoRow label='Geometry' value={selectedNode.geometry.type || 'Custom'} />
+            <HierarchyDetail label='Geometry' value={selectedNode.geometry.type || 'Custom'} />
           )}
         </div>
       )}
@@ -577,13 +591,27 @@ function AppPaneHierarchy({ app }) {
   )
 }
 
-function InfoRow({ label, value }) {
+function HierarchyDetail({ label, value, copy }) {
+  let handleCopy = copy ? () => navigator.clipboard.writeText(value) : null
   return (
-    <div className='ahierarchy-info-row'>
-      <div className='ahierarchy-info-row-label'>{label}</div>
-      <div className='ahierarchy-info-row-value'>{value}</div>
+    <div className='ahierarchy-detail'>
+      <div className='ahierarchy-detail-label'>{label}</div>
+      <div className={cls('ahierarchy-detail-value', { copy })} onClick={handleCopy}>
+        {value}
+      </div>
     </div>
   )
+}
+
+const nodeIcons = {
+  default: CircleIcon,
+  group: FolderIcon,
+  mesh: BoxIcon,
+  rigidbody: DumbbellIcon,
+  collider: BlendIcon,
+  lod: EyeIcon,
+  avatar: PersonStandingIcon,
+  snap: MagnetIcon,
 }
 
 function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
@@ -601,6 +629,7 @@ function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
     const children = node.children || []
     const hasChildren = Array.isArray(children) && children.length > 0
     const isSelected = selectedNode?.id === node.id
+    const Icon = nodeIcons[node.name] || nodeIcons.default
 
     return (
       <div key={node.id || node.uuid || Math.random()}>
@@ -612,7 +641,7 @@ function renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
           style={{ marginLeft: depth * 20 }}
           onClick={() => setSelectedNode(node)}
         >
-          <LayersIcon size={14} />
+          <Icon size={14} />
           <span>{node.id || node.name || 'Unnamed'}</span>
         </div>
         {hasChildren && renderHierarchy(children, depth + 1, selectedNode, setSelectedNode)}
