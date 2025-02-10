@@ -57,19 +57,19 @@ export class ClientBuilder extends System {
   start() {
     this.control = this.world.controls.bind({
       priority: ControlPriorities.BUILDER,
-      onPress: code => {
-        if (code === 'Tab') {
-          this.toggle()
-        }
-        if (code === 'KeyC' && this.selected) {
-          return true
-        }
-      },
-      onScroll: () => {
-        if (this.selected) {
-          return true
-        }
-      },
+      // onPress: code => {
+      //   if (code === 'Tab') {
+      //     this.toggle()
+      //   }
+      //   if (code === 'KeyC' && this.selected) {
+      //     return true
+      //   }
+      // },
+      // onScroll: () => {
+      //   if (this.selected) {
+      //     return true
+      //   }
+      // },
     })
 
     this.updateActions()
@@ -109,31 +109,35 @@ export class ClientBuilder extends System {
   }
 
   update(delta) {
+    // toggle build
+    if (this.control.Tab.pressed) {
+      this.toggle()
+    }
     if (this.selected?.dead) {
       this.select(null)
     }
     if (!this.enabled) return
-    if (!this.control.pointer.locked) return
+    if (!this.control.Pointer.locked) return
     // inspect
-    if (this.control.pressed.KeyR) {
-      this.control.pointer.unlock()
+    if (this.control.KeyR.pressed) {
+      this.control.Pointer.unlock()
       this.select(null)
       const entity = this.getEntityAtReticle()
       this.world.emit('inspect', entity)
     }
     // grab
-    if (this.control.pressed.MouseLeft && !this.selected) {
+    if (this.control.MouseLeft.pressed && !this.selected) {
       const entity = this.getEntityAtReticle()
       if (entity?.isApp) {
         this.select(entity)
       }
     }
     // place
-    else if (this.control.pressed.MouseLeft && this.selected) {
+    else if (this.control.MouseLeft.pressed && this.selected) {
       this.select(null)
     }
     // duplicate
-    if (this.control.pressed.MouseRight) {
+    if (this.control.MouseRight.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
       if (entity) {
         const data = {
@@ -151,7 +155,7 @@ export class ClientBuilder extends System {
       }
     }
     // destroy
-    if (this.control.pressed.KeyX) {
+    if (this.control.KeyX.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
       this.select(null)
       entity?.destroy(true)
@@ -173,15 +177,15 @@ export class ClientBuilder extends System {
         this.target.position.copy(camPos).add(camDir.multiplyScalar(this.target.limit))
       }
       // if holding F/C then push or pull
-      const project = this.control.buttons.KeyF ? 1 : this.control.buttons.KeyC ? -1 : null
+      const project = this.control.KeyF.down ? 1 : this.control.KeyC.down ? -1 : null
       if (project) {
         this.target.limit += project * PROJECT_SPEED * delta
         if (this.target.limit < PROJECT_MIN) this.target.limit = PROJECT_MIN
         if (hitDistance && this.target.limit > hitDistance) this.target.limit = hitDistance
       }
       // if not holding shift, mouse wheel rotates
-      if (!this.control.buttons.ShiftLeft) {
-        this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+      if (!this.control.ShiftLeft.down) {
+        this.target.rotation.y += this.control.ScrollDelta.value * 0.1 * delta
       }
       // apply movement
       app.root.position.copy(this.target.position)
@@ -194,7 +198,7 @@ export class ClientBuilder extends System {
       // update matrix
       app.root.clean()
       // and snap to any nearby points
-      if (!this.control.buttons.ControlLeft) {
+      if (!this.control.ControlLeft.down) {
         for (const pos of app.snaps) {
           const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
           if (result) {
@@ -245,6 +249,8 @@ export class ClientBuilder extends System {
       }
       document.body.style.cursor = 'default'
       this.selected = null
+      this.control.KeyC.capture = false
+      this.control.ScrollDelta.capture = false
     }
     // select new (if any)
     if (app) {
@@ -253,6 +259,8 @@ export class ClientBuilder extends System {
       this.world.network.send('entityModified', { id: app.data.id, mover: app.data.mover })
       document.body.style.cursor = 'grabbing'
       this.selected = app
+      this.control.KeyC.capture = true
+      this.control.ScrollDelta.capture = true
       this.target.position.copy(app.root.position)
       this.target.quaternion.copy(app.root.quaternion)
       this.target.limit = PROJECT_MAX
@@ -329,7 +337,7 @@ export class ClientBuilder extends System {
         visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
-          this.control.pointer.lock()
+          this.control.Pointer.lock()
           this.setContext(null)
           entity.move()
         },
@@ -340,7 +348,7 @@ export class ClientBuilder extends System {
         visible: isAdmin || isBuilder,
         disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
-          this.control.pointer.lock()
+          this.control.Pointer.lock()
           this.setContext(null)
           const data = {
             id: uuid(),
@@ -361,7 +369,7 @@ export class ClientBuilder extends System {
         visible: isAdmin || isBuilder,
         disabled: !!entity.data.uploader, // must be uploaded
         onClick: () => {
-          this.control.pointer.lock()
+          this.control.Pointer.lock()
           this.setContext(null)
           // duplicate the blueprint
           const blueprint = {
@@ -392,7 +400,7 @@ export class ClientBuilder extends System {
         visible: isAdmin || isBuilder,
         disabled: false,
         onClick: () => {
-          this.control.pointer.lock()
+          this.control.Pointer.lock()
           this.setContext(null)
           entity.destroy(true)
         },
@@ -511,7 +519,7 @@ export class ClientBuilder extends System {
       frozen: info.blueprint.frozen,
     }
     this.world.blueprints.add(blueprint, true)
-    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const hit = this.world.stage.raycastPointer(this.control.Pointer.position)[0]
     const position = hit ? hit.point.toArray() : [0, 0, 0]
     const data = {
       id: uuid(),
@@ -565,7 +573,7 @@ export class ClientBuilder extends System {
     // register blueprint
     this.world.blueprints.add(blueprint, true)
     // get spawn point
-    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const hit = this.world.stage.raycastPointer(this.control.Pointer.position)[0]
     const position = hit ? hit.point.toArray() : [0, 0, 0]
     // spawn the app moving
     // - mover: follows this clients cursor until placed
@@ -622,7 +630,7 @@ export class ClientBuilder extends System {
         // register blueprint
         this.world.blueprints.add(blueprint, true)
         // get spawn point
-        const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+        const hit = this.world.stage.raycastPointer(this.control.Pointer.position)[0]
         const position = hit ? hit.point.toArray() : [0, 0, 0]
         // spawn the app moving
         // - mover: follows this clients cursor until placed

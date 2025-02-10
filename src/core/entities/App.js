@@ -136,26 +136,26 @@ export class App extends Entity {
     // if we're the mover lets bind controls
     if (this.data.mover === this.world.network.id) {
       this.lastMoveSendTime = 0
-      this.control = this.world.controls.bind({
-        priority: ControlPriorities.ENTITY,
-        onPress: code => {
-          // if (code === 'ShiftLeft') {
-          //   this.control._lifting = true
-          //   this.control.pointer.lock()
-          //   return true
-          // }
-        },
-        onRelease: code => {
-          // if (code === 'ShiftLeft') {
-          //   this.control._lifting = false
-          //   this.control.pointer.unlock()
-          //   return true
-          // }
-        },
-        // onScroll: () => {
-        //   return true
-        // },
-      })
+      // this.control = this.world.controls.bind({
+      //   priority: ControlPriorities.ENTITY,
+      //   onPress: code => {
+      //     // if (code === 'ShiftLeft') {
+      //     //   this.control._lifting = true
+      //     //   this.control.pointer.lock()
+      //     //   return true
+      //     // }
+      //   },
+      //   onRelease: code => {
+      //     // if (code === 'ShiftLeft') {
+      //     //   this.control._lifting = false
+      //     //   this.control.pointer.unlock()
+      //     //   return true
+      //     // }
+      //   },
+      //   // onScroll: () => {
+      //   //   return true
+      //   // },
+      // })
     }
     // if remote is moving, set up to receive network updates
     this.networkPos = new LerpVector3(root.position, this.world.networkRate)
@@ -183,10 +183,10 @@ export class App extends Entity {
     this.clearEventListeners()
     this.hotEvents = 0
     // release control
-    if (this.control) {
-      this.control?.release()
-      this.control = null
-    }
+    // if (this.control) {
+    //   this.control?.release()
+    //   this.control = null
+    // }
     // cancel update tracking
     this.world.setHot(this, false)
     // abort fetch's etc
