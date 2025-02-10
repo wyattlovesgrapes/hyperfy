@@ -78,7 +78,7 @@ export class PlayerLocal extends Entity {
 
     this.lastJumpAt = 0
     this.flying = false
-    this.flyForce = 50
+    this.flyForce = 100
     this.flyDrag = 300
     this.flyDir = new THREE.Vector3()
 
@@ -270,6 +270,10 @@ export class PlayerLocal extends Entity {
     this.control.camera.position.copy(this.cam.position)
     this.control.camera.quaternion.copy(this.cam.quaternion)
     this.control.camera.zoom = this.cam.zoom
+    this.control.actions = [
+      { type: 'KeySpace', label: 'Jump' },
+      { type: 'KeySpace', label: 'Fly (Double-Tap)' },
+    ]
   }
 
   toggleFlying() {
@@ -686,11 +690,11 @@ export class PlayerLocal extends Entity {
     }
 
     // right-click open context wheel
-    if (this.control.pointer.locked && this.control.pressed.MouseRight) {
-      // TODO: ClientEditor.js needs reconcile
-      const didOpen = this.world.editor.tryContext()
-      if (didOpen) this.control.pointer.unlock()
-    }
+    // if (this.control.pointer.locked && this.control.pressed.MouseRight) {
+    //   // TODO: ClientEditor.js needs reconcile
+    //   const didOpen = this.world.builder.tryContext()
+    //   if (didOpen) this.control.pointer.unlock()
+    // }
   }
 
   lateUpdate(delta) {

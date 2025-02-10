@@ -7,6 +7,8 @@ const RMB = 2 // bitmask
 const LMB_CODE = 'MouseLeft'
 const RMB_CODE = 'MouseRight'
 
+let actionIds = 0
+
 /**
  * Control System
  *
@@ -18,6 +20,7 @@ export class ClientControls extends System {
   constructor(world) {
     super(world)
     this.controls = []
+    this.actions = []
     this.isUserGesture = false
     this.isMac = /Mac/.test(navigator.platform)
     this.pointer = {
@@ -104,6 +107,7 @@ export class ClientControls extends System {
   }
 
   bind(options = {}) {
+    const self = this
     const control = {
       options,
       api: {
@@ -142,6 +146,13 @@ export class ClientControls extends System {
           width: 0,
           height: 0,
         },
+        set actions(value) {
+          control.api._actions = value
+          for (const action of value) {
+            action.id = ++actionIds
+          }
+          self.updateActions()
+        },
         release: () => {
           const idx = this.controls.indexOf(control)
           if (idx === -1) return
@@ -175,10 +186,29 @@ export class ClientControls extends System {
     }
   }
 
+  updateActions() {
+    this.actions = []
+    for (const control of this.controls) {
+      const actions = control.api._actions
+      if (!actions) continue
+      for (const action of actions) {
+        // ignore if existing
+        // const idx = this.actions.findIndex(a => a.type === action.type)
+        // if (idx !== -1) continue
+        this.actions.push(action)
+      }
+    }
+    this.world.emit('actions', this.actions)
+  }
+
   onKeyDown = e => {
     if (e.repeat) return
     if (this.isInputFocused()) return
     const code = e.code
+    if (code === 'Tab') {
+      // prevent default focus switching behavior
+      e.preventDefault()
+    }
     for (const control of this.controls) {
       control.api.buttons[code] = true
       control.api.pressed[code] = true
@@ -303,6 +333,7 @@ export class ClientControls extends System {
   onPointerLockStart() {
     if (this.pointer.locked) return
     this.pointer.locked = true
+    this.world.emit('pointer-lock', true)
     // pointerlock is async so if its no longer meant to be locked, exit
     if (!this.pointer.shouldLock) this.unlockPointer()
   }
@@ -310,6 +341,7 @@ export class ClientControls extends System {
   onPointerLockEnd() {
     if (!this.pointer.locked) return
     this.pointer.locked = false
+    this.world.emit('pointer-lock', false)
   }
 
   onScroll = e => {

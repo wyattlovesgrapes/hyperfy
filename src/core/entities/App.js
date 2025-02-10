@@ -152,9 +152,9 @@ export class App extends Entity {
           //   return true
           // }
         },
-        onScroll: () => {
-          return true
-        },
+        // onScroll: () => {
+        //   return true
+        // },
       })
     }
     // if remote is moving, set up to receive network updates
@@ -215,115 +215,114 @@ export class App extends Entity {
     if (this.data.mover === this.world.network.id) {
       // we cant just update the root directly and must track where it
       // should be theoretically, and then apply snap points on top of that.
-      if (!this.target) {
-        this.target = new THREE.Object3D()
-        this.target.position.copy(this.root.position)
-        this.target.quaternion.copy(this.root.quaternion)
-        this.target.rotation.reorder('YXZ')
-        document.body.style.cursor = 'grabbing'
-        this.projectLimit = PROJECT_MAX
-        // const hits = this.world.stage.raycastReticle()
-        // let hit
-        // for (const _hit of hits) {
-        //   const entity = _hit.getEntity?.()
-        //   // ignore self and players
-        //   if (entity === this || entity?.isPlayer) continue
-        //   hit = _hit
-        //   break
-        // }
-        // this.projectLimit = hit ? hit.distance : Infinity
-        // console.log(this.projectLimit)
-      }
-      if (false /*this.control.buttons.ShiftLeft*/) {
-        // if shift is down we're raising and lowering the app
-        // this.target.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
-      } else {
-        // otherwise move with the cursor
-        const hits = this.world.stage.raycastReticle()
-        let hit
-        for (const _hit of hits) {
-          const entity = _hit.getEntity?.()
-          // ignore self and players
-          if (entity === this || entity?.isPlayer) continue
-          hit = _hit
-          break
-        }
-        // place at distance
-        const camPos = this.world.rig.position
-        const camDir = v1.copy(FORWARD).applyQuaternion(this.world.rig.quaternion)
-        const hitDistance = hit ? hit.point.distanceTo(camPos) : 0
-        if (hit && hitDistance < this.projectLimit) {
-          // within range, use hit point
-          this.target.position.copy(hit.point)
-          // if (hitDistance <= this.projectLimit) {
-          // } else {
-          //   // beyond range, project to max distance
-          //   this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
-          // }
-        } else {
-          // no hit, project to limit
-          this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
-        }
-        // if holding shift, mouse wheel moves app in and out
-        if (this.control.buttons.ShiftLeft && this.control.scroll.delta) {
-          this.projectLimit += this.control.scroll.delta * PROJECT_SPEED * delta
-          if (this.projectLimit < PROJECT_MIN) this.projectLimit = PROJECT_MIN
-          if (hitDistance && this.projectLimit > hitDistance) this.projectLimit = hitDistance
-        }
-        // if not holding shift, mouse wheel rotates
-        else {
-          this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
-        }
-      }
-      // apply movement
-      this.root.position.copy(this.target.position)
-      this.root.quaternion.copy(this.target.quaternion)
-      // snap rotation to degrees
-      const newY = this.target.rotation.y
-      const degrees = newY / DEG2RAD
-      const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
-      this.root.rotation.y = snappedDegrees * DEG2RAD
-      // update matrix
-      this.root.clean()
-      // and snap to any nearby points
-      if (!this.control.buttons.ControlLeft) {
-        for (const pos of this.snaps) {
-          const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
-          if (result) {
-            const offset = v1.copy(result.position).sub(pos)
-            this.root.position.add(offset)
-            break
-          }
-        }
-      }
-
+      // if (!this.target) {
+      //   // this.target = new THREE.Object3D()
+      //   // this.target.position.copy(this.root.position)
+      //   // this.target.quaternion.copy(this.root.quaternion)
+      //   // this.target.rotation.reorder('YXZ')
+      //   // document.body.style.cursor = 'grabbing'
+      //   // this.projectLimit = PROJECT_MAX
+      //   // const hits = this.world.stage.raycastReticle()
+      //   // let hit
+      //   // for (const _hit of hits) {
+      //   //   const entity = _hit.getEntity?.()
+      //   //   // ignore self and players
+      //   //   if (entity === this || entity?.isPlayer) continue
+      //   //   hit = _hit
+      //   //   break
+      //   // }
+      //   // this.projectLimit = hit ? hit.distance : Infinity
+      //   // console.log(this.projectLimit)
+      // }
+      // if (false /*this.control.buttons.ShiftLeft*/) {
+      //   // if shift is down we're raising and lowering the app
+      //   // this.target.position.y -= this.world.controls.pointer.delta.y * delta * 0.5
+      // } else {
+      //   // otherwise move with the cursor
+      //   const hits = this.world.stage.raycastReticle()
+      //   let hit
+      //   for (const _hit of hits) {
+      //     const entity = _hit.getEntity?.()
+      //     // ignore self and players
+      //     if (entity === this || entity?.isPlayer) continue
+      //     hit = _hit
+      //     break
+      //   }
+      //   // place at distance
+      //   const camPos = this.world.rig.position
+      //   const camDir = v1.copy(FORWARD).applyQuaternion(this.world.rig.quaternion)
+      //   const hitDistance = hit ? hit.point.distanceTo(camPos) : 0
+      //   if (hit && hitDistance < this.projectLimit) {
+      //     // within range, use hit point
+      //     this.target.position.copy(hit.point)
+      //     // if (hitDistance <= this.projectLimit) {
+      //     // } else {
+      //     //   // beyond range, project to max distance
+      //     //   this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
+      //     // }
+      //   } else {
+      //     // no hit, project to limit
+      //     this.target.position.copy(camPos).add(camDir.multiplyScalar(this.projectLimit))
+      //   }
+      //   // if holding shift, mouse wheel moves app in and out
+      //   if (this.control.buttons.ShiftLeft && this.control.scroll.delta) {
+      //     this.projectLimit += this.control.scroll.delta * PROJECT_SPEED * delta
+      //     if (this.projectLimit < PROJECT_MIN) this.projectLimit = PROJECT_MIN
+      //     if (hitDistance && this.projectLimit > hitDistance) this.projectLimit = hitDistance
+      //   }
+      //   // if not holding shift, mouse wheel rotates
+      //   else {
+      //     // this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+      //   }
+      // }
+      // // apply movement
+      // this.root.position.copy(this.target.position)
+      // this.root.quaternion.copy(this.target.quaternion)
+      // // snap rotation to degrees
+      // const newY = this.target.rotation.y
+      // const degrees = newY / DEG2RAD
+      // const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
+      // this.root.rotation.y = snappedDegrees * DEG2RAD
+      // // update matrix
+      // this.root.clean()
+      // // and snap to any nearby points
+      // if (!this.control.buttons.ControlLeft) {
+      //   for (const pos of this.snaps) {
+      //     const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
+      //     if (result) {
+      //       const offset = v1.copy(result.position).sub(pos)
+      //       this.root.position.add(offset)
+      //       break
+      //     }
+      //   }
+      // }
       // periodically send updates
-      this.lastMoveSendTime += delta
-      if (this.lastMoveSendTime > this.world.networkRate) {
-        this.world.network.send('entityModified', {
-          id: this.data.id,
-          position: this.root.position.toArray(),
-          quaternion: this.root.quaternion.toArray(),
-        })
-        this.lastMoveSendTime = 0
-      }
+      // this.lastMoveSendTime += delta
+      // if (this.lastMoveSendTime > this.world.networkRate) {
+      //   this.world.network.send('entityModified', {
+      //     id: this.data.id,
+      //     position: this.root.position.toArray(),
+      //     quaternion: this.root.quaternion.toArray(),
+      //   })
+      //   this.lastMoveSendTime = 0
+      // }
       // if we left clicked, we can place the app
-      if (this.control.pressed.MouseLeft) {
-        this.data.mover = null
-        this.data.position = this.root.position.toArray()
-        this.data.quaternion = this.root.quaternion.toArray()
-        this.data.state = {}
-        this.world.network.send('entityModified', {
-          id: this.data.id,
-          mover: null,
-          position: this.data.position,
-          quaternion: this.data.quaternion,
-          state: this.data.state,
-        })
-        this.build()
-        this.target = null
-        document.body.style.cursor = 'default'
-      }
+      // if (this.control.pressed.MouseLeft) {
+      //   this.data.mover = null
+      //   this.data.position = this.root.position.toArray()
+      //   this.data.quaternion = this.root.quaternion.toArray()
+      //   this.data.state = {}
+      //   this.world.network.send('entityModified', {
+      //     id: this.data.id,
+      //     mover: null,
+      //     position: this.data.position,
+      //     quaternion: this.data.quaternion,
+      //     state: this.data.state,
+      //   })
+      //   this.build()
+      //   this.target = null
+      //   document.body.style.cursor = 'default'
+      // }
     }
     // if someone else is moving the app, interpolate updates
     if (this.data.mover && this.data.mover !== this.world.network.id) {
@@ -392,11 +391,11 @@ export class App extends Entity {
     }
   }
 
-  move() {
-    this.data.mover = this.world.network.id
-    this.build()
-    this.world.network.send('entityModified', { id: this.data.id, mover: this.data.mover })
-  }
+  // move() {
+  //   this.data.mover = this.world.network.id
+  //   this.build()
+  //   this.world.network.send('entityModified', { id: this.data.id, mover: this.data.mover })
+  // }
 
   crash() {
     this.build(true)

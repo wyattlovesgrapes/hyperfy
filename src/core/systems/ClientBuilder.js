@@ -9,23 +9,39 @@ import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-reac
 import { cloneDeep } from 'lodash-es'
 import moment from 'moment'
 import { importApp } from '../extras/appTools'
+import { DEG2RAD } from '../extras/general'
 
 contextBreakers = ['MouseLeft', 'Escape']
 
+const FORWARD = new THREE.Vector3(0, 0, -1)
 const MAX_UPLOAD_SIZE = parseInt(process.env.PUBLIC_MAX_UPLOAD_SIZE || '100')
+const SNAP_DISTANCE = 1
+const SNAP_DEGREES = 5
+const PROJECT_SPEED = 10
+const PROJECT_MIN = 3
+const PROJECT_MAX = 50
+
+const v1 = new THREE.Vector3()
 
 /**
- * Editor System
+ * Builder System
  *
  * - runs on the client
  * - listens for files being drag and dropped onto the window and handles them
- * - handles editing apps
+ * - handles build mode
  *
  */
-export class ClientEditor extends System {
+export class ClientBuilder extends System {
   constructor(world) {
     super(world)
-    this.target = null
+    this.enabled = false
+
+    this.selected = null
+    this.target = new THREE.Object3D()
+    this.target.rotation.reorder('YXZ')
+    this.lastMoveSendTime = 0
+
+    this.dropTarget = null
     this.file = null
   }
 
@@ -35,18 +51,235 @@ export class ClientEditor extends System {
     this.viewport.addEventListener('dragenter', this.onDragEnter)
     this.viewport.addEventListener('dragleave', this.onDragLeave)
     this.viewport.addEventListener('drop', this.onDrop)
+    this.world.on('player', this.onLocalPlayer)
   }
 
   start() {
     this.control = this.world.controls.bind({
-      priority: ControlPriorities.EDITOR,
+      priority: ControlPriorities.BUILDER,
+      onPress: code => {
+        if (code === 'Tab') {
+          this.toggle()
+        }
+        if (code === 'KeyC' && this.selected) {
+          return true
+        }
+      },
+      onScroll: () => {
+        if (this.selected) {
+          return true
+        }
+      },
     })
+
+    this.updateActions()
+  }
+
+  onLocalPlayer = () => {
+    this.updateActions()
+  }
+
+  updateActions() {
+    const actions = []
+    if (!this.enabled) {
+      const canBuild = hasRole(this.world.entities.player?.data.user.roles, 'admin', 'builder')
+      if (canBuild) {
+        actions.push({ type: 'KeyTab', label: 'Build Mode' })
+      }
+    }
+    if (this.enabled && !this.selected) {
+      actions.push({ type: 'KeyTab', label: 'Exit Build Mode' })
+      actions.push({ type: 'KeyR', label: 'Inspect' })
+      actions.push({ type: 'MouseLeft', label: 'Grab' })
+      actions.push({ type: 'MouseRight', label: 'Duplicate' })
+      actions.push({ type: 'KeyX', label: 'Destroy' })
+    }
+    if (this.enabled && this.selected) {
+      actions.push({ type: 'KeyTab', label: 'Exit Build Mode' })
+      actions.push({ type: 'KeyR', label: 'Inspect' })
+      actions.push({ type: 'MouseLeft', label: 'Place' })
+      actions.push({ type: 'MouseWheel', label: 'Rotate' })
+      actions.push({ type: 'MouseRight', label: 'Duplicate' })
+      actions.push({ type: 'KeyX', label: 'Destroy' })
+      actions.push({ type: 'ControlLeft', label: 'Snap Off (Hold)' })
+      actions.push({ type: 'KeyF', label: 'Push' })
+      actions.push({ type: 'KeyC', label: 'Pull' })
+    }
+    this.control.actions = actions
   }
 
   update(delta) {
-    if (this.control.pressed.MouseLeft && this.context) {
-      this.setContext(null)
+    if (this.selected?.dead) {
+      this.select(null)
     }
+    if (!this.enabled) return
+    if (!this.control.pointer.locked) return
+    // inspect
+    if (this.control.pressed.KeyR) {
+      this.control.pointer.unlock()
+      this.select(null)
+      const entity = this.getEntityAtReticle()
+      this.world.emit('inspect', entity)
+    }
+    // grab
+    if (this.control.pressed.MouseLeft && !this.selected) {
+      const entity = this.getEntityAtReticle()
+      if (entity?.isApp) {
+        this.select(entity)
+      }
+    }
+    // place
+    else if (this.control.pressed.MouseLeft && this.selected) {
+      this.select(null)
+    }
+    // duplicate
+    if (this.control.pressed.MouseRight) {
+      const entity = this.selected || this.getEntityAtReticle()
+      if (entity) {
+        const data = {
+          id: uuid(),
+          type: 'app',
+          blueprint: entity.data.blueprint,
+          position: entity.root.position.toArray(),
+          quaternion: entity.root.quaternion.toArray(),
+          mover: this.world.network.id,
+          uploader: null,
+          state: {},
+        }
+        const dup = this.world.entities.add(data, true)
+        this.select(dup)
+      }
+    }
+    // destroy
+    if (this.control.pressed.KeyX) {
+      const entity = this.selected || this.getEntityAtReticle()
+      this.select(null)
+      entity?.destroy(true)
+    }
+    // TODO: move up/down
+    // this.selected.position.y -= this.control.pointer.delta.y * delta * 0.5
+    if (this.selected) {
+      const app = this.selected
+      const hit = this.getHitAtReticle(app, true)
+      // place at distance
+      const camPos = this.world.rig.position
+      const camDir = v1.copy(FORWARD).applyQuaternion(this.world.rig.quaternion)
+      const hitDistance = hit ? hit.point.distanceTo(camPos) : 0
+      if (hit && hitDistance < this.target.limit) {
+        // within range, use hit point
+        this.target.position.copy(hit.point)
+      } else {
+        // no hit, project to limit
+        this.target.position.copy(camPos).add(camDir.multiplyScalar(this.target.limit))
+      }
+      // if holding F/C then push or pull
+      const project = this.control.buttons.KeyF ? 1 : this.control.buttons.KeyC ? -1 : null
+      if (project) {
+        this.target.limit += project * PROJECT_SPEED * delta
+        if (this.target.limit < PROJECT_MIN) this.target.limit = PROJECT_MIN
+        if (hitDistance && this.target.limit > hitDistance) this.target.limit = hitDistance
+      }
+      // if not holding shift, mouse wheel rotates
+      if (!this.control.buttons.ShiftLeft) {
+        this.target.rotation.y += this.control.scroll.delta * 0.1 * delta
+      }
+      // apply movement
+      app.root.position.copy(this.target.position)
+      app.root.quaternion.copy(this.target.quaternion)
+      // snap rotation to degrees
+      const newY = this.target.rotation.y
+      const degrees = newY / DEG2RAD
+      const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
+      app.root.rotation.y = snappedDegrees * DEG2RAD
+      // update matrix
+      app.root.clean()
+      // and snap to any nearby points
+      if (!this.control.buttons.ControlLeft) {
+        for (const pos of app.snaps) {
+          const result = this.world.snaps.octree.query(pos, SNAP_DISTANCE)[0]
+          if (result) {
+            const offset = v1.copy(result.position).sub(pos)
+            app.root.position.add(offset)
+            break
+          }
+        }
+      }
+
+      // periodically send updates
+      this.lastMoveSendTime += delta
+      if (this.lastMoveSendTime > this.world.networkRate) {
+        this.world.network.send('entityModified', {
+          id: app.data.id,
+          position: app.root.position.toArray(),
+          quaternion: app.root.quaternion.toArray(),
+        })
+        this.lastMoveSendTime = 0
+      }
+    }
+  }
+
+  toggle() {
+    this.enabled = !this.enabled
+    if (!this.enabled) this.select(null)
+    console.log('build mode:', this.enabled)
+    this.updateActions()
+  }
+
+  select(app) {
+    // deselect existing
+    if (this.selected) {
+      if (!this.selected.dead) {
+        const app = this.selected
+        app.data.mover = null
+        app.data.position = app.root.position.toArray()
+        app.data.quaternion = app.root.quaternion.toArray()
+        app.data.state = {}
+        this.world.network.send('entityModified', {
+          id: app.data.id,
+          mover: null,
+          position: app.data.position,
+          quaternion: app.data.quaternion,
+          state: app.data.state,
+        })
+        app.build()
+      }
+      document.body.style.cursor = 'default'
+      this.selected = null
+    }
+    // select new (if any)
+    if (app) {
+      app.data.mover = this.world.network.id
+      app.build()
+      this.world.network.send('entityModified', { id: app.data.id, mover: app.data.mover })
+      document.body.style.cursor = 'grabbing'
+      this.selected = app
+      this.target.position.copy(app.root.position)
+      this.target.quaternion.copy(app.root.quaternion)
+      this.target.limit = PROJECT_MAX
+    }
+    this.updateActions()
+  }
+
+  getEntityAtReticle() {
+    const hits = this.world.stage.raycastReticle()
+    let entity
+    for (const hit of hits) {
+      entity = hit.getEntity?.()
+      if (entity) break
+    }
+    return entity
+  }
+
+  getHitAtReticle(ignoreEntity, ignorePlayers) {
+    const hits = this.world.stage.raycastReticle()
+    let hit
+    for (const _hit of hits) {
+      const entity = _hit.getEntity?.()
+      if (entity === ignoreEntity || (entity?.isPlayer && ignorePlayers)) continue
+      hit = _hit
+      break
+    }
+    return hit
   }
 
   tryContext() {
@@ -182,13 +415,13 @@ export class ClientEditor extends System {
   }
 
   onDragEnter = e => {
-    this.target = e.target
+    this.dropTarget = e.target
     this.dropping = true
     this.file = null
   }
 
   onDragLeave = e => {
-    if (e.target === this.target) {
+    if (e.target === this.dropTarget) {
       this.dropping = false
     }
   }

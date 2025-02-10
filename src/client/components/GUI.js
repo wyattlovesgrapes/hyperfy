@@ -8,6 +8,9 @@ import { CodePane } from './CodePane'
 import { AvatarPane } from './AvatarPane'
 import { ChatBox } from './ChatBox'
 import { useElemSize } from './useElemSize'
+import { MouseLeftIcon } from './MouseLeftIcon'
+import { MouseRightIcon } from './MouseRightIcon'
+import { MouseWheelIcon } from './MouseWheelIcon'
 
 export function GUI({ world }) {
   const [ref, width, height] = useElemSize()
@@ -85,17 +88,9 @@ function Content({ world, width, height }) {
       {inspect && code && <CodePane key={`code-${inspect.data.id}`} world={world} entity={inspect} />}
       {avatar && <AvatarPane key={avatar.hash} world={world} info={avatar} />}
       {disconnected && <Disconnected />}
+      <Actions world={world} />
       {!ready && <LoadingOverlay />}
-      <div
-        css={css`
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 2px;
-          height: 2px;
-          background: white;
-        `}
-      />
+      <Reticle world={world} />
     </>
   )
 }
@@ -182,6 +177,114 @@ function LoadingOverlay() {
       `}
     >
       <LoaderIcon size={30} />
+    </div>
+  )
+}
+
+function Actions({ world }) {
+  const [actions, setActions] = useState(() => world.controls.actions)
+  useEffect(() => {
+    world.on('actions', setActions)
+    return () => world.off('actions', setActions)
+  }, [])
+
+  return (
+    <div
+      className='actions'
+      css={css`
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 20px;
+        .actions-item {
+          display: flex;
+          align-items: center;
+          margin: 0 0 8px;
+          &-icon {
+            // ...
+          }
+          &-label {
+            margin-left: 10px;
+            font-weight: 500;
+          }
+        }
+      `}
+    >
+      {actions.map(action => (
+        <div className='actions-item' key={action.id}>
+          <div className='actions-item-icon'>{getActionIcon(action.type)}</div>
+          <div className='actions-item-label'>{action.label}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function getActionIcon(type) {
+  if (type.startsWith('Key')) {
+    return <ActionText label={type.split('Key')[1]} />
+  }
+  if (type === 'ControlLeft') {
+    return <ActionText label='Ctrl' />
+  }
+  if (type === 'MouseLeft') {
+    return <MouseLeftIcon />
+  }
+  if (type === 'MouseRight') {
+    return <MouseRightIcon />
+  }
+  if (type === 'MouseWheel') {
+    return <MouseWheelIcon />
+  }
+  return <ActionText label='?' />
+}
+
+function ActionText({ label }) {
+  return (
+    <div
+      className='actiontext'
+      css={css`
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(0, 0, 0, 0.1);
+        padding: 4px 6px;
+        font-weight: 500;
+        font-size: 14px;
+      `}
+    >
+      {label}
+    </div>
+  )
+}
+
+function Reticle({ world }) {
+  const [visible, setVisible] = useState(world.controls.pointer.locked)
+  useEffect(() => {
+    world.on('pointer-lock', setVisible)
+    return () => world.off('pointer-lock', setVisible)
+  }, [])
+  if (!visible) return null
+  return (
+    <div
+      className='reticle'
+      css={css`
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .reticle-item {
+          width: 8px;
+          height: 8px;
+          border-radius: 4px;
+          border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+      `}
+    >
+      <div className='reticle-item' />
     </div>
   )
 }
