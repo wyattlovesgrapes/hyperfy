@@ -18,7 +18,6 @@ export function ChatBox({ className, world, active, onClose, ...props }) {
   useEffect(() => {
     const control = world.controls.bind({ priority: ControlPriorities.GUI })
     control.enter.onPress = () => {
-      console.log('ENTER FOCUS')
       inputRef.current.focus()
     }
     return () => control.release()
