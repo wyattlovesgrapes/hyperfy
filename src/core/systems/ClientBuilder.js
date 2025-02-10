@@ -119,7 +119,7 @@ export class ClientBuilder extends System {
       this.select(null)
     }
     if (!this.enabled) return
-    if (!this.control.pointer.locked) return
+    // if (!this.control.pointer.locked) return
     // inspect
     if (this.control.keyR.pressed) {
       this.control.pointer.unlock()
@@ -128,18 +128,18 @@ export class ClientBuilder extends System {
       this.world.emit('inspect', entity)
     }
     // grab
-    if (this.control.mouseLeft.pressed && !this.selected) {
+    if (this.control.pointer.locked && this.control.mouseLeft.pressed && !this.selected) {
       const entity = this.getEntityAtReticle()
       if (entity?.isApp) {
         this.select(entity)
       }
     }
     // place
-    else if (this.control.mouseLeft.pressed && this.selected) {
+    else if (this.control.pointer.locked && this.control.mouseLeft.pressed && this.selected) {
       this.select(null)
     }
     // duplicate
-    if (this.control.mouseRight.pressed) {
+    if (this.control.pointer.locked && this.control.mouseRight.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
       if (entity) {
         const data = {
@@ -190,6 +190,7 @@ export class ClientBuilder extends System {
         this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
       }
       // apply movement
+      console.log('app', app, app.root)
       app.root.position.copy(this.target.position)
       app.root.quaternion.copy(this.target.quaternion)
       // snap rotation to degrees
@@ -228,7 +229,6 @@ export class ClientBuilder extends System {
     if (!this.canBuild()) return
     this.enabled = !this.enabled
     if (!this.enabled) this.select(null)
-    console.log('build mode:', this.enabled)
     this.updateActions()
   }
 
@@ -439,9 +439,7 @@ export class ClientBuilder extends System {
     e.preventDefault()
     this.dropping = false
     // ensure we have admin/builder role
-    const roles = this.world.entities.player.data.user.roles
-    const canDrop = hasRole(roles, 'admin', 'builder')
-    if (!canDrop) {
+    if (!this.canBuild()) {
       this.world.chat.add({
         id: uuid(),
         from: null,
@@ -486,6 +484,9 @@ export class ClientBuilder extends System {
       console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
       return
     }
+    if (!this.enabled) {
+      this.toggle()
+    }
     const ext = file.name.split('.').pop().toLowerCase()
     if (ext === 'hyp') {
       this.addApp(file)
@@ -528,11 +529,12 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position,
       quaternion: [0, 0, 0, 1],
-      mover: this.world.network.id,
+      mover: null,
       uploader: this.world.network.id,
       state: {},
     }
     const app = this.world.entities.add(data, true)
+    this.select(app)
     const promises = info.assets.map(asset => {
       return this.world.network.upload(asset.file)
     })
@@ -590,6 +592,7 @@ export class ClientBuilder extends System {
       state: {},
     }
     const app = this.world.entities.add(data, true)
+    this.select(app)
     // upload the glb
     await this.world.network.upload(file)
     // mark as uploaded so other clients can load it in
@@ -647,6 +650,7 @@ export class ClientBuilder extends System {
           state: {},
         }
         const app = this.world.entities.add(data, true)
+        this.select(app)
         // upload the glb
         await this.world.network.upload(file)
         // mark as uploaded so other clients can load it in
