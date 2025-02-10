@@ -190,14 +190,15 @@ export class ClientBuilder extends System {
         this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
       }
       // apply movement
-      console.log('app', app, app.root)
       app.root.position.copy(this.target.position)
       app.root.quaternion.copy(this.target.quaternion)
       // snap rotation to degrees
-      const newY = this.target.rotation.y
-      const degrees = newY / DEG2RAD
-      const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
-      app.root.rotation.y = snappedDegrees * DEG2RAD
+      if (!this.control.controlLeft.down) {
+        const newY = this.target.rotation.y
+        const degrees = newY / DEG2RAD
+        const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
+        app.root.rotation.y = snappedDegrees * DEG2RAD
+      }
       // update matrix
       app.root.clean()
       // and snap to any nearby points
@@ -256,9 +257,11 @@ export class ClientBuilder extends System {
     }
     // select new (if any)
     if (app) {
-      app.data.mover = this.world.network.id
-      app.build()
-      this.world.network.send('entityModified', { id: app.data.id, mover: app.data.mover })
+      if (app.data.mover !== this.world.network.id) {
+        app.data.mover = this.world.network.id
+        app.build()
+        this.world.network.send('entityModified', { id: app.data.id, mover: app.data.mover })
+      }
       this.selected = app
       this.control.keyC.capture = true
       this.control.scrollDelta.capture = true
@@ -529,12 +532,11 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position,
       quaternion: [0, 0, 0, 1],
-      mover: null,
+      mover: this.world.network.id,
       uploader: this.world.network.id,
       state: {},
     }
     const app = this.world.entities.add(data, true)
-    this.select(app)
     const promises = info.assets.map(asset => {
       return this.world.network.upload(asset.file)
     })
@@ -576,7 +578,7 @@ export class ClientBuilder extends System {
     // register blueprint
     this.world.blueprints.add(blueprint, true)
     // get spawn point
-    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const hit = this.world.stage.raycastReticle()[0]
     const position = hit ? hit.point.toArray() : [0, 0, 0]
     // spawn the app moving
     // - mover: follows this clients cursor until placed
@@ -592,7 +594,6 @@ export class ClientBuilder extends System {
       state: {},
     }
     const app = this.world.entities.add(data, true)
-    this.select(app)
     // upload the glb
     await this.world.network.upload(file)
     // mark as uploaded so other clients can load it in
@@ -650,7 +651,6 @@ export class ClientBuilder extends System {
           state: {},
         }
         const app = this.world.entities.add(data, true)
-        this.select(app)
         // upload the glb
         await this.world.network.upload(file)
         // mark as uploaded so other clients can load it in
