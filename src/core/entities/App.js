@@ -182,11 +182,6 @@ export class App extends Entity {
     // clear script event listeners
     this.clearEventListeners()
     this.hotEvents = 0
-    // release control
-    // if (this.control) {
-    //   this.control?.release()
-    //   this.control = null
-    // }
     // cancel update tracking
     this.world.setHot(this, false)
     // abort fetch's etc
