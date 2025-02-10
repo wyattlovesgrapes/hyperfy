@@ -193,6 +193,7 @@ export class ClientControls extends System {
         if (value.$button && value.down) {
           value.released = true
           value.down = false
+          value.onRelease?.()
         }
       }
     }
@@ -230,6 +231,7 @@ export class ClientControls extends System {
       if (button?.$button) {
         button.pressed = true
         button.down = true
+        button.onPress?.()
         if (button.capture) break
       }
     }
@@ -251,6 +253,7 @@ export class ClientControls extends System {
       if (button?.$button && button.down) {
         button.down = false
         button.released = true
+        button.onRelease?.()
       }
     }
   }
@@ -290,6 +293,7 @@ export class ClientControls extends System {
         if (button) {
           button.down = true
           button.pressed = true
+          button.onPress?.()
           if (button.capture) break
         }
       }
@@ -303,6 +307,7 @@ export class ClientControls extends System {
         if (button) {
           button.down = false
           button.released = true
+          button.onRelease?.()
         }
       }
     }
@@ -316,6 +321,7 @@ export class ClientControls extends System {
         if (button) {
           button.down = true
           button.pressed = true
+          button.onPress?.()
           if (button.capture) break
         }
       }
@@ -329,6 +335,7 @@ export class ClientControls extends System {
         if (button) {
           button.down = false
           button.released = true
+          button.onRelease?.()
         }
       }
     }
@@ -455,6 +462,8 @@ function createButton(controls, control, prop) {
     pressed,
     released,
     capture: false,
+    onPress: null,
+    onRelease: null,
   }
 }
 

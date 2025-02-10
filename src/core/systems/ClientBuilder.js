@@ -186,9 +186,7 @@ export class ClientBuilder extends System {
         if (hitDistance && this.target.limit > hitDistance) this.target.limit = hitDistance
       }
       // if not holding shift, mouse wheel rotates
-      if (!this.control.shiftLeft.down) {
-        this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
-      }
+      this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
       // apply movement
       app.root.position.copy(this.target.position)
       app.root.quaternion.copy(this.target.quaternion)
