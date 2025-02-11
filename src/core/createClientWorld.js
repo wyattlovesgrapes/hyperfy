@@ -12,6 +12,7 @@ import { ClientBuilder } from './systems/ClientBuilder'
 import { ClientActions } from './systems/ClientActions'
 import { Nametags } from './systems/Nametags'
 import { Snaps } from './systems/Snaps'
+import { XR } from './systems/XR'
 
 export function createClientWorld() {
   const world = new World()
@@ -27,5 +28,6 @@ export function createClientWorld() {
   world.register('actions', ClientActions)
   world.register('nametags', Nametags)
   world.register('snaps', Snaps)
+  world.register('xr', XR)
   return world
 }

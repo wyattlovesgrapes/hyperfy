@@ -688,8 +688,14 @@ export class PlayerLocal extends Entity {
   }
 
   lateUpdate(delta) {
-    // interpolate camera towards target (snaps if just teleported)
-    simpleCamLerp(this.world, this.control.camera, this.cam, delta)
+    if (this.world.graphics.renderer.xr.isPresenting) {
+      // Don't lerp the camera in VR
+      this.control.camera.position.copy(this.cam.position)
+      this.control.camera.quaternion.copy(this.cam.quaternion)
+    } else {
+      // interpolate camera towards target (snaps if just teleported)
+      simpleCamLerp(this.world, this.control.camera, this.cam, delta)
+    }
   }
 
   teleport({ position, rotationY }) {

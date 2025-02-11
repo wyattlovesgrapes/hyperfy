@@ -231,11 +231,17 @@ export function createVRMFactory(glb, setupMaterial) {
       matrix.multiplyMatrices(vrm.scene.matrixWorld, bone.matrixWorld)
     }
 
+    const setFirstPersonMode = firstPerson => {
+      const head = findBone('neck')
+      head.scale.setScalar(firstPerson ? 0 : 1)
+    }
+
     return {
       raw: vrm,
       height,
       applyBoneMatrixWorld,
       setEmote,
+      setFirstPersonMode,
       update,
       move(_matrix) {
         matrix.copy(_matrix)

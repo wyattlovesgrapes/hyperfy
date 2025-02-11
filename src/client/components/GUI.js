@@ -14,6 +14,7 @@ import {
 import { InspectPane } from './InspectPane'
 import { CodePane } from './CodePane'
 import { AvatarPane } from './AvatarPane'
+import { XRButton } from './XRButton'
 import { useElemSize } from './useElemSize'
 import { MouseLeftIcon } from './MouseLeftIcon'
 import { MouseRightIcon } from './MouseRightIcon'
@@ -68,6 +69,7 @@ function Content({ world, width, height }) {
         inset: 0;
       `}
     >
+      {world.xr.supportsVR && <XRButton world={world} />}
       {inspect && <InspectPane key={`inspect-${inspect.data.id}`} world={world} entity={inspect} />}
       {inspect && code && <CodePane key={`code-${inspect.data.id}`} world={world} entity={inspect} />}
       {avatar && <AvatarPane key={avatar.hash} world={world} info={avatar} />}
