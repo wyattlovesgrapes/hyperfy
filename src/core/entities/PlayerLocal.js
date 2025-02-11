@@ -241,12 +241,6 @@ export class PlayerLocal extends Entity {
   initControl() {
     this.control = this.world.controls.bind({
       priority: ControlPriorities.PLAYER,
-      // onPress: code => {
-      //   // ...
-      // },
-      // onRelease: code => {
-      //   // ...
-      // },
       onTouch: touch => {
         if (!this.stick && touch.position.x < this.control.screen.width / 2) {
           this.stick = {
@@ -270,10 +264,6 @@ export class PlayerLocal extends Entity {
     this.control.camera.position.copy(this.cam.position)
     this.control.camera.quaternion.copy(this.cam.quaternion)
     this.control.camera.zoom = this.cam.zoom
-    // this.control.camera.claim()
-    // this.control.camera.position.copy(this.cam.position)
-    // this.control.camera.quaternion.copy(this.cam.quaternion)
-    // this.control.camera.zoom = this.cam.zoom
     this.control.setActions([{ type: 'space', label: 'Jump / Fly (Double-Tap)' }])
   }
 
@@ -578,7 +568,7 @@ export class PlayerLocal extends Entity {
     }
 
     // ensure we can't look too far up/down
-    this.cam.rotation.x = clamp(this.cam.rotation.x, -90 * DEG2RAD, 90 * DEG2RAD)
+    this.cam.rotation.x = clamp(this.cam.rotation.x, -89 * DEG2RAD, 89 * DEG2RAD)
 
     // zoom camera if scrolling wheel (and not moving an object)
     this.cam.zoom += -this.control.scrollDelta.value * ZOOM_SPEED * delta

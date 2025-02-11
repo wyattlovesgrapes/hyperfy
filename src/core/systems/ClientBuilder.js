@@ -52,9 +52,7 @@ export class ClientBuilder extends System {
   }
 
   start() {
-    this.control = this.world.controls.bind({
-      priority: ControlPriorities.BUILDER,
-    })
+    this.control = this.world.controls.bind({ priority: ControlPriorities.BUILDER })
     this.updateActions()
   }
 

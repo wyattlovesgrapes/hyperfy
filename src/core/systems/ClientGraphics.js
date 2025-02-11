@@ -87,7 +87,7 @@ export class ClientGraphics extends System {
     this.resizer = new ResizeObserver(() => {
       this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight)
     })
-    this.viewport.prepend(this.renderer.domElement)
+    this.viewport.appendChild(this.renderer.domElement)
     this.resizer.observe(this.viewport)
   }
 

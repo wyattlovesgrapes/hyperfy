@@ -20,19 +20,7 @@ export class ClientActions extends System {
   start() {
     this.action = createAction(this.world)
     this.btnDown = false
-    this.control = this.world.controls.bind({
-      priority: ControlPriorities.ACTION,
-      // onPress: code => {
-      //   if (code === 'KeyE') {
-      //     this.btnDown = true
-      //   }
-      // },
-      // onRelease: code => {
-      //   if (code === 'KeyE') {
-      //     this.btnDown = false
-      //   }
-      // },
-    })
+    this.control = this.world.controls.bind({ priority: ControlPriorities.ACTION })
   }
 
   register(node) {
