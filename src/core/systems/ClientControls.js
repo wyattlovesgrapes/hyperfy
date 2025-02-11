@@ -138,7 +138,7 @@ export class ClientControls extends System {
               action.id = ++actionIds
             }
           }
-          self.updateActions()
+          self.buildActions()
         },
         release: () => {
           const idx = this.controls.indexOf(control)
@@ -199,7 +199,7 @@ export class ClientControls extends System {
     }
   }
 
-  updateActions() {
+  buildActions() {
     this.actions = []
     for (const control of this.controls) {
       const actions = control.actions
@@ -210,7 +210,6 @@ export class ClientControls extends System {
           // if (idx !== -1) continue
           this.actions.push(action)
         }
-        break
       }
     }
     this.world.emit('actions', this.actions)

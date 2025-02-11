@@ -86,26 +86,26 @@ export class ClientBuilder extends System {
     const actions = []
     if (!this.enabled) {
       if (this.canBuild()) {
-        actions.push({ type: 'KeyTab', label: 'Build Mode' })
+        actions.push({ type: 'tab', label: 'Build Mode' })
       }
     }
     if (this.enabled && !this.selected) {
-      actions.push({ type: 'KeyTab', label: 'Exit Build Mode' })
-      actions.push({ type: 'KeyR', label: 'Inspect' })
-      actions.push({ type: 'MouseLeft', label: 'Grab' })
-      actions.push({ type: 'MouseRight', label: 'Duplicate' })
-      actions.push({ type: 'KeyX', label: 'Destroy' })
+      actions.push({ type: 'tab', label: 'Exit Build Mode' })
+      actions.push({ type: 'keyR', label: 'Inspect' })
+      actions.push({ type: 'mouseLeft', label: 'Grab' })
+      actions.push({ type: 'mouseRight', label: 'Duplicate' })
+      actions.push({ type: 'keyX', label: 'Destroy' })
     }
     if (this.enabled && this.selected) {
-      actions.push({ type: 'KeyTab', label: 'Exit Build Mode' })
-      actions.push({ type: 'KeyR', label: 'Inspect' })
-      actions.push({ type: 'MouseLeft', label: 'Place' })
-      actions.push({ type: 'MouseWheel', label: 'Rotate' })
-      actions.push({ type: 'MouseRight', label: 'Duplicate' })
-      actions.push({ type: 'KeyX', label: 'Destroy' })
-      actions.push({ type: 'ControlLeft', label: 'No Snap (Hold)' })
-      actions.push({ type: 'KeyF', label: 'Push' })
-      actions.push({ type: 'KeyC', label: 'Pull' })
+      actions.push({ type: 'tab', label: 'Exit Build Mode' })
+      actions.push({ type: 'keyR', label: 'Inspect' })
+      actions.push({ type: 'mouseLeft', label: 'Place' })
+      actions.push({ type: 'mouseWheel', label: 'Rotate' })
+      actions.push({ type: 'mouseRight', label: 'Duplicate' })
+      actions.push({ type: 'keyX', label: 'Destroy' })
+      actions.push({ type: 'controlLeft', label: 'No Snap (Hold)' })
+      actions.push({ type: 'keyF', label: 'Push' })
+      actions.push({ type: 'keyC', label: 'Pull' })
     }
     this.control.setActions(actions)
   }
@@ -485,9 +485,6 @@ export class ClientBuilder extends System {
       console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
       return
     }
-    if (!this.enabled) {
-      this.toggle()
-    }
     const ext = file.name.split('.').pop().toLowerCase()
     if (ext === 'hyp') {
       this.addApp(file)
@@ -530,7 +527,7 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position,
       quaternion: [0, 0, 0, 1],
-      mover: this.world.network.id,
+      mover: null,
       uploader: this.world.network.id,
       state: {},
     }
@@ -576,7 +573,7 @@ export class ClientBuilder extends System {
     // register blueprint
     this.world.blueprints.add(blueprint, true)
     // get spawn point
-    const hit = this.world.stage.raycastReticle()[0]
+    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
     const position = hit ? hit.point.toArray() : [0, 0, 0]
     // spawn the app moving
     // - mover: follows this clients cursor until placed
@@ -587,7 +584,7 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position,
       quaternion: [0, 0, 0, 1],
-      mover: this.world.network.id,
+      mover: null,
       uploader: this.world.network.id,
       state: {},
     }
@@ -644,7 +641,7 @@ export class ClientBuilder extends System {
           blueprint: blueprint.id,
           position,
           quaternion: [0, 0, 0, 1],
-          mover: this.world.network.id,
+          mover: null,
           uploader: this.world.network.id,
           state: {},
         }
