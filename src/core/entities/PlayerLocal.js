@@ -695,13 +695,6 @@ export class PlayerLocal extends Entity {
     if (!this.control.pointer.locked && this.control.mouseLeft.pressed) {
       this.control.pointer.lock()
     }
-
-    // right-click open context wheel
-    // if (this.control.pointer.locked && this.control.pressed.MouseRight) {
-    //   // TODO: ClientEditor.js needs reconcile
-    //   const didOpen = this.world.builder.tryContext()
-    //   if (didOpen) this.control.pointer.unlock()
-    // }
   }
 
   lateUpdate(delta) {

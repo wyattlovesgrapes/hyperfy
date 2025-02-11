@@ -1,17 +1,14 @@
+import moment from 'moment'
 import * as THREE from '../extras/three'
+import { cloneDeep } from 'lodash-es'
 
 import { System } from './System'
 
 import { hashFile } from '../utils-client'
 import { hasRole, uuid } from '../utils'
 import { ControlPriorities } from '../extras/ControlPriorities'
-import { CopyIcon, EyeIcon, HandIcon, Trash2Icon, UnlinkIcon } from 'lucide-react'
-import { cloneDeep } from 'lodash-es'
-import moment from 'moment'
 import { importApp } from '../extras/appTools'
 import { DEG2RAD } from '../extras/general'
-
-contextBreakers = ['MouseLeft', 'Escape']
 
 const FORWARD = new THREE.Vector3(0, 0, -1)
 const MAX_UPLOAD_SIZE = parseInt(process.env.PUBLIC_MAX_UPLOAD_SIZE || '100')
@@ -57,19 +54,6 @@ export class ClientBuilder extends System {
   start() {
     this.control = this.world.controls.bind({
       priority: ControlPriorities.BUILDER,
-      // onPress: code => {
-      //   if (code === 'Tab') {
-      //     this.toggle()
-      //   }
-      //   if (code === 'KeyC' && this.selected) {
-      //     return true
-      //   }
-      // },
-      // onScroll: () => {
-      //   if (this.selected) {
-      //     return true
-      //   }
-      // },
     })
     this.updateActions()
   }
@@ -117,14 +101,18 @@ export class ClientBuilder extends System {
     if (this.control.tab.pressed) {
       this.toggle()
     }
+    // deselect if dead
     if (this.selected?.dead) {
       this.select(null)
     }
+    // deselect if stolen
     if (this.selected?.data.mover !== this.world.network.id) {
       this.select(null)
     }
-    if (!this.enabled) return
-    // if (!this.control.pointer.locked) return
+    // stop here if build mode not enabled
+    if (!this.enabled) {
+      return
+    }
     // inspect
     if (this.control.keyR.pressed) {
       const entity = this.getEntityAtReticle()
@@ -325,134 +313,6 @@ export class ClientBuilder extends System {
       break
     }
     return hit
-  }
-
-  tryContext() {
-    const hits = this.world.stage.raycastReticle()
-    let entity
-    for (const hit of hits) {
-      entity = hit.getEntity?.()
-      if (entity) break
-    }
-    if (!entity) return
-    const rect = this.viewport.getBoundingClientRect()
-    const context = {
-      id: uuid(),
-      x: rect.width / 2,
-      y: rect.height / 2,
-      actions: [],
-    }
-    if (entity.isPlayer) {
-      context.actions.push({
-        label: 'Inspect',
-        icon: EyeIcon,
-        visible: true,
-        disabled: false,
-        onClick: () => {
-          this.setContext(null)
-        },
-      })
-    }
-    if (entity.isApp) {
-      const roles = this.world.entities.player.data.user.roles
-      const isAdmin = hasRole(roles, 'admin')
-      const isBuilder = hasRole(roles, 'builder')
-      const isPublic = entity.blueprint.public
-      context.actions.push({
-        label: 'Inspect',
-        icon: EyeIcon,
-        visible: isAdmin || isBuilder || isPublic,
-        disabled: false,
-        onClick: () => {
-          this.setContext(null)
-          this.world.emit('inspect', entity)
-        },
-      })
-      context.actions.push({
-        label: 'Move',
-        icon: HandIcon,
-        visible: isAdmin || isBuilder,
-        disabled: false,
-        onClick: () => {
-          this.control.pointer.lock()
-          this.setContext(null)
-          entity.move()
-        },
-      })
-      context.actions.push({
-        label: 'Duplicate',
-        icon: CopyIcon,
-        visible: isAdmin || isBuilder,
-        disabled: !!entity.data.uploader, // must be uploaded
-        onClick: () => {
-          this.control.pointer.lock()
-          this.setContext(null)
-          const data = {
-            id: uuid(),
-            type: 'app',
-            blueprint: entity.data.blueprint,
-            position: entity.data.position,
-            quaternion: entity.data.quaternion,
-            mover: this.world.network.id,
-            uploader: null,
-            state: {},
-          }
-          this.world.entities.add(data, true)
-        },
-      })
-      context.actions.push({
-        label: 'Unlink',
-        icon: UnlinkIcon,
-        visible: isAdmin || isBuilder,
-        disabled: !!entity.data.uploader, // must be uploaded
-        onClick: () => {
-          this.control.pointer.lock()
-          this.setContext(null)
-          // duplicate the blueprint
-          const blueprint = {
-            id: uuid(),
-            version: 0,
-            name: entity.blueprint.name,
-            image: entity.blueprint.image,
-            author: entity.blueprint.author,
-            url: entity.blueprint.url,
-            desc: entity.blueprint.desc,
-            model: entity.blueprint.model,
-            script: entity.blueprint.script,
-            props: cloneDeep(entity.blueprint.props),
-            preload: entity.blueprint.preload,
-            public: entity.blueprint.public,
-            locked: entity.blueprint.locked,
-            frozen: entity.blueprint.frozen,
-          }
-          this.world.blueprints.add(blueprint, true)
-          // assign new blueprint
-          entity.modify({ blueprint: blueprint.id })
-          this.world.network.send('entityModified', { id: entity.data.id, blueprint: blueprint.id })
-        },
-      })
-      context.actions.push({
-        label: 'Destroy',
-        icon: Trash2Icon,
-        visible: isAdmin || isBuilder,
-        disabled: false,
-        onClick: () => {
-          this.control.pointer.lock()
-          this.setContext(null)
-          entity.destroy(true)
-        },
-      })
-    }
-    const hasActions = context.actions.find(action => action.visible)
-    if (hasActions) {
-      this.setContext(context)
-      return true
-    }
-  }
-
-  setContext(value) {
-    this.context = value
-    this.world.emit('context', value)
   }
 
   onDragOver = e => {
