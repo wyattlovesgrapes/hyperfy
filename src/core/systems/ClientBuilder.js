@@ -120,6 +120,9 @@ export class ClientBuilder extends System {
     if (this.selected?.dead) {
       this.select(null)
     }
+    if (this.selected?.data.mover !== this.world.network.id) {
+      this.select(null)
+    }
     if (!this.enabled) return
     // if (!this.control.pointer.locked) return
     // inspect
@@ -266,7 +269,7 @@ export class ClientBuilder extends System {
   select(app) {
     // deselect existing
     if (this.selected) {
-      if (!this.selected.dead) {
+      if (!this.selected.dead && this.selected.data.mover === this.world.network.id) {
         const app = this.selected
         app.data.mover = null
         app.data.position = app.root.position.toArray()
