@@ -92,6 +92,7 @@ export class ClientBuilder extends System {
     if (this.enabled && !this.selected) {
       actions.push({ type: 'tab', label: 'Exit Build Mode' })
       actions.push({ type: 'keyR', label: 'Inspect' })
+      actions.push({ type: 'keyU', label: 'Unlink' })
       actions.push({ type: 'mouseLeft', label: 'Grab' })
       actions.push({ type: 'mouseRight', label: 'Duplicate' })
       actions.push({ type: 'keyX', label: 'Destroy' })
@@ -99,6 +100,7 @@ export class ClientBuilder extends System {
     if (this.enabled && this.selected) {
       actions.push({ type: 'tab', label: 'Exit Build Mode' })
       actions.push({ type: 'keyR', label: 'Inspect' })
+      actions.push({ type: 'keyU', label: 'Unlink' })
       actions.push({ type: 'mouseLeft', label: 'Place' })
       actions.push({ type: 'mouseWheel', label: 'Rotate' })
       actions.push({ type: 'mouseRight', label: 'Duplicate' })
@@ -122,10 +124,40 @@ export class ClientBuilder extends System {
     // if (!this.control.pointer.locked) return
     // inspect
     if (this.control.keyR.pressed) {
-      this.control.pointer.unlock()
-      this.select(null)
       const entity = this.getEntityAtReticle()
-      this.world.emit('inspect', entity)
+      if (entity) {
+        this.select(null)
+        this.control.pointer.unlock()
+        this.world.emit('inspect', entity)
+      }
+    }
+    // unlink
+    if (this.control.keyU.pressed) {
+      const entity = this.getEntityAtReticle()
+      if (entity) {
+        this.select(null)
+        // duplicate the blueprint
+        const blueprint = {
+          id: uuid(),
+          version: 0,
+          name: entity.blueprint.name,
+          image: entity.blueprint.image,
+          author: entity.blueprint.author,
+          url: entity.blueprint.url,
+          desc: entity.blueprint.desc,
+          model: entity.blueprint.model,
+          script: entity.blueprint.script,
+          props: cloneDeep(entity.blueprint.props),
+          preload: entity.blueprint.preload,
+          public: entity.blueprint.public,
+          locked: entity.blueprint.locked,
+          frozen: entity.blueprint.frozen,
+        }
+        this.world.blueprints.add(blueprint, true)
+        // assign new blueprint
+        entity.modify({ blueprint: blueprint.id })
+        this.world.network.send('entityModified', { id: entity.data.id, blueprint: blueprint.id })
+      }
     }
     // grab
     if (this.control.pointer.locked && this.control.mouseLeft.pressed && !this.selected) {
