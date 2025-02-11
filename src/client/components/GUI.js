@@ -10,11 +10,11 @@ import {
   UnplugIcon,
   WifiOffIcon,
 } from 'lucide-react'
+import moment from 'moment'
 
 import { InspectPane } from './InspectPane'
 import { CodePane } from './CodePane'
 import { AvatarPane } from './AvatarPane'
-import { XRButton } from './XRButton'
 import { useElemSize } from './useElemSize'
 import { MouseLeftIcon } from './MouseLeftIcon'
 import { MouseRightIcon } from './MouseRightIcon'
@@ -22,7 +22,6 @@ import { MouseWheelIcon } from './MouseWheelIcon'
 import { buttons, propToLabel } from '../../core/extras/buttons'
 import { cls } from '../utils'
 import { uuid } from '../../core/utils'
-import moment from 'moment'
 import { ControlPriorities } from '../../core/extras/ControlPriorities'
 
 export function GUI({ world }) {
@@ -69,7 +68,6 @@ function Content({ world, width, height }) {
         inset: 0;
       `}
     >
-      {world.xr.supportsVR && <XRButton world={world} />}
       {inspect && <InspectPane key={`inspect-${inspect.data.id}`} world={world} entity={inspect} />}
       {inspect && code && <CodePane key={`code-${inspect.data.id}`} world={world} entity={inspect} />}
       {avatar && <AvatarPane key={avatar.hash} world={world} info={avatar} />}
@@ -180,6 +178,9 @@ function Side({ world }) {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 25px;
           }
+          &-vr {
+            font-weight: 450;
+          }
           &:hover {
             cursor: pointer;
           }
@@ -224,9 +225,14 @@ function Side({ world }) {
       <Messages world={world} active={chat} touch={touch} />
       <div className='bar'>
         <div className={cls('bar-btns', { active: !chat })}>
-          <div className='bar-btn' onClick={() => setChat(true)}>
+          <div className={cls('bar-btn', { darken: world.xr.supportsVR })} onClick={() => setChat(true)}>
             <MessageCircleMoreIcon size={20} />
           </div>
+          {world.xr.supportsVR && (
+            <div className={'bar-btn'} onClick={() => world.xr.enter()}>
+              <div className='bar-btn-vr'>VR</div>
+            </div>
+          )}
           {/* <div className='bar-btn' onClick={null}>
             <MicIcon size={20} />
           </div>
@@ -289,7 +295,6 @@ function Messages({ world, active, touch }) {
     const didInit = !initRef.current
     if (didInit) {
       spacerRef.current.style.height = contentRef.current.offsetHeight + 'px'
-      console.log('YOO', contentRef.current.offsetHeight + 'px')
     }
     setTimeout(() => {
       contentRef.current.scroll({

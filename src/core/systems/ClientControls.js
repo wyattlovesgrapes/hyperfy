@@ -7,6 +7,8 @@ const LMB = 1 // bitmask
 const RMB = 2 // bitmask
 const MouseLeft = 'mouseLeft'
 const MouseRight = 'mouseRight'
+const HandednessLeft = 'left'
+const HandednessRight = 'right'
 
 let actionIds = 0
 
@@ -27,6 +29,12 @@ const controlTypes = {
   pointer: createPointer,
   screen: createScreen,
   camera: createCamera,
+  xrLeftStick: createVector,
+  xrLeftBtn1: createButton,
+  xrLeftBtn2: createButton,
+  xrRightStick: createVector,
+  xrRightBtn1: createButton,
+  xrRightBtn2: createButton,
 }
 
 export class ClientControls extends System {
@@ -52,6 +60,11 @@ export class ClientControls extends System {
     this.scroll = {
       delta: 0,
     }
+    this.xrSession = null
+  }
+
+  start() {
+    this.world.on('xrSession', this.onXRSession)
   }
 
   preFixedUpdate() {
@@ -61,6 +74,83 @@ export class ClientControls extends System {
         control.entries.scrollDelta.value = this.scroll.delta
         if (control.entries.scrollDelta.capture) break
       }
+    }
+    // xr
+    if (this.xrSession) {
+      this.xrSession.inputSources?.forEach(src => {
+        // left
+        if (src.gamepad && src.handedness === HandednessLeft) {
+          for (const control of this.controls) {
+            if (control.entries.xrLeftStick) {
+              control.entries.xrLeftStick.value.x = src.gamepad.axes[2]
+              control.entries.xrLeftStick.value.z = src.gamepad.axes[3]
+              if (control.entries.xrLeftStick.capture) break
+            }
+            if (control.entries.xrLeftBtn1) {
+              const button = control.entries.xrLeftBtn1
+              const down = src.gamepad.buttons[4].pressed
+              if (down && !button.down) {
+                button.pressed = true
+                button.onPress?.()
+              }
+              if (!down && button.down) {
+                button.released = true
+                button.onRelease?.()
+              }
+              button.down = down
+            }
+            if (control.entries.xrLeftBtn2) {
+              const button = control.entries.xrLeftBtn2
+              const down = src.gamepad.buttons[5].pressed
+              if (down && !button.down) {
+                button.pressed = true
+                button.onPress?.()
+              }
+              if (!down && button.down) {
+                button.released = true
+                button.onRelease?.()
+              }
+              button.down = down
+            }
+          }
+        }
+        // right
+        if (src.gamepad && src.handedness === HandednessRight) {
+          for (const control of this.controls) {
+            if (control.entries.xrRightStick) {
+              control.entries.xrRightStick.value.x = src.gamepad.axes[2]
+              control.entries.xrRightStick.value.z = src.gamepad.axes[3]
+              if (control.entries.xrRightStick.capture) break
+            }
+            if (control.entries.xrRightBtn1) {
+              const button = control.entries.xrRightBtn1
+              const down = src.gamepad.buttons[4].pressed
+              if (down && !button.down) {
+                button.pressed = true
+                button.onPress?.()
+              }
+              if (!down && button.down) {
+                button.released = true
+                button.onRelease?.()
+              }
+              button.down = down
+            }
+            if (control.entries.xrRightBtn2) {
+              const button = control.entries.xrRightBtn2
+              const down = src.gamepad.buttons[5].pressed
+              if (down && !button.down) {
+                button.pressed = true
+                button.onPress?.()
+              }
+              if (!down && button.down) {
+                button.released = true
+                button.onRelease?.()
+              }
+              button.down = down
+            }
+          }
+        }
+      })
     }
   }
 
@@ -444,6 +534,10 @@ export class ClientControls extends System {
 
   onBlur = () => {
     this.releaseAllButtons()
+  }
+
+  onXRSession = session => {
+    this.xrSession = session
   }
 
   isInputFocused() {
