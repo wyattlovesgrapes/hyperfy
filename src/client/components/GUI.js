@@ -272,6 +272,7 @@ const MESSAGES_REFRESH_RATE = 30 // every x seconds
 function Messages({ world, active, touch }) {
   const initRef = useRef()
   const contentRef = useRef()
+  const spacerRef = useRef()
   const [now, setNow] = useState(() => moment())
   const [msgs, setMsgs] = useState([])
   useEffect(() => {
@@ -288,11 +289,15 @@ function Messages({ world, active, touch }) {
   }, [])
   useEffect(() => {
     if (!msgs.length) return
-    const instant = !initRef.current
+    const didInit = !initRef.current
+    if (didInit) {
+      spacerRef.current.style.height = contentRef.current.offsetHeight + 'px'
+      console.log('YOO', contentRef.current.offsetHeight + 'px')
+    }
     setTimeout(() => {
       contentRef.current.scroll({
         top: 9999999,
-        behavior: instant ? 'instant' : 'smooth',
+        behavior: didInit ? 'instant' : 'smooth',
       })
     }, 10)
     initRef.current = true
@@ -317,6 +322,9 @@ function Messages({ world, active, touch }) {
         &.active {
           pointer-events: auto;
         }
+        .messages-spacer {
+          flex-shrink: 0;
+        }
         .message {
           padding: 4px 0;
           line-height: 1.4;
@@ -332,6 +340,7 @@ function Messages({ world, active, touch }) {
         }
       `}
     >
+      <div className='messages-spacer' ref={spacerRef} />
       {msgs.map(msg => (
         <Message key={msg.id} msg={msg} now={now} />
       ))}
