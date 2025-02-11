@@ -79,7 +79,7 @@ function Content({ world, width, height }) {
       {disconnected && <Disconnected />}
       {!ready && <LoadingOverlay />}
       <Reticle world={world} />
-      <Side world={world} />
+      {ready && <Side world={world} />}
     </div>
   )
 }
