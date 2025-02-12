@@ -480,7 +480,7 @@ export class ClientBuilder extends System {
     const blueprint = {
       id: uuid(),
       version: 0,
-      name: null,
+      name: file.name,
       image: null,
       author: null,
       url: null,
@@ -535,7 +535,7 @@ export class ClientBuilder extends System {
         const blueprint = {
           id: uuid(),
           version: 0,
-          name: null,
+          name: file.name,
           image: null,
           author: null,
           url: null,
