@@ -559,18 +559,22 @@ function Reticle({ world }) {
 }
 
 function Toast({ world }) {
-  const [msg, setMsg] = useState(null)
+  const [msg, setMsg] = useState({ text: null, id: 0 })
   const [visible, setVisible] = useState(false)
   const [current, setCurrent] = useState('')
   useEffect(() => {
-    world.on('toast', setMsg)
-    return () => world.off('toast', setMsg)
+    let ids = 0
+    const onToast = text => {
+      setMsg({ text, id: ++ids })
+    }
+    world.on('toast', onToast)
+    return () => world.off('toast', onToast)
   }, [])
   useEffect(() => {
-    if (msg) {
+    if (msg.text) {
       setVisible(false)
       const timeout1 = setTimeout(() => {
-        setCurrent(msg)
+        setCurrent(msg.text)
         setVisible(true)
       }, 10)
       const timeout2 = setTimeout(() => {
@@ -581,7 +585,7 @@ function Toast({ world }) {
         clearTimeout(timeout2)
       }
     }
-  }, [msg])
+  }, [msg.id])
   if (!current) return null
   return (
     <div
