@@ -1,6 +1,6 @@
 import moment from 'moment'
 import * as THREE from '../extras/three'
-import { cloneDeep } from 'lodash-es'
+import { cloneDeep, isBoolean } from 'lodash-es'
 
 import { System } from './System'
 
@@ -19,6 +19,8 @@ const PROJECT_MIN = 3
 const PROJECT_MAX = 50
 
 const v1 = new THREE.Vector3()
+const q1 = new THREE.Quaternion()
+const e1 = new THREE.Euler()
 
 /**
  * Builder System
@@ -249,9 +251,11 @@ export class ClientBuilder extends System {
     }
   }
 
-  toggle() {
+  toggle(enabled) {
     if (!this.canBuild()) return
-    this.enabled = !this.enabled
+    enabled = isBoolean(enabled) ? enabled : !this.enabled
+    if (this.enabled === enabled) return
+    this.enabled = enabled
     if (!this.enabled) this.select(null)
     this.updateActions()
   }
@@ -370,6 +374,11 @@ export class ClientBuilder extends System {
       file = e.dataTransfer.files[0]
     }
     if (!file) return
+    // slight delay to ensure we get updated pointer position from window focus
+    await new Promise(resolve => setTimeout(resolve, 20))
+    // ensure we in build mode
+    this.toggle(true)
+    // add it!
     const maxSize = MAX_UPLOAD_SIZE * 1024 * 1024
     if (file.size > maxSize) {
       this.world.chat.add({
@@ -382,19 +391,20 @@ export class ClientBuilder extends System {
       console.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`)
       return
     }
+    const transform = this.getSpawnTransform()
     const ext = file.name.split('.').pop().toLowerCase()
     if (ext === 'hyp') {
-      this.addApp(file)
+      this.addApp(file, transform)
     }
     if (ext === 'glb') {
-      this.addModel(file)
+      this.addModel(file, transform)
     }
     if (ext === 'vrm') {
-      this.addAvatar(file)
+      this.addAvatar(file, transform)
     }
   }
 
-  async addApp(file) {
+  async addApp(file, transform) {
     const info = await importApp(file)
     for (const asset of info.assets) {
       this.world.loader.insert(asset.type, asset.url, asset.file)
@@ -416,14 +426,12 @@ export class ClientBuilder extends System {
       frozen: info.blueprint.frozen,
     }
     this.world.blueprints.add(blueprint, true)
-    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
-    const position = hit ? hit.point.toArray() : [0, 0, 0]
     const data = {
       id: uuid(),
       type: 'app',
       blueprint: blueprint.id,
-      position,
-      quaternion: [0, 0, 0, 1],
+      position: transform.position,
+      quaternion: transform.quaternion,
       mover: null,
       uploader: this.world.network.id,
       state: {},
@@ -442,7 +450,7 @@ export class ClientBuilder extends System {
     }
   }
 
-  async addModel(file) {
+  async addModel(file, transform) {
     // immutable hash the file
     const hash = await hashFile(file)
     // use hash as glb filename
@@ -469,9 +477,6 @@ export class ClientBuilder extends System {
     }
     // register blueprint
     this.world.blueprints.add(blueprint, true)
-    // get spawn point
-    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
-    const position = hit ? hit.point.toArray() : [0, 0, 0]
     // spawn the app moving
     // - mover: follows this clients cursor until placed
     // - uploader: other clients see a loading indicator until its fully uploaded
@@ -479,8 +484,8 @@ export class ClientBuilder extends System {
       id: uuid(),
       type: 'app',
       blueprint: blueprint.id,
-      position,
-      quaternion: [0, 0, 0, 1],
+      position: transform.position,
+      quaternion: transform.quaternion,
       mover: null,
       uploader: this.world.network.id,
       state: {},
@@ -492,7 +497,7 @@ export class ClientBuilder extends System {
     app.onUploaded()
   }
 
-  async addAvatar(file) {
+  async addAvatar(file, transform) {
     // immutable hash the file
     const hash = await hashFile(file)
     // use hash as vrm filename
@@ -526,9 +531,6 @@ export class ClientBuilder extends System {
         }
         // register blueprint
         this.world.blueprints.add(blueprint, true)
-        // get spawn point
-        const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
-        const position = hit ? hit.point.toArray() : [0, 0, 0]
         // spawn the app moving
         // - mover: follows this clients cursor until placed
         // - uploader: other clients see a loading indicator until its fully uploaded
@@ -536,8 +538,8 @@ export class ClientBuilder extends System {
           id: uuid(),
           type: 'app',
           blueprint: blueprint.id,
-          position,
-          quaternion: [0, 0, 0, 1],
+          position: transform.position,
+          quaternion: transform.quaternion,
           mover: null,
           uploader: this.world.network.id,
           state: {},
@@ -574,6 +576,23 @@ export class ClientBuilder extends System {
         })
       },
     })
+  }
+
+  getSpawnTransform() {
+    const hit = this.world.stage.raycastPointer(this.control.pointer.position)[0]
+    const position = hit ? hit.point.toArray() : [0, 0, 0]
+    let quaternion
+    if (hit) {
+      e1.copy(this.world.rig.rotation).reorder('YXZ')
+      e1.x = 0
+      e1.z = 0
+      e1.y += 180 * DEG2RAD
+      q1.setFromEuler(e1)
+      quaternion = q1.toArray()
+    } else {
+      quaternion = [0, 0, 0, 1]
+    }
+    return { position, quaternion }
   }
 }
 
