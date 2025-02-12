@@ -201,7 +201,7 @@ function AppPaneOverview({ world, app, blueprint }) {
           align-self: center;
           width: 120px;
           height: 120px;
-          background-color: #252630;
+          background-color: ${blueprint.image ? 'none' : '#252630'};
           background-image: ${blueprint.image ? `url(${resolveURL(blueprint.image.url)})` : 'none'};
           background-position: center;
           background-size: cover;
