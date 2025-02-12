@@ -125,7 +125,7 @@ export class ClientBuilder extends System {
     // unlink
     if (this.control.keyU.pressed) {
       const entity = this.getEntityAtReticle()
-      if (entity) {
+      if (entity?.isApp) {
         this.select(null)
         // duplicate the blueprint
         const blueprint = {
@@ -164,7 +164,7 @@ export class ClientBuilder extends System {
     // duplicate
     if (this.control.pointer.locked && this.control.mouseRight.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
-      if (entity) {
+      if (entity?.isApp) {
         const data = {
           id: uuid(),
           type: 'app',
@@ -182,8 +182,10 @@ export class ClientBuilder extends System {
     // destroy
     if (this.control.keyX.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
-      this.select(null)
-      entity?.destroy(true)
+      if (entity?.isApp) {
+        this.select(null)
+        entity?.destroy(true)
+      }
     }
     // TODO: move up/down
     // this.selected.position.y -= this.control.pointer.delta.y * delta * 0.5
