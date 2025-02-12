@@ -78,6 +78,7 @@ export class ClientBuilder extends System {
       actions.push({ type: 'space', label: 'Jump / Fly (Double-Tap)' })
       actions.push({ type: 'keyR', label: 'Inspect' })
       actions.push({ type: 'keyU', label: 'Unlink' })
+      actions.push({ type: 'keyP', label: 'Pin' })
       actions.push({ type: 'mouseLeft', label: 'Grab' })
       actions.push({ type: 'mouseRight', label: 'Duplicate' })
       actions.push({ type: 'keyX', label: 'Destroy' })
@@ -87,6 +88,7 @@ export class ClientBuilder extends System {
       actions.push({ type: 'space', label: 'Jump / Fly (Double-Tap)' })
       actions.push({ type: 'keyR', label: 'Inspect' })
       actions.push({ type: 'keyU', label: 'Unlink' })
+      actions.push({ type: 'keyP', label: 'Pin' })
       actions.push({ type: 'mouseLeft', label: 'Place' })
       actions.push({ type: 'mouseWheel', label: 'Rotate' })
       actions.push({ type: 'mouseRight', label: 'Duplicate' })
@@ -152,10 +154,22 @@ export class ClientBuilder extends System {
         this.world.network.send('entityModified', { id: entity.data.id, blueprint: blueprint.id })
       }
     }
+    // pin/unpin
+    if (this.control.keyP.pressed) {
+      const entity = this.getEntityAtReticle()
+      if (entity?.isApp) {
+        entity.data.pinned = !entity.data.pinned
+        this.world.network.send('entityModified', {
+          id: entity.data.id,
+          pinned: entity.data.pinned,
+        })
+        this.world.emit('toast', entity.data.pinned ? 'Pinned' : 'Un-pinned')
+      }
+    }
     // grab
     if (this.control.pointer.locked && this.control.mouseLeft.pressed && !this.selected) {
       const entity = this.getEntityAtReticle()
-      if (entity?.isApp) {
+      if (entity?.isApp && !entity.data.pinned) {
         this.select(entity)
       }
     }
@@ -175,6 +189,7 @@ export class ClientBuilder extends System {
           quaternion: entity.root.quaternion.toArray(),
           mover: this.world.network.id,
           uploader: null,
+          pinned: false,
           state: {},
         }
         const dup = this.world.entities.add(data, true)
@@ -184,7 +199,7 @@ export class ClientBuilder extends System {
     // destroy
     if (this.control.keyX.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
-      if (entity?.isApp) {
+      if (entity?.isApp && !entity.data.pinned) {
         this.select(null)
         entity?.destroy(true)
       }
@@ -206,9 +221,10 @@ export class ClientBuilder extends System {
         this.target.position.copy(camPos).add(camDir.multiplyScalar(this.target.limit))
       }
       // if holding F/C then push or pull
-      const project = this.control.keyF.down ? 1 : this.control.keyC.down ? -1 : null
+      let project = this.control.keyF.down ? 1 : this.control.keyC.down ? -1 : null
       if (project) {
-        this.target.limit += project * PROJECT_SPEED * delta
+        const multiplier = this.control.shiftLeft.down ? 4 : 1
+        this.target.limit += project * PROJECT_SPEED * delta * multiplier
         if (this.target.limit < PROJECT_MIN) this.target.limit = PROJECT_MIN
         if (hitDistance && this.target.limit > hitDistance) this.target.limit = hitDistance
       }
@@ -434,6 +450,7 @@ export class ClientBuilder extends System {
       quaternion: transform.quaternion,
       mover: null,
       uploader: this.world.network.id,
+      pinned: false,
       state: {},
     }
     const app = this.world.entities.add(data, true)
@@ -488,6 +505,7 @@ export class ClientBuilder extends System {
       quaternion: transform.quaternion,
       mover: null,
       uploader: this.world.network.id,
+      pinned: false,
       state: {},
     }
     const app = this.world.entities.add(data, true)
@@ -542,6 +560,7 @@ export class ClientBuilder extends System {
           quaternion: transform.quaternion,
           mover: null,
           uploader: this.world.network.id,
+          pinned: false,
           state: {},
         }
         const app = this.world.entities.add(data, true)

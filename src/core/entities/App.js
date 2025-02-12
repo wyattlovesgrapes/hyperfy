@@ -228,6 +228,9 @@ export class App extends Entity {
       this.data.quaternion = data.quaternion
       this.networkQuat.pushArray(data.quaternion)
     }
+    if (data.hasOwnProperty('pinned')) {
+      this.data.pinned = data.pinned
+    }
     if (data.hasOwnProperty('state')) {
       this.data.state = data.state
       rebuild = true

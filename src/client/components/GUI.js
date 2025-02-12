@@ -75,6 +75,7 @@ function Content({ world, width, height }) {
       {!ready && <LoadingOverlay />}
       <Reticle world={world} />
       {ready && <Side world={world} />}
+      {<Toast world={world} />}
     </div>
   )
 }
@@ -553,6 +554,77 @@ function Reticle({ world }) {
       `}
     >
       <div className='reticle-item' />
+    </div>
+  )
+}
+
+function Toast({ world }) {
+  const [msg, setMsg] = useState(null)
+  const [visible, setVisible] = useState(false)
+  const [current, setCurrent] = useState('')
+  useEffect(() => {
+    world.on('toast', setMsg)
+    return () => world.off('toast', setMsg)
+  }, [])
+  useEffect(() => {
+    if (msg) {
+      setVisible(false)
+      const timeout1 = setTimeout(() => {
+        setCurrent(msg)
+        setVisible(true)
+      }, 10)
+      const timeout2 = setTimeout(() => {
+        setVisible(false)
+      }, 1000)
+      return () => {
+        clearTimeout(timeout1)
+        clearTimeout(timeout2)
+      }
+    }
+  }, [msg])
+  if (!current) return null
+  return (
+    <div
+      className='toast'
+      css={css`
+        position: absolute;
+        top: calc(50% - 70px);
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        @keyframes toastIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .toast-msg {
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 14px;
+          background: rgba(22, 22, 28, 0.4);
+          backdrop-filter: blur(3px);
+          border-radius: 25px;
+          opacity: 0;
+          transform: translateY(10px) scale(0.9);
+          transition: all 0.1s ease-in-out;
+
+          &.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            animation: toastIn 0.1s ease-in-out;
+          }
+        }
+      `}
+    >
+      <div className={cls('toast-msg', { visible })}>{current}</div>
     </div>
   )
 }
