@@ -559,9 +559,7 @@ function Reticle({ world }) {
 }
 
 function Toast({ world }) {
-  const [msg, setMsg] = useState({ text: null, id: 0 })
-  const [visible, setVisible] = useState(false)
-  const [current, setCurrent] = useState('')
+  const [msg, setMsg] = useState(null)
   useEffect(() => {
     let ids = 0
     const onToast = text => {
@@ -570,23 +568,7 @@ function Toast({ world }) {
     world.on('toast', onToast)
     return () => world.off('toast', onToast)
   }, [])
-  useEffect(() => {
-    if (msg.text) {
-      setVisible(false)
-      const timeout1 = setTimeout(() => {
-        setCurrent(msg.text)
-        setVisible(true)
-      }, 10)
-      const timeout2 = setTimeout(() => {
-        setVisible(false)
-      }, 1000)
-      return () => {
-        clearTimeout(timeout1)
-        clearTimeout(timeout2)
-      }
-    }
-  }, [msg.id])
-  if (!current) return null
+  if (!msg) return null
   return (
     <div
       className='toast'
@@ -619,7 +601,6 @@ function Toast({ world }) {
           opacity: 0;
           transform: translateY(10px) scale(0.9);
           transition: all 0.1s ease-in-out;
-
           &.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -628,7 +609,15 @@ function Toast({ world }) {
         }
       `}
     >
-      <div className={cls('toast-msg', { visible })}>{current}</div>
+      {msg && <ToastMsg key={msg.id} text={msg.text} />}
     </div>
   )
+}
+
+function ToastMsg({ text }) {
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    setTimeout(() => setVisible(false), 1000)
+  }, [])
+  return <div className={cls('toast-msg', { visible })}>{text}</div>
 }
