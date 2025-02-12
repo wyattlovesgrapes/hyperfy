@@ -73,6 +73,7 @@ export class ClientBuilder extends System {
     }
     if (this.enabled && !this.selected) {
       actions.push({ type: 'tab', label: 'Exit Build Mode' })
+      actions.push({ type: 'space', label: 'Jump / Fly (Double-Tap)' })
       actions.push({ type: 'keyR', label: 'Inspect' })
       actions.push({ type: 'keyU', label: 'Unlink' })
       actions.push({ type: 'mouseLeft', label: 'Grab' })
@@ -81,6 +82,7 @@ export class ClientBuilder extends System {
     }
     if (this.enabled && this.selected) {
       actions.push({ type: 'tab', label: 'Exit Build Mode' })
+      actions.push({ type: 'space', label: 'Jump / Fly (Double-Tap)' })
       actions.push({ type: 'keyR', label: 'Inspect' })
       actions.push({ type: 'keyU', label: 'Unlink' })
       actions.push({ type: 'mouseLeft', label: 'Place' })

@@ -264,7 +264,7 @@ export class PlayerLocal extends Entity {
     this.control.camera.position.copy(this.cam.position)
     this.control.camera.quaternion.copy(this.cam.quaternion)
     this.control.camera.zoom = this.cam.zoom
-    this.control.setActions([{ type: 'space', label: 'Jump / Fly (Double-Tap)' }])
+    // this.control.setActions([{ type: 'space', label: 'Jump / Double-Jump' }])
   }
 
   toggleFlying() {
@@ -425,6 +425,7 @@ export class PlayerLocal extends Entity {
       // this is to prevent animation jitter when only falling for a very small amount of time
       if (this.fallTimer > 0.1 && !this.falling) {
         this.jumping = false
+        this.airJumping = false
         this.falling = true
         this.fallStartY = this.base.position.y
       }
@@ -442,6 +443,10 @@ export class PlayerLocal extends Entity {
       // if jumping and we're now on the ground, clear it
       if (this.jumping && this.grounded) {
         this.jumping = false
+      }
+      if (this.airJumped && this.grounded) {
+        this.airJumped = false
+        this.airJumping = false
       }
 
       // if we're grounded we don't need gravity.
@@ -512,8 +517,10 @@ export class PlayerLocal extends Entity {
         // this.capsule.addForce(moveForce.toPxVec3(), PHYSX.PxForceModeEnum.eFORCE, true)
       }
 
-      // apply jump
-      if (this.grounded && !this.jumping && this.jumpDown) {
+      // ground/air jump
+      const shouldJump = this.grounded && !this.jumping && this.jumpDown
+      const shouldAirJump = !this.grounded && !this.airJumped && this.jumpPressed && !this.world.builder.enabled
+      if (shouldJump || shouldAirJump) {
         // calc velocity needed to reach jump height
         let jumpVelocity = Math.sqrt(2 * this.effectiveGravity * this.jumpHeight)
         jumpVelocity = jumpVelocity * (1 / Math.sqrt(this.mass))
@@ -521,8 +528,18 @@ export class PlayerLocal extends Entity {
         const velocity = this.capsule.getLinearVelocity()
         velocity.y = jumpVelocity
         this.capsule.setLinearVelocity(velocity)
-        // set jumped (we haven't left the ground yet)
-        this.jumped = true
+        // ground jump init (we haven't left the ground yet)
+        if (shouldJump) {
+          this.jumped = true
+        }
+        // air jump init
+        if (shouldAirJump) {
+          this.falling = false
+          this.fallTimer = 0
+          this.jumping = true
+          this.airJumped = true
+          this.airJumping = true
+        }
       }
     } else {
       /**
@@ -552,7 +569,24 @@ export class PlayerLocal extends Entity {
       // zero out any rotational velocity
       const zeroAngular = v4.set(0, 0, 0)
       this.capsule.setAngularVelocity(zeroAngular.toPxVec3())
+
+      // if not in build mode, cancel flying
+      if (!this.world.builder.enabled) {
+        this.toggleFlying()
+      }
     }
+
+    // double jump in build, mode toggle flying
+    if (this.jumpPressed && this.world.builder.enabled) {
+      if (this.world.time - this.lastJumpAt < 0.4) {
+        console.log('togleFlying')
+        this.toggleFlying()
+      }
+      this.lastJumpAt = this.world.time
+    }
+
+    // consume jump press so we dont run it across multiple fixedUpdates in one frame
+    this.jumpPressed = false
   }
 
   update(delta) {
@@ -673,6 +707,8 @@ export class PlayerLocal extends Entity {
     // emote
     if (this.flying) {
       this.emote = Emotes.FLOAT
+    } else if (this.airJumping) {
+      this.emote = Emotes.FLIP
     } else if (this.jumping) {
       this.emote = Emotes.FLOAT
     } else if (this.falling) {
@@ -704,14 +740,10 @@ export class PlayerLocal extends Entity {
     this.pointerState.update(hit, this.control.mouseLeft.pressed, this.control.mouseLeft.released)
     // console.timeEnd('pointer')
 
-    // watch double jump to toggle flying
-    this.jumpPressed = isXR ? this.control.xrRightBtn1.pressed : this.control.space.pressed
+    // watch jump presses to either fly or air-jump
     this.jumpDown = isXR ? this.control.xrRightBtn1.down : this.control.space.down
-    if (this.jumpPressed) {
-      if (this.world.time - this.lastJumpAt < 0.4) {
-        this.toggleFlying()
-      }
-      this.lastJumpAt = this.world.time
+    if (isXR ? this.control.xrRightBtn1.pressed : this.control.space.pressed) {
+      this.jumpPressed = true
     }
 
     // left-click lock pointer
