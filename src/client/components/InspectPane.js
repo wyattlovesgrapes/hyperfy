@@ -560,11 +560,6 @@ function AppPaneHierarchy({ app }) {
             <HierarchyDetail label='Scale' value={getVectorString(selectedNode.scale)} />
           )}
 
-          {/* Visibility */}
-          {hasProperty(selectedNode, 'visible') && (
-            <HierarchyDetail label='Visible' value={selectedNode.visible.toString()} />
-          )}
-
           {/* Material */}
           {hasProperty(selectedNode, 'material') && selectedNode.material && (
             <>
