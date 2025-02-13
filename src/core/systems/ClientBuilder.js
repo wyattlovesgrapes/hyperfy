@@ -147,11 +147,14 @@ export class ClientBuilder extends System {
           public: entity.blueprint.public,
           locked: entity.blueprint.locked,
           frozen: entity.blueprint.frozen,
+          unique: entity.blueprint.unique,
         }
         this.world.blueprints.add(blueprint, true)
         // assign new blueprint
         entity.modify({ blueprint: blueprint.id })
         this.world.network.send('entityModified', { id: entity.data.id, blueprint: blueprint.id })
+        // toast
+        this.world.emit('toast', 'Unlinked')
       }
     }
     // pin/unpin
@@ -181,10 +184,33 @@ export class ClientBuilder extends System {
     if (this.control.pointer.locked && this.control.mouseRight.pressed) {
       const entity = this.selected || this.getEntityAtReticle()
       if (entity?.isApp) {
+        let blueprintId = entity.data.blueprint
+        // if unique, we also duplicate the blueprint
+        if (entity.blueprint.unique) {
+          const blueprint = {
+            id: uuid(),
+            version: 0,
+            name: entity.blueprint.name,
+            image: entity.blueprint.image,
+            author: entity.blueprint.author,
+            url: entity.blueprint.url,
+            desc: entity.blueprint.desc,
+            model: entity.blueprint.model,
+            script: entity.blueprint.script,
+            props: cloneDeep(entity.blueprint.props),
+            preload: entity.blueprint.preload,
+            public: entity.blueprint.public,
+            locked: entity.blueprint.locked,
+            frozen: entity.blueprint.frozen,
+            unique: entity.blueprint.unique,
+          }
+          this.world.blueprints.add(blueprint, true)
+          blueprintId = blueprint.id
+        }
         const data = {
           id: uuid(),
           type: 'app',
-          blueprint: entity.data.blueprint,
+          blueprint: blueprintId,
           position: entity.root.position.toArray(),
           quaternion: entity.root.quaternion.toArray(),
           mover: this.world.network.id,
@@ -440,6 +466,7 @@ export class ClientBuilder extends System {
       public: info.blueprint.public,
       locked: info.blueprint.locked,
       frozen: info.blueprint.frozen,
+      unique: info.blueprint.unique,
     }
     this.world.blueprints.add(blueprint, true)
     const data = {
@@ -491,6 +518,7 @@ export class ClientBuilder extends System {
       preload: false,
       public: false,
       locked: false,
+      unique: false,
     }
     // register blueprint
     this.world.blueprints.add(blueprint, true)
@@ -546,6 +574,7 @@ export class ClientBuilder extends System {
           preload: false,
           public: false,
           locked: false,
+          unique: false,
         }
         // register blueprint
         this.world.blueprints.add(blueprint, true)

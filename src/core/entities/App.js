@@ -334,6 +334,16 @@ export class App extends Entity {
     }
   }
 
+  getNodes() {
+    // note: this is currently just used in the nodes tab in the app inspector
+    // to get a clean hierarchy
+    if (!this.blueprint) return
+    const type = this.blueprint.model.endsWith('vrm') ? 'avatar' : 'model'
+    let glb = this.world.loader.get(type, this.blueprint.model)
+    if (!glb) return
+    return glb.toNodes()
+  }
+
   getWorldProxy() {
     const entity = this
     const world = this.world
