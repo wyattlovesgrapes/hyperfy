@@ -186,6 +186,14 @@ export function AppPane({ world, app }) {
 }
 
 function AppPaneMain({ world, app, blueprint, canEdit }) {
+  const downloadModel = e => {
+    if (e.shiftKey) {
+      e.preventDefault()
+      const file = world.loader.getFile(blueprint.model)
+      if (!file) return
+      downloadFile(file)
+    }
+  }
   const changeModel = async e => {
     const file = e.target.files[0]
     if (!file) return
@@ -360,7 +368,7 @@ function AppPaneMain({ world, app, blueprint, canEdit }) {
         <>
           <div className='amain-line mt mb' />
           <div className='amain-btns'>
-            <label className='amain-btns-btn'>
+            <label className='amain-btns-btn' onClick={downloadModel}>
               <input type='file' accept='.glb,.vrm' onChange={changeModel} />
               <BoxIcon size={16} />
               <span>Model</span>

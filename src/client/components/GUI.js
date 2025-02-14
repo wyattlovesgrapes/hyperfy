@@ -1,14 +1,17 @@
 import { css } from '@firebolt-dev/css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  LayoutGridIcon,
   LoaderIcon,
   MessageCircleMoreIcon,
   MicIcon,
+  SearchIcon,
   SendHorizonalIcon,
   SettingsIcon,
   StoreIcon,
   UnplugIcon,
   WifiOffIcon,
+  ZapIcon,
 } from 'lucide-react'
 import moment from 'moment'
 
@@ -21,8 +24,9 @@ import { MouseRightIcon } from './MouseRightIcon'
 import { MouseWheelIcon } from './MouseWheelIcon'
 import { buttons, propToLabel } from '../../core/extras/buttons'
 import { cls } from '../utils'
-import { uuid } from '../../core/utils'
+import { hasRole, uuid } from '../../core/utils'
 import { ControlPriorities } from '../../core/extras/ControlPriorities'
+import { AppsPane } from './AppsPane'
 
 export function GUI({ world }) {
   const [ref, width, height] = useElemSize()
@@ -42,18 +46,22 @@ export function GUI({ world }) {
 function Content({ world, width, height }) {
   const small = width < 600
   const [ready, setReady] = useState(false)
+  const [player, setPlayer] = useState(() => world.entities.player)
   const [inspect, setInspect] = useState(null)
   const [code, setCode] = useState(false)
   const [avatar, setAvatar] = useState(null)
   const [disconnected, setDisconnected] = useState(false)
+  const [apps, setApps] = useState(false)
   useEffect(() => {
     world.on('ready', setReady)
+    world.on('player', setPlayer)
     world.on('inspect', setInspect)
     world.on('code', setCode)
     world.on('avatar', setAvatar)
     world.on('disconnect', setDisconnected)
     return () => {
       world.off('ready', setReady)
+      world.off('player', setPlayer)
       world.off('inspect', setInspect)
       world.off('code', setCode)
       world.off('avatar', setAvatar)
@@ -74,17 +82,21 @@ function Content({ world, width, height }) {
       {disconnected && <Disconnected />}
       {!ready && <LoadingOverlay />}
       <Reticle world={world} />
-      {ready && <Side world={world} />}
+      {ready && <Side world={world} player={player} toggleApps={() => setApps(!apps)} />}
       {<Toast world={world} />}
+      {apps && <AppsPane world={world} close={() => setApps(false)} />}
     </div>
   )
 }
 
-function Side({ world }) {
+function Side({ world, player, toggleApps }) {
   const touch = useMemo(() => navigator.userAgent.match(/OculusBrowser|iPhone|iPad|iPod|Android/i), [])
   const inputRef = useRef()
   const [msg, setMsg] = useState('')
   const [chat, setChat] = useState(false)
+  const canBuild = useMemo(() => {
+    return player && hasRole(player.data.user.roles, 'admin', 'builder')
+  }, [player])
   useEffect(() => {
     const control = world.controls.bind({ priority: ControlPriorities.GUI })
     control.enter.onPress = () => {
@@ -226,7 +238,7 @@ function Side({ world }) {
       <Messages world={world} active={chat} touch={touch} />
       <div className='bar'>
         <div className={cls('bar-btns', { active: !chat })}>
-          <div className={cls('bar-btn', { darken: world.xr.supportsVR })} onClick={() => setChat(true)}>
+          <div className={cls('bar-btn', { darken: world.xr.supportsVR || canBuild })} onClick={() => setChat(true)}>
             <MessageCircleMoreIcon size={20} />
           </div>
           {world.xr.supportsVR && (
@@ -239,10 +251,12 @@ function Side({ world }) {
           </div>
           <div className='bar-btn' onClick={null}>
             <StoreIcon size={20} />
-          </div>
-          <div className='bar-btn' onClick={null}>
-            <SettingsIcon size={20} />
           </div> */}
+          {canBuild && (
+            <div className='bar-btn' onClick={toggleApps}>
+              <ZapIcon size={20} />
+            </div>
+          )}
         </div>
         <label className={cls('bar-chat', { active: chat })}>
           <input
