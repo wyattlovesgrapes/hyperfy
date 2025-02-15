@@ -11,6 +11,7 @@ import {
   HashIcon,
   LayoutGridIcon,
   PencilIcon,
+  RotateCcwIcon,
   SearchIcon,
   SettingsIcon,
   TargetIcon,
@@ -29,6 +30,7 @@ export function AppsPane({ world, close }) {
   const headRef = useRef()
   usePane('apps', paneRef, headRef)
   const [query, setQuery] = useState('')
+  const [refresh, setRefresh] = useState(0)
   return (
     <div
       ref={paneRef}
@@ -50,7 +52,7 @@ export function AppsPane({ world, close }) {
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
           display: flex;
           align-items: center;
-          padding: 0 0 0 10px;
+          padding: 0 5px 0 10px;
           &-title {
             padding-left: 7px;
             font-weight: 500;
@@ -68,34 +70,41 @@ export function AppsPane({ world, close }) {
               font-size: 14px;
             }
           }
-          &-close {
-            width: 40px;
+          &-btn {
+            width: 30px;
             height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            &:hover {
+              cursor: pointer;
+              color: white;
+            }
           }
         }
       `}
     >
       <div className='apane-head' ref={headRef}>
-        <ZapIcon size={20} />
+        <ZapIcon size={16} />
         <div className='apane-head-title'>Apps</div>
         <div className='apane-head-search'>
           <SearchIcon size={16} />
           <input type='text' placeholder='Search' value={query} onChange={e => setQuery(e.target.value)} />
         </div>
-        <div className='apane-head-close' onClick={close}>
+        <div className='apane-head-btn' onClick={() => setRefresh(n => n + 1)}>
+          <RotateCcwIcon size={16} />
+        </div>
+        <div className='apane-head-btn' onClick={close}>
           <XIcon size={20} />
         </div>
       </div>
-      <AppsPaneContent world={world} query={query} />
+      <AppsPaneContent world={world} query={query} refresh={refresh} />
     </div>
   )
 }
 
-function AppsPaneContent({ world, query }) {
+function AppsPaneContent({ world, query, refresh }) {
   const [sort, setSort] = useState('count')
   const [asc, setAsc] = useState(false)
   const [target, setTarget] = useState(null)
@@ -135,7 +144,7 @@ function AppsPaneContent({ world, query }) {
       items.push(item)
     }
     return items
-  }, [])
+  }, [refresh])
   items = useMemo(() => {
     let newItems = items
     if (query) {
@@ -144,7 +153,7 @@ function AppsPaneContent({ world, query }) {
     }
     newItems = orderBy(newItems, sort, asc ? 'asc' : 'desc')
     return newItems
-  }, [sort, asc, query])
+  }, [items, sort, asc, query])
   const reorder = key => {
     if (sort === key) {
       setAsc(!asc)
@@ -222,9 +231,15 @@ function AppsPaneContent({ world, query }) {
             width: 70px;
             text-align: right;
           }
-          &.target {
+          &.actions {
             width: 60px;
             text-align: right;
+          }
+          &:hover:not(.active) {
+            cursor: pointer;
+          }
+          &.active {
+            color: #4088ff;
           }
         }
         .asettings-rows {
@@ -269,7 +284,7 @@ function AppsPaneContent({ world, query }) {
           color: rgba(255, 255, 255, 0.4);
           &:hover:not(.active) {
             cursor: pointer;
-            color: rgba(255, 255, 255, 0.6);
+            color: white;
           }
           &.active {
             color: #4088ff;
@@ -278,32 +293,56 @@ function AppsPaneContent({ world, query }) {
       `}
     >
       <div className='asettings-head'>
-        <div className='asettings-headitem name' onClick={() => reorder('name')} title='Name'>
+        <div
+          className={cls('asettings-headitem name', { active: sort === 'name' })}
+          onClick={() => reorder('name')}
+          title='Name'
+        >
           <span>Name</span>
         </div>
-        <div className='asettings-headitem count' onClick={() => reorder('count')} title='Instances'>
+        <div
+          className={cls('asettings-headitem count', { active: sort === 'count' })}
+          onClick={() => reorder('count')}
+          title='Instances'
+        >
           <HashIcon size={16} />
         </div>
-        <div className='asettings-headitem geometries' onClick={() => reorder('geometries')} title='Geometries'>
+        <div
+          className={cls('asettings-headitem geometries', { active: sort === 'geometries' })}
+          onClick={() => reorder('geometries')}
+          title='Geometries'
+        >
           <BoxIcon size={16} />
         </div>
-        <div className='asettings-headitem triangles' onClick={() => reorder('triangles')} title='Triangles'>
+        <div
+          className={cls('asettings-headitem triangles', { active: sort === 'triangles' })}
+          onClick={() => reorder('triangles')}
+          title='Triangles'
+        >
           <TriangleIcon size={16} />
         </div>
         <div
-          className='asettings-headitem textureSize'
+          className={cls('asettings-headitem textureSize', { active: sort === 'textureBytes' })}
           onClick={() => reorder('textureBytes')}
           title='Texture Memory Size'
         >
           <BrickWallIcon size={16} />
         </div>
-        <div className='asettings-headitem code' onClick={() => reorder('code')} title='Code'>
+        <div
+          className={cls('asettings-headitem code', { active: sort === 'code' })}
+          onClick={() => reorder('code')}
+          title='Code'
+        >
           <FileCode2Icon size={16} />
         </div>
-        <div className='asettings-headitem fileSize' onClick={() => reorder('fileBytes')} title='File Size'>
+        <div
+          className={cls('asettings-headitem fileSize', { active: sort === 'fileBytes' })}
+          onClick={() => reorder('fileBytes')}
+          title='File Size'
+        >
           <HardDriveIcon size={16} />
         </div>
-        <div className='asettings-headitem target'>{/* <CrosshairIcon size={16} /> */}</div>
+        <div className='asettings-headitem actions' />
       </div>
       <div className='asettings-rows noscrollbar'>
         {items.map(item => (
