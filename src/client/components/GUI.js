@@ -563,10 +563,13 @@ function Reticle({ world }) {
         align-items: center;
         justify-content: center;
         .reticle-item {
-          width: 8px;
-          height: 8px;
-          border-radius: 4px;
-          border: 1px solid rgba(255, 255, 255, 0.4);
+          width: 10px;
+          height: 10px;
+          border-radius: 5px;
+          /* border: 1.5px solid rgba(255, 255, 255, 0.8); */
+          border: 1.5px solid white;
+          /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
+          mix-blend-mode: difference;
         }
       `}
     >
