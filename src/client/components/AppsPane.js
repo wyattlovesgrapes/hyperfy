@@ -173,7 +173,11 @@ function AppsPaneContent({ world, query }) {
     return closestEntity
   }
   const toggleTarget = item => {
-    if (target === item) return setTarget(null)
+    if (target === item) {
+      world.target.hide()
+      setTarget(null)
+      return
+    }
     const entity = getClosest(item)
     if (!entity) return
     world.target.show(entity.root.position)
