@@ -116,11 +116,14 @@ function Side({ world, player, toggleApps }) {
       inputRef.current.blur()
     }
   }, [chat])
-  const send = async () => {
+  const send = async e => {
     if (world.controls.pointer.locked) {
       setTimeout(() => setChat(false), 10)
     }
-    if (!msg) return setChat(false)
+    if (!msg) {
+      e.preventDefault()
+      return setChat(false)
+    }
     setMsg('')
     // check for client commands
     if (msg.startsWith('/')) {
@@ -271,7 +274,7 @@ function Side({ world, player, toggleApps }) {
                 setChat(false)
               }
               if (e.code === 'Enter') {
-                send()
+                send(e)
               }
             }}
             onBlur={() => setChat(false)}
