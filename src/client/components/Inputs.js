@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useUpdate } from './useUpdate'
 import { ChevronDownIcon, FileIcon, LoaderIcon, XIcon } from 'lucide-react'
 import { cls } from './cls'
+import { hashFile } from '../../core/utils-client'
 
 export function InputText({ value, onChange, placeholder }) {
   const [localValue, setLocalValue] = useState(value)
