@@ -634,7 +634,7 @@ export class ClientBuilder extends System {
       e1.copy(this.world.rig.rotation).reorder('YXZ')
       e1.x = 0
       e1.z = 0
-      const degrees = e1.y * RAD2DEG + 180
+      const degrees = e1.y * RAD2DEG
       const snappedDegrees = Math.round(degrees / SNAP_DEGREES) * SNAP_DEGREES
       e1.y = snappedDegrees * DEG2RAD
       q1.setFromEuler(e1)
