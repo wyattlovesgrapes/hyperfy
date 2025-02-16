@@ -417,7 +417,7 @@ export class ClientBuilder extends System {
     }
     if (!file) return
     // slight delay to ensure we get updated pointer position from window focus
-    await new Promise(resolve => setTimeout(resolve, 20))
+    await new Promise(resolve => setTimeout(resolve, 100))
     // ensure we in build mode
     this.toggle(true)
     // add it!
