@@ -98,8 +98,14 @@ export class App extends Entity {
     // setup
     this.blueprint = blueprint
     this.root = root
+    console.log(this.data.position)
+    console.log(this.data.quaternion)
+    console.log(this.data.scale)
+
+
     this.root.position.fromArray(this.data.position)
     this.root.quaternion.fromArray(this.data.quaternion)
+    this.root.scale.fromArray(this.data.scale)
     // activate
     this.root.activate({ world: this.world, entity: this, moving: !!this.data.mover })
     // execute script
@@ -128,6 +134,7 @@ export class App extends Entity {
     // if remote is moving, set up to receive network updates
     this.networkPos = new LerpVector3(root.position, this.world.networkRate)
     this.networkQuat = new LerpQuaternion(root.quaternion, this.world.networkRate)
+    this.networkScale = new LerpVector3(root.scale, this.world.networkRate)
     // execute any events we collected while building
     while (this.eventQueue.length) {
       const event = this.eventQueue[0]
@@ -231,6 +238,10 @@ export class App extends Entity {
     if (data.hasOwnProperty('quaternion')) {
       this.data.quaternion = data.quaternion
       this.networkQuat.pushArray(data.quaternion)
+    }
+    if (data.hasOwnProperty('scale')) {
+      this.data.scale = data.scale
+      this.root.scale.pushArray(data.scale)
     }
     if (data.hasOwnProperty('pinned')) {
       this.data.pinned = data.pinned

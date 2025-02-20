@@ -213,6 +213,7 @@ export class ClientBuilder extends System {
           blueprint: blueprintId,
           position: entity.root.position.toArray(),
           quaternion: entity.root.quaternion.toArray(),
+          scale: entity.root.scale.toArray(),
           mover: this.world.network.id,
           uploader: null,
           pinned: false,
@@ -260,10 +261,9 @@ export class ClientBuilder extends System {
       } else {
         // Shift is held down → Scale the object
         const scaleFactor = 1 + (this.control.scrollDelta.value * 0.1 * delta)
-        let scaleX = this.target.scale.x *= scaleFactor
+        this.target.scale.x *= scaleFactor
         this.target.scale.y *= scaleFactor
         this.target.scale.z *= scaleFactor
-        //console.log('scaling', scaleX)
       }
       
 
@@ -494,6 +494,7 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position: transform.position,
       quaternion: transform.quaternion,
+      scale: transform.scale,
       mover: null,
       uploader: this.world.network.id,
       pinned: false,
@@ -550,6 +551,7 @@ export class ClientBuilder extends System {
       blueprint: blueprint.id,
       position: transform.position,
       quaternion: transform.quaternion,
+      scale: transform.scale,
       mover: null,
       uploader: this.world.network.id,
       pinned: false,
@@ -606,6 +608,7 @@ export class ClientBuilder extends System {
           blueprint: blueprint.id,
           position: transform.position,
           quaternion: transform.quaternion,
+          scale: transform.scale,
           mover: null,
           uploader: this.world.network.id,
           pinned: false,
