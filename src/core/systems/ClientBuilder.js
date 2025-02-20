@@ -255,10 +255,22 @@ export class ClientBuilder extends System {
         if (hitDistance && this.target.limit > hitDistance) this.target.limit = hitDistance
       }
       // if not holding shift, mouse wheel rotates
-      this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
+      if(!this.control.shiftLeft.down) {
+        this.target.rotation.y += this.control.scrollDelta.value * 0.1 * delta
+      } else {
+        // Shift is held down → Scale the object
+        const scaleFactor = 1 + (this.control.scrollDelta.value * 0.1 * delta)
+        let scaleX = this.target.scale.x *= scaleFactor
+        this.target.scale.y *= scaleFactor
+        this.target.scale.z *= scaleFactor
+        //console.log('scaling', scaleX)
+      }
+      
+
       // apply movement
       app.root.position.copy(this.target.position)
       app.root.quaternion.copy(this.target.quaternion)
+      app.root.scale.copy(this.target.scale)
       // snap rotation to degrees
       if (!this.control.controlLeft.down) {
         const newY = this.target.rotation.y
@@ -287,6 +299,7 @@ export class ClientBuilder extends System {
           id: app.data.id,
           position: app.root.position.toArray(),
           quaternion: app.root.quaternion.toArray(),
+          scale: app.root.scale.toArray(),
         })
         this.lastMoveSendTime = 0
       }
@@ -312,12 +325,14 @@ export class ClientBuilder extends System {
         app.data.mover = null
         app.data.position = app.root.position.toArray()
         app.data.quaternion = app.root.quaternion.toArray()
+        app.data.scale = app.root.scale.toArray()
         app.data.state = {}
         this.world.network.send('entityModified', {
           id: app.data.id,
           mover: null,
           position: app.data.position,
           quaternion: app.data.quaternion,
+          scale: app.data.scale,
           state: app.data.state,
         })
         app.build()
@@ -338,6 +353,7 @@ export class ClientBuilder extends System {
       this.control.scrollDelta.capture = true
       this.target.position.copy(app.root.position)
       this.target.quaternion.copy(app.root.quaternion)
+      this.target.scale.copy(app.root.scale) 
       this.target.limit = PROJECT_MAX
     }
     // update actions
