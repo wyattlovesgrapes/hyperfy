@@ -236,7 +236,7 @@ export class ClientControls extends System {
           return !!player.effect
         },
         setEffect(opts) {
-          // opts = { anchorId, emote, snare, freeze, duration, cancellable }
+          // opts = { anchorId, emote, snare, freeze, turn, duration, cancellable, onEnd }
           //
           // cancel any current effect
           control.effect?.onEnd()
