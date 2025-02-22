@@ -679,7 +679,7 @@ export class PlayerLocal extends Entity {
 
     // check effect cancel
     if (this.effect?.cancellable && (this.moving || this.jumpDown)) {
-      this.effect = null
+      this.setEffect(null)
     }
 
     if (freeze || anchor) {
@@ -874,9 +874,19 @@ export class PlayerLocal extends Entity {
     this.control.camera.quaternion.copy(this.cam.quaternion)
   }
 
-  setEffect(effect) {
-    // { anchorId, emote, snare, freeze, duration, cancellable }
+  setEffect(effect, cancel) {
+    if (this.effect === effect) return
+    if (this.effect) {
+      this.effect = null
+      this.cancelEffect()
+      this.cancelEffect = null
+    }
     this.effect = effect
+    this.cancelEffect = cancel
+    this.world.network.send('entityModified', {
+      id: this.data.id,
+      ef: effect,
+    })
   }
 
   setSessionAvatar(avatar) {
