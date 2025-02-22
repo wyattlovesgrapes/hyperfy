@@ -236,25 +236,29 @@ export class ClientControls extends System {
           return !!player.effect
         },
         setEffect(opts) {
+          const player = self.world.entities.player
           // opts = { anchorId, emote, snare, freeze, turn, duration, cancellable, onEnd }
           //
           // cancel any current effect
           control.effect?.onEnd()
           control.effect = null
           // construct effect
-          const player = self.world.entities.player
-          const config = {}
-          if (opts.anchor) config.anchorId = opts.anchor.anchorId
-          if (opts.emote) config.emote = opts.emote
-          if (opts.snare) config.snare = opts.snare
-          if (opts.freeze) config.freeze = opts.freeze
-          if (opts.turn) config.turn = opts.turn
-          if (opts.duration) config.duration = opts.duration
-          if (opts.cancellable) {
-            config.cancellable = opts.cancellable
-            delete config.freeze // overrides
+          let config = null
+          let onEnd
+          if (opts) {
+            config = {}
+            if (opts.anchor) config.anchorId = opts.anchor.anchorId
+            if (opts.emote) config.emote = opts.emote
+            if (opts.snare) config.snare = opts.snare
+            if (opts.freeze) config.freeze = opts.freeze
+            if (opts.turn) config.turn = opts.turn
+            if (opts.duration) config.duration = opts.duration
+            if (opts.cancellable) {
+              config.cancellable = opts.cancellable
+              delete config.freeze // overrides
+            }
+            onEnd = opts.onEnd
           }
-          const onEnd = opts.onEnd
           const effect = {
             config,
             ended: false,
