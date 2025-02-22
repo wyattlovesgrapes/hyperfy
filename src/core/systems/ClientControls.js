@@ -213,11 +213,11 @@ export class ClientControls extends System {
   bind(options = {}) {
     const self = this
     const entries = {}
-    let currentEffect
     const control = {
       options,
       entries,
       actions: null,
+      effect: null,
       api: {
         setActions(value) {
           if (value !== null && !Array.isArray(value)) {
@@ -237,6 +237,11 @@ export class ClientControls extends System {
         },
         setEffect(opts) {
           // opts = { anchorId, emote, snare, freeze, duration, cancellable }
+          //
+          // cancel any current effect
+          control.effect?.onEnd()
+          control.effect = null
+          // construct effect
           const player = self.world.entities.player
           const config = {}
           if (opts.anchor) config.anchorId = opts.anchor.anchorId
@@ -251,23 +256,26 @@ export class ClientControls extends System {
           const onEnd = opts.onEnd
           const effect = {
             config,
-            end: () => {
-              if (currentEffect !== effect) return
-              currentEffect = null
-              player.setEffect(null)
+            ended: false,
+            onEnd: () => {
+              if (effect.ended) return
+              effect.ended = true
+              control.effect = null
+              player.cancelEffect(effect.config)
               onEnd?.()
             },
           }
-          player.setEffect(effect.config, effect.end)
-          currentEffect = effect
+          // set effect on player
+          player.setEffect(effect.config, effect.onEnd)
+          control.effect = effect
         },
         release: () => {
           const idx = this.controls.indexOf(control)
           if (idx === -1) return
           this.controls.splice(idx, 1)
           options.onRelease?.()
-          currentEffect?.end()
-          currentEffect = null
+          control.effect?.onEnd()
+          control.effect = null
         },
       },
     }

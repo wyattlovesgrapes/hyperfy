@@ -874,18 +874,31 @@ export class PlayerLocal extends Entity {
     this.control.camera.quaternion.copy(this.cam.quaternion)
   }
 
-  setEffect(effect, end) {
-    if (this.effect === effect) return
+  setEffect(config, onEnd) {
+    if (this.effect === config) return
     if (this.effect) {
       this.effect = null
-      this.endEffect()
-      this.endEffect = null
+      this.onEffectEnd()
+      this.onEffectEnd = null
     }
-    this.effect = effect
-    this.endEffect = end
+    this.effect = config
+    this.onEffectEnd = onEnd
     this.world.network.send('entityModified', {
       id: this.data.id,
-      ef: effect,
+      ef: config,
+    })
+  }
+
+  cancelEffect(config) {
+    // specifically only cancel the passed in effect,
+    // and ignore if effect is different
+    if (this.effect !== config) return
+    this.effect = null
+    this.onEffectEnd()
+    this.onEffectEnd = null
+    this.world.network.send('entityModified', {
+      id: this.data.id,
+      ef: null,
     })
   }
 
