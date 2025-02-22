@@ -908,7 +908,7 @@ export class PlayerLocal extends Entity {
     // and ignore if effect is different
     if (this.effect !== config) return
     this.effect = null
-    this.onEffectEnd()
+    this.onEffectEnd?.()
     this.onEffectEnd = null
     this.world.network.send('entityModified', {
       id: this.data.id,
