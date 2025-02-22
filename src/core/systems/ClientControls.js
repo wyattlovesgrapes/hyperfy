@@ -213,7 +213,7 @@ export class ClientControls extends System {
   bind(options = {}) {
     const self = this
     const entries = {}
-    let activeEffect
+    let currentEffect
     const control = {
       options,
       entries,
@@ -238,31 +238,36 @@ export class ClientControls extends System {
         setEffect(opts) {
           // opts = { anchorId, emote, snare, freeze, duration, cancellable }
           const player = self.world.entities.player
-          const effect = {}
-          if (opts.anchor) effect.anchorId = opts.anchor.anchorId
-          if (opts.emote) effect.emote = opts.emote
-          if (opts.snare) effect.snare = opts.snare
-          if (opts.freeze) effect.freeze = opts.freeze
-          if (opts.duration) effect.duration = opts.duration
+          const config = {}
+          if (opts.anchor) config.anchorId = opts.anchor.anchorId
+          if (opts.emote) config.emote = opts.emote
+          if (opts.snare) config.snare = opts.snare
+          if (opts.freeze) config.freeze = opts.freeze
+          if (opts.duration) config.duration = opts.duration
           if (opts.cancellable) {
-            effect.cancellable = opts.cancellable
-            delete effect.freeze // overrides
+            config.cancellable = opts.cancellable
+            delete config.freeze // overrides
           }
-          const cancel = () => {
-            player.setEffect(null)
-            opts.onCancel?.()
-            activeEffect = null
+          const onEnd = opts.onEnd
+          const effect = {
+            config,
+            end: () => {
+              if (currentEffect !== effect) return
+              currentEffect = null
+              player.setEffect(null)
+              onEnd?.()
+            },
           }
-          player.setEffect(effect, cancel)
-          activeEffect = { effect, cancel }
+          player.setEffect(effect.config, effect.end)
+          currentEffect = effect
         },
         release: () => {
           const idx = this.controls.indexOf(control)
           if (idx === -1) return
           this.controls.splice(idx, 1)
           options.onRelease?.()
-          activeEffect?.cancel()
-          activeEffect = null
+          currentEffect?.end()
+          currentEffect = null
         },
       },
     }

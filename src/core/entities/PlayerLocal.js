@@ -830,7 +830,7 @@ export class PlayerLocal extends Entity {
     if (this.effect?.duration) {
       this.effect.duration -= delta
       if (this.effect.duration <= 0) {
-        this.effect = null
+        this.setEffect(null)
       }
     }
   }
@@ -874,15 +874,15 @@ export class PlayerLocal extends Entity {
     this.control.camera.quaternion.copy(this.cam.quaternion)
   }
 
-  setEffect(effect, cancel) {
+  setEffect(effect, end) {
     if (this.effect === effect) return
     if (this.effect) {
       this.effect = null
-      this.cancelEffect()
-      this.cancelEffect = null
+      this.endEffect()
+      this.endEffect = null
     }
     this.effect = effect
-    this.cancelEffect = cancel
+    this.endEffect = end
     this.world.network.send('entityModified', {
       id: this.data.id,
       ef: effect,
