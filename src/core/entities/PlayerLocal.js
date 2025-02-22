@@ -96,6 +96,8 @@ export class PlayerLocal extends Entity {
     // this.nametag = createNode({ name: 'nametag', label: this.data.name, active: false })
     // this.base.add(this.nametag)
 
+    this.aura = createNode('group')
+
     this.bubble = createNode('ui', {
       width: 300,
       height: 512,
@@ -119,8 +121,9 @@ export class PlayerLocal extends Entity {
     })
     this.bubble.add(this.bubbleBox)
     this.bubbleBox.add(this.bubbleText)
-    this.base.add(this.bubble)
+    this.aura.add(this.bubble)
 
+    this.aura.activate({ world: this.world, entity: this })
     this.base.activate({ world: this.world, entity: this })
 
     this.camHeight = DEFAULT_CAM_HEIGHT
@@ -153,12 +156,12 @@ export class PlayerLocal extends Entity {
         this.avatar = src.toNodes().get('avatar')
         this.base.add(this.avatar)
         // this.nametag.position.y = this.avatar.height + 0.2
-        this.bubble.position.y = this.avatar.height + 0.2
+        this.bubble.position.y = this.avatar.getHeadToHeight() + 0.2
         // if (!this.bubble.active) {
         //   this.nametag.active = true
         // }
         this.avatarUrl = avatarUrl
-        this.camHeight = this.avatar.height * 1.1
+        this.camHeight = this.avatar.height * 0.95
       })
       .catch(err => {
         console.error(err)
@@ -840,6 +843,10 @@ export class PlayerLocal extends Entity {
     } else {
       // otherwise interpolate camera towards target
       simpleCamLerp(this.world, this.control.camera, this.cam, delta)
+    }
+    if (this.avatar) {
+      const matrix = this.avatar.getBoneTransform('head')
+      this.aura.position.setFromMatrixPosition(matrix)
     }
   }
 
