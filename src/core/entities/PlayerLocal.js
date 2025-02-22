@@ -296,7 +296,7 @@ export class PlayerLocal extends Entity {
     const freeze = this.effect?.freeze
     const anchor = this.getAnchorMatrix()
     const snare = this.effect?.snare || 0
-    if (freeze || anchor) {
+    if (anchor) {
       /**
        *
        * ZERO MODE
@@ -719,8 +719,22 @@ export class PlayerLocal extends Entity {
       this.moveDir.applyQuaternion(yQuaternion)
     }
 
+    // if our effect has turn enabled, face the camera direction
+    if (this.effect?.turn) {
+      let cameraY = 0
+      if (isXR) {
+        e1.copy(this.world.xr.camera.rotation).reorder('YXZ')
+        cameraY = e1.y
+      } else {
+        cameraY = this.cam.rotation.y
+      }
+      e1.set(0, cameraY, 0)
+      q1.setFromEuler(e1)
+      const alpha = 1 - Math.pow(0.00000001, delta)
+      this.base.quaternion.slerp(q1, alpha)
+    }
     // if we're moving continually rotate ourselves toward the direction we are moving
-    if (this.moving) {
+    else if (this.moving) {
       const alpha = 1 - Math.pow(0.00000001, delta)
       q1.setFromUnitVectors(FORWARD, this.moveDir)
       this.base.quaternion.slerp(q1, alpha)

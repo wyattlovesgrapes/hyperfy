@@ -248,6 +248,7 @@ export class ClientControls extends System {
           if (opts.emote) config.emote = opts.emote
           if (opts.snare) config.snare = opts.snare
           if (opts.freeze) config.freeze = opts.freeze
+          if (opts.turn) config.turn = opts.turn
           if (opts.duration) config.duration = opts.duration
           if (opts.cancellable) {
             config.cancellable = opts.cancellable
