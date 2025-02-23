@@ -138,7 +138,7 @@ export class PlayerLocal extends Entity {
     bindRotations(this.cam.quaternion, this.cam.rotation)
     this.cam.quaternion.copy(this.base.quaternion)
     this.cam.rotation.x += -15 * DEG2RAD
-    this.cam.zoom = 3
+    this.cam.zoom = 2
 
     this.initCapsule()
     this.initControl()
