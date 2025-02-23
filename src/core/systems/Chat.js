@@ -38,11 +38,10 @@ export class Chat extends System {
     }
     const readOnly = Object.freeze({ ...msg })
     this.world.events.emit('chat', readOnly)
-
   }
 
   clear(broadcast) {
-    this.msgs = [];
+    this.msgs = []
     for (const callback of this.listeners) {
       callback(this.msgs)
     }
@@ -50,7 +49,7 @@ export class Chat extends System {
       this.world.network.send('chatCleared')
     }
   }
-  
+
   serialize() {
     return this.msgs
   }

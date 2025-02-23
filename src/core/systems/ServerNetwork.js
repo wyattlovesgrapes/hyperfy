@@ -321,8 +321,7 @@ export class ServerNetwork extends System {
         const code = arg1
         if (code !== 'clear') return
         const player = socket.player
-        const user = player.data.user
-        if (!hasRole(user.roles, 'admin')) {
+        if (!hasRole(player.data.roles, 'admin')) {
           return
         }
         this.world.chat.clear(true)

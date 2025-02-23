@@ -98,6 +98,7 @@ export class ClientNetwork extends System {
   onChatAdded = msg => {
     this.world.chat.add(msg, false)
   }
+
   onChatCleared = () => {
     this.world.chat.clear()
   }
